@@ -2,6 +2,16 @@
   <img src="logo image.png" alt="Vitals in the Void Logo" width="250" />
 </p>
 
+<p align="center">
+  <a href="https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/">
+    <img src="https://img.shields.io/badge/NASA%20Space%20Apps-Challenge%20Page-blue?style=for-the-badge&logo=nasa" alt="NASA Space Apps Challenge">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://vitalsofhevoid.health">
+    <img src="https://img.shields.io/badge/Live%20Website-vitalsofhevoid.health-purple?style=for-the-badge&logo=rocket" alt="Live Website">
+  </a>
+</p>
+
 # Vitals in the Void
 
 > **NASA Space Apps Challenge 2026** — *Health Monitoring Software Challenge*  
