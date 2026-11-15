@@ -4304,14 +4304,30 @@
                 LIVE_LAST[cid] = { d: d, vals: vals };
                 if (!LIVE_BUF[cid]) LIVE_BUF[cid] = [];
                 LIVE_BUF[cid].push(vals);
-                if (!DB.settings.streamMeta[cid]) DB.settings.streamMeta[cid] = { samples: 0, lowAlerted: false };
+                if (!DB.settings.streamMeta[cid]) DB.settings.streamMeta[cid] = { samples: 0, alert15: false, alert10: false };
                 DB.settings.streamMeta[cid].samples = (DB.settings.streamMeta[cid].samples || 0) + 1;
                 var curBat = DB.settings.battery[cid] != null ? Number(DB.settings.battery[cid]) : 88;
                 var nextBat = Math.max(0, Math.round((curBat - 0.35) * 100) / 100);
                 DB.settings.battery[cid] = nextBat;
-                if (nextBat < 15 && !DB.settings.streamMeta[cid].lowAlerted) {
-                  DB.settings.streamMeta[cid].lowAlerted = true;
-                  toast('Low wearable battery (' + Math.round(nextBat) + '%) for ' + c.d.name + ' — recharge wearable!', 5200);
+                var cName = c.d.name;
+                if (nextBat >= 15) {
+                  DB.settings.streamMeta[cid].alert15 = false;
+                  DB.settings.streamMeta[cid].alert10 = false;
+                } else if (nextBat >= 10 && nextBat < 15 && !DB.settings.streamMeta[cid].alert15) {
+                  DB.settings.streamMeta[cid].alert15 = true;
+                  toast('Low wearable battery (' + Math.round(nextBat) + '%) for ' + cName + ' — recharge wearable!', 5200);
+                } else if (nextBat < 10 && !DB.settings.streamMeta[cid].alert10) {
+                  DB.settings.streamMeta[cid].alert10 = true;
+                  toast('⚠️ PROACTIVE ALERT: Wearable battery at ' + Math.round(nextBat) + '% for ' + cName + '! Recharge immediately.', 6500);
+                  if (window.Notification && Notification.permission === 'granted') {
+                    new Notification('Vitals in the Void · Battery Proactive Alert', { body: 'Wearable battery reached ' + Math.round(nextBat) + '% for ' + cName + '.' });
+                  } else if (window.Notification && Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(function (p) {
+                      if (p === 'granted') {
+                        new Notification('Vitals in the Void · Battery Proactive Alert', { body: 'Wearable battery reached ' + Math.round(nextBat) + '% for ' + cName + '.' });
+                      }
+                    });
+                  }
                 }
                 if (LIVE_BUF[cid].length >= 10) {
                   Services.flushStream(cid);
@@ -5507,12 +5523,27 @@
             if (!DB.settings.streamMeta) DB.settings.streamMeta = {};
             var next = Math.max(0, Math.min(100, Math.round(val * 100) / 100));
             DB.settings.battery[cid] = next;
-            if (!DB.settings.streamMeta[cid]) DB.settings.streamMeta[cid] = { samples: 0, lowAlerted: false };
-            if (next >= 15) DB.settings.streamMeta[cid].lowAlerted = false;
-            else if (!DB.settings.streamMeta[cid].lowAlerted) {
-              DB.settings.streamMeta[cid].lowAlerted = true;
-              var cw = getCrew(cid);
-              toast('Low wearable battery (' + Math.round(next) + '%) for ' + (cw ? cw.d.name : 'astronaut') + ' — recharge wearable!', 5200);
+            if (!DB.settings.streamMeta[cid]) DB.settings.streamMeta[cid] = { samples: 0, alert15: false, alert10: false };
+            var cw = getCrew(cid);
+            var cName = cw ? cw.d.name : 'astronaut';
+            if (next >= 15) {
+              DB.settings.streamMeta[cid].alert15 = false;
+              DB.settings.streamMeta[cid].alert10 = false;
+            } else if (next >= 10 && next < 15 && !DB.settings.streamMeta[cid].alert15) {
+              DB.settings.streamMeta[cid].alert15 = true;
+              toast('Low wearable battery (' + Math.round(next) + '%) for ' + cName + ' — recharge wearable!', 5200);
+            } else if (next < 10 && !DB.settings.streamMeta[cid].alert10) {
+              DB.settings.streamMeta[cid].alert10 = true;
+              toast('⚠️ PROACTIVE ALERT: Wearable battery at ' + Math.round(next) + '% for ' + cName + '! Recharge immediately.', 6500);
+              if (window.Notification && Notification.permission === 'granted') {
+                new Notification('Vitals in the Void · Battery Proactive Alert', { body: 'Wearable battery reached ' + Math.round(next) + '% for ' + cName + '.' });
+              } else if (window.Notification && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(function (p) {
+                  if (p === 'granted') {
+                    new Notification('Vitals in the Void · Battery Proactive Alert', { body: 'Wearable battery reached ' + Math.round(next) + '% for ' + cName + '.' });
+                  }
+                });
+              }
             }
             saveDB();
           }
@@ -7193,8 +7224,8 @@
             return {
               html: '<div class="grid split"><div class="card hi" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px"><div class="robot-avatar" id="astrobotFace" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#34c27a,#0a3b22);display:grid;place-items:center;box-shadow:0 0 30px rgba(52,194,122,0.35);position:relative;margin-bottom:16px"><div style="font-size:38px;transition:transform .2s" id="botEmoji">🤖</div><div class="robot-waves" style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(52,194,122,0.5);animation:spin 12s linear infinite"></div></div>' +
                 '<h2 id="botTitle">AstroBot Emergency Guide</h2>' +
-                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Speak or tap a scenario below.</p>' +
-                '<div class="row center" style="gap:10px;margin-top:16px"><button class="btn p" id="botMic">🎤 Speak to AstroBot</button><button class="btn" id="botMute">🔊 Voice: On</button></div>' +
+                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Speak, type, or tap a scenario below.</p>' +
+                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic">🎤 Speak</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend">Send</button><button class="btn" id="botMute" title="Mute / Unmute voice">🔊</button></div>' +
                 '<div class="waveform" style="display:flex;gap:4px;align-items:center;height:24px;margin-top:14px" id="botWave"><span></span><span></span><span></span><span></span><span></span></div>' +
                 '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>AstroBot:</b> Station systems nominal. I am standing by for emergency guidance.</p></div></div>' +
                 '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency to activate instant voice guidance and step-by-step protocols.</p><div class="stack gap8" style="margin-top:14px">' +
@@ -7204,7 +7235,7 @@
                 '<button class="sub row between" data-esc="cardiac" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Cardiac Arrhythmia / Faint</b><br><span class="xs t3">QTc &gt; 500 ms, palpitations or syncope</span></span><span class="btn sm warning">Medical</span></button>' +
                 '<button class="sub row between" data-esc="breathe" style="text-align:left"><span class="grow"><b>Calm Down &amp; Guided Breathing</b><br><span class="xs t3">Anxiety, panic or high stress protocol</span></span><span class="btn sm">Relax</span></button>' +
                 '</div></div>' +
-                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">You can say commands like:</p><ul class="acts t2" style="margin-top:8px"><li>“AstroBot, what do I do for decompression sickness?”</li><li>“Help, solar storm alert!”</li><li>“I feel dizzy and short of breath.”</li><li>“Guide me through breathing exercises.”</li></ul></div></div></div>',
+                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">If speech recognition is blocked or unsupported, you can type your question above or say commands like:</p><ul class="acts t2" style="margin-top:8px"><li>“What do I do for decompression sickness?”</li><li>“Help, solar storm alert!”</li><li>“I feel dizzy and short of breath.”</li><li>“Guide me through breathing exercises.”</li></ul></div></div></div>',
               bind: function () {
                 var speaking = true;
                 var synth = window.speechSynthesis;
@@ -7228,30 +7259,60 @@
                   } catch (e) {}
                 };
 
-                speak('Hello! I am AstroBot, your station emergency voice guide. Select an emergency scenario or speak a command whenever you need assistance.', '🤖');
+                speak('Hello! I am AstroBot, your station emergency voice guide. You can speak into your microphone, type your question below, or tap any emergency scenario.', '🤖');
+
+                var handleQuery = function (rawQ) {
+                  var q = (rawQ || '').toLowerCase().trim();
+                  if (!q) return;
+                  var log = $('#botLog');
+                  if (log) log.innerHTML += '<p style="margin-top:8px;color:var(--text3)"><b>You:</b> ' + esc(q) + '</p>';
+                  if (q.indexOf('decompression') >= 0 || q.indexOf('bends') >= 0 || q.indexOf('dcs') >= 0 || q.indexOf('joint pain') >= 0) {
+                    speak('Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.', '🚨');
+                  } else if (q.indexOf('solar') >= 0 || q.indexOf('radiation') >= 0 || q.indexOf('storm') >= 0 || q.indexOf('spe') >= 0) {
+                    speak('Solar particle event warning! Radiation dose rate spike detected. Move to the storm shelter and protected crew quarters immediately. Put on your personal dosimeter and await further ground instructions.', '☢️');
+                  } else if (q.indexOf('hypox') >= 0 || q.indexOf('oxygen') >= 0 || q.indexOf('breath') >= 0 && q.indexOf('short') >= 0 || q.indexOf('co2') >= 0) {
+                    speak('Hypoxia or suit hazard alert! Oxygen saturation below normal or suit carbon dioxide elevated. Check your regulator, re-seat the mask, and notify the commander at once.', '⚠️');
+                  } else if (q.indexOf('cardiac') >= 0 || q.indexOf('heart') >= 0 || q.indexOf('faint') >= 0 || q.indexOf('dizzy') >= 0 || q.indexOf('palpitat') >= 0) {
+                    speak('Cardiac alert! Heart rate or QTc irregularity detected. Stop all activity immediately, sit down, take slow breaths, and contact medical.', '❤️');
+                  } else if (q.indexOf('breathe') >= 0 || q.indexOf('calm') >= 0 || q.indexOf('stress') >= 0 || q.indexOf('panic') >= 0 || q.indexOf('anxiety') >= 0) {
+                    speak('Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.', '🧘');
+                  } else {
+                    speak('I received: "' + rawQ + '". For safety, please check the emergency scenario protocol cards on the right or contact the Crew Medical Officer.', '🤖');
+                  }
+                };
 
                 $$('[data-esc]').forEach(function (b) {
                   b.onclick = function () {
                     var t = b.dataset.esc;
-                    if (t === 'dcs') {
-                      speak('Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.', '🚨');
-                    } else if (t === 'spe') {
-                      speak('Solar particle event warning! Radiation dose rate spike detected. Move to the storm shelter and protected crew quarters immediately. Put on your personal dosimeter and await further ground instructions.', '☢️');
-                    } else if (t === 'hypox') {
-                      speak('Hypoxia or suit hazard alert! Oxygen saturation below normal or suit carbon dioxide elevated. Check your regulator, re-seat the mask, and notify the commander at once.', '⚠️');
-                    } else if (t === 'cardiac') {
-                      speak('Cardiac alert! Heart rate or QTc irregularity detected. Stop all activity immediately, sit down, take slow breaths, and contact medical.', '❤️');
-                    } else if (t === 'breathe') {
-                      speak('Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.', '🧘');
-                    }
+                    if (t === 'dcs') handleQuery('decompression sickness');
+                    else if (t === 'spe') handleQuery('solar particle event');
+                    else if (t === 'hypox') handleQuery('hypoxia');
+                    else if (t === 'cardiac') handleQuery('cardiac');
+                    else if (t === 'breathe') handleQuery('breathe');
                   };
                 });
+
+                var promptIn = $('#botPrompt'), sendBtn = $('#botSend');
+                if (sendBtn && promptIn) {
+                  sendBtn.onclick = function () {
+                    var val = promptIn.value;
+                    promptIn.value = '';
+                    handleQuery(val);
+                  };
+                  promptIn.onkeydown = function (e) {
+                    if (e.key === 'Enter') {
+                      var val = promptIn.value;
+                      promptIn.value = '';
+                      handleQuery(val);
+                    }
+                  };
+                }
 
                 var mb = $('#botMute');
                 if (mb) {
                   mb.onclick = function () {
                     speaking = !speaking;
-                    mb.textContent = speaking ? '🔊 Voice: On' : '🔇 Voice: Muted';
+                    mb.textContent = speaking ? '🔊' : '🔇';
                     if (!speaking && synth) synth.cancel();
                     toast(speaking ? 'AstroBot voice enabled' : 'AstroBot voice muted');
                   };
@@ -7262,8 +7323,8 @@
                   mic.onclick = function () {
                     var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
                     if (!Rec) {
-                      toast('Speech recognition not supported in this browser. Use the emergency buttons above.');
-                      speak('Speech recognition is not available in your browser, but I am ready to guide you using the emergency buttons.', '🤖');
+                      toast('Speech recognition not supported in this browser. Please type your query in the text box below.');
+                      speak('Speech recognition is not available in your browser sandbox, but you can type any emergency question in the text box below or click the scenario buttons.', '🤖');
                       return;
                     }
                     try {
@@ -7273,30 +7334,21 @@
                       speak('Listening for your emergency command...', '👂');
                       rec.onresult = function (e) {
                         var q = (e.results[0][0].transcript || '').toLowerCase();
-                        mic.textContent = '🎤 Speak to AstroBot';
-                        var log = $('#botLog');
-                        if (log) log.innerHTML += '<p style="margin-top:8px;color:var(--text3)"><b>You:</b> ' + esc(q) + '</p>';
-                        if (q.indexOf('decompression') >= 0 || q.indexOf('bends') >= 0 || q.indexOf('dcs') >= 0) {
-                          speak('Decompression sickness protocol activated. Put on oxygen and repressurize!', '🚨');
-                        } else if (q.indexOf('solar') >= 0 || q.indexOf('radiation') >= 0 || q.indexOf('storm') >= 0) {
-                          speak('Solar particle event protocol. Move to storm shelter immediately.', '☢️');
-                        } else if (q.indexOf('breathe') >= 0 || q.indexOf('calm') >= 0 || q.indexOf('stress') >= 0) {
-                          speak('Relax. Inhale deeply for four seconds, hold, and exhale.', '🧘');
-                        } else {
-                          speak('I heard: ' + q + '. For safety, please consult the emergency scenario buttons or contact the Crew Medical Officer.', '🤖');
-                        }
+                        mic.textContent = '🎤 Speak';
+                        handleQuery(q);
                       };
-                      rec.onerror = function () {
-                        mic.textContent = '🎤 Speak to AstroBot';
-                        toast('Speech recognition error or timed out.');
+                      rec.onerror = function (err) {
+                        mic.textContent = '🎤 Speak';
+                        toast('Microphone input note: ' + (err.error || 'speech not recognized') + '. You can type your query in the text box below.');
+                        speak('I could not pick up your voice clearly. Browser microphone permissions or sandbox settings may be restricted. Please type your question in the text box or tap the emergency buttons.', '🤖');
                       };
                       rec.onend = function () {
-                        mic.textContent = '🎤 Speak to AstroBot';
+                        mic.textContent = '🎤 Speak';
                       };
                       rec.start();
                     } catch (e) {
-                      mic.textContent = '🎤 Speak to AstroBot';
-                      toast('Could not start speech recognition.');
+                      mic.textContent = '🎤 Speak';
+                      toast('Could not start speech recognition. Please type your query below.');
                     }
                   };
                 }
