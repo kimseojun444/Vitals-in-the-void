@@ -1589,9 +1589,20 @@
       .g-canvas{border-radius:16px;border:1px solid var(--line2);background:rgba(6,10,12,0.82);max-width:100%;height:auto;display:block}
       @keyframes spin{to{transform:rotate(360deg)}}
       @keyframes wave-idle{0%,100%{height:6px;opacity:.45}50%{height:12px;opacity:.75}}
-      .waveform span{width:4px;height:6px;border-radius:999px;background:rgba(121,220,232,0.55);transition:height .1s ease,background .2s ease}
-      .waveform.recording span{background:var(--bad)}
-      .waveform.awake span{background:#34c27a}
+      .tars-meter{width:100%;margin-top:14px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,0.28);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px;transition:border-color .2s ease,box-shadow .2s ease}
+      .tars-meter.listening{border-color:rgba(121,220,232,0.45)}
+      .tars-meter.recording{border-color:rgba(239,91,91,0.65);box-shadow:0 0 18px rgba(239,91,91,0.18)}
+      .tars-meter.awake{border-color:rgba(52,194,122,0.65);box-shadow:0 0 18px rgba(52,194,122,0.18)}
+      .tars-meter-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--text3)}
+      .tars-meter-status{display:inline-flex;align-items:center;gap:6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
+      .tars-meter-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.3);transition:background .2s ease,box-shadow .2s ease}
+      .tars-meter.listening .tars-meter-dot{background:#79dce8;box-shadow:0 0 8px #79dce8}
+      .tars-meter.recording .tars-meter-dot{background:var(--bad);box-shadow:0 0 8px var(--bad);animation:ping 1.2s infinite}
+      .tars-meter.awake .tars-meter-dot{background:#34c27a;box-shadow:0 0 8px #34c27a}
+      #botWaveCanvas{width:100%;height:48px;display:block;border-radius:8px;background:rgba(255,255,255,0.025)}
+      .tars-vol-track{position:relative;height:6px;width:100%;border-radius:999px;background:rgba(255,255,255,0.09);overflow:hidden}
+      .tars-vol-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#34c27a 0%,#79dce8 55%,#f5b941 82%,#ef5b5b 100%);transition:width 60ms linear}
+      .tars-vol-peak{position:absolute;top:0;bottom:0;left:0%;width:2px;background:#fff;opacity:.75;border-radius:2px;transition:left 80ms linear}
       #botMic.recording{background:var(--bad);border-color:var(--bad);color:#fff;animation:ping 1.4s infinite}
       #botWake.wake-on{border-color:rgba(121,220,232,0.65);background:rgba(121,220,232,0.16);color:#d8f8ff}
       #botWake.wake-active{border-color:#34c27a;background:rgba(52,194,122,0.24);color:#d7ffe9;box-shadow:0 0 18px rgba(52,194,122,0.35)}
@@ -5287,7 +5298,7 @@
               reader.readAsDataURL(blob);
             });
           }
-          async function startVoiceCapture(onLevel) {
+          async function startVoiceCapture(onLevel, onAnalyser) {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
               throw new Error('Microphone capture is not supported in this browser.');
             }
@@ -5302,6 +5313,7 @@
             var AC = window.AudioContext || window.webkitAudioContext;
             var audioCtx = null;
             var source = null;
+            var analyser = null;
             var processor = null;
             var sink = null;
             var pcmChunks = [];
@@ -5316,6 +5328,11 @@
                 }
                 sampleRate = audioCtx.sampleRate || 48000;
                 source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.72;
+                source.connect(analyser);
+                if (onAnalyser) onAnalyser(analyser);
                 processor = audioCtx.createScriptProcessor(4096, 1, 1);
                 sink = audioCtx.createGain();
                 sink.gain.value = 0;
@@ -5359,8 +5376,10 @@
 
             var stopped = false;
             var cleanup = function () {
+              if (onAnalyser) { try { onAnalyser(null); } catch (e) {} }
               if (processor) { try { processor.disconnect(); } catch (e) {} processor = null; }
               if (sink) { try { sink.disconnect(); } catch (e) {} sink = null; }
+              if (analyser) { try { analyser.disconnect(); } catch (e) {} analyser = null; }
               if (source) { try { source.disconnect(); } catch (e) {} source = null; }
               if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
               if (stream) { try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {} stream = null; }
@@ -5370,21 +5389,15 @@
               stop: async function () {
                 if (stopped) return null;
                 stopped = true;
-                if (recorder && recorder.state !== 'inactive') {
-                  await new Promise(function (resolve) {
-                    var done = false;
-                    var finish = function () { if (!done) { done = true; resolve(); } };
-                    recorder.onstop = finish;
-                    try { recorder.stop(); } catch (e) { finish(); }
-                    setTimeout(finish, 400);
-                  });
-                }
                 var totalLen = 0;
                 for (var i = 0; i < pcmChunks.length; i++) totalLen += pcmChunks[i].length;
                 var recMime = (recorder && recorder.mimeType) || chosenMime || 'audio/webm';
-                cleanup();
 
                 if (totalLen > 0) {
+                  if (recorder && recorder.state !== 'inactive') {
+                    try { recorder.stop(); } catch (e) {}
+                  }
+                  cleanup();
                   var merged = new Float32Array(totalLen);
                   var off = 0;
                   for (var j = 0; j < pcmChunks.length; j++) {
@@ -5398,6 +5411,17 @@
                     durationSec: totalLen / sampleRate
                   };
                 }
+
+                if (recorder && recorder.state !== 'inactive') {
+                  await new Promise(function (resolve) {
+                    var done = false;
+                    var finish = function () { if (!done) { done = true; resolve(); } };
+                    recorder.onstop = finish;
+                    try { recorder.stop(); } catch (e) { finish(); }
+                    setTimeout(finish, 250);
+                  });
+                }
+                cleanup();
 
                 var fallbackBlob = new Blob(recChunks, { type: recMime });
                 return {
@@ -7560,7 +7584,7 @@
                 '<h2 id="botTitle">TARS Emergency Guide</h2>' +
                 '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Enable <b>Hey TARS</b> to call out hands-free, or tap <b>Speak</b>.</p>' +
                 '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><button class="btn" id="botWake" type="button" title="Hands-free Hey TARS wake word listening">🎧 Hey TARS: Off</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;min-width:160px;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
-                '<div class="waveform" style="display:flex;gap:4px;align-items:center;height:24px;margin-top:14px" id="botWave"><span></span><span></span><span></span><span></span><span></span></div>' +
+                '<div class="tars-meter" id="botMeter" aria-label="Microphone audio waveform and volume meter"><div class="tars-meter-top"><span class="tars-meter-status"><i class="tars-meter-dot" id="botMeterDot"></i><span id="botMeterState">Mic Idle</span></span><span class="mono" id="botMeterDb">Input: —</span></div><canvas id="botWaveCanvas" height="48"></canvas><div class="tars-vol-track"><div class="tars-vol-fill" id="botVolFill"></div><div class="tars-vol-peak" id="botVolPeak"></div></div></div>' +
                 '<div class="tars-transcript is-visible" id="botTranscriptBox" aria-live="polite"><strong>Standby:</strong> Tap <b>🎧 Hey TARS: Off</b> to listen hands-free, or tap <b>🎤 Speak</b>.</div>' +
                 '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>TARS:</b> Station systems nominal. Say "Hey TARS" (with hands-free enabled), "TARS code red", or type below.</p></div></div>' +
                 '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency to activate instant guidance and step-by-step protocols.</p><div class="stack gap8" style="margin-top:14px">' +
@@ -7701,16 +7725,36 @@
                   markTtsActive(false);
                 };
 
-                var playGeminiTtsFallback = async function (text) {
-                  try {
-                    var resp = await fetch('/api/tars/speak', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ text: text })
+                var ttsAudioCache = {};
+                var browserTtsUnavailable = false;
+                try {
+                  if (synth && typeof synth.addEventListener === 'function') {
+                    synth.addEventListener('voiceschanged', function () {
+                      try {
+                        var v = synth.getVoices ? synth.getVoices() : [];
+                        if (v && v.length > 0) browserTtsUnavailable = false;
+                      } catch (e) {}
                     });
-                    if (!resp.ok) { markTtsActive(false); return; }
-                    var data = await resp.json().catch(function () { return {}; });
-                    if (!data.audioBase64) { markTtsActive(false); return; }
+                  }
+                } catch (e) {}
+
+                var playGeminiTtsFallback = async function (text) {
+                  var key = (text || '').trim().slice(0, 600);
+                  try {
+                    var data = ttsAudioCache[key];
+                    if (!data) {
+                      var resp = await fetch('/api/tars/speak', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: key })
+                      });
+                      if (!resp.ok) { markTtsActive(false); return; }
+                      data = await resp.json().catch(function () { return {}; });
+                      if (data && data.audioBase64) {
+                        ttsAudioCache[key] = data;
+                      }
+                    }
+                    if (!data || !data.audioBase64) { markTtsActive(false); return; }
                     var audio = new Audio('data:' + (data.mimeType || 'audio/wav') + ';base64,' + data.audioBase64);
                     activeAudioEl = audio;
                     audio.onended = function () {
@@ -7740,29 +7784,28 @@
                   }
                   if (allowVoice !== true || !speaking) return;
 
-                  var estMs = Math.min(18000, Math.max(4000, text.length * 85));
-                  if (synth) {
+                  var estMs = Math.min(18000, Math.max(3500, text.length * 80));
+                  if (synth && !browserTtsUnavailable) {
                     try {
                       synth.cancel();
                       if (synth.resume) synth.resume();
                       var voices = synth.getVoices ? synth.getVoices() : [];
-                      if (voices && voices.length === 0) {
-                        playGeminiTtsFallback(text);
-                        return;
-                      }
                       var utter = new SpeechSynthesisUtterance(text);
-                      utter.rate = 1.04;
+                      utter.rate = 1.08;
                       utter.pitch = 1.02;
                       window.__tarsUtter = utter;
                       var started = false;
+                      var waitLimitMs = (voices && voices.length > 0) ? 240 : 180;
                       var fallbackTimer = setTimeout(function () {
                         if (!started && !synth.speaking) {
+                          browserTtsUnavailable = true;
                           try { synth.cancel(); } catch (e) {}
                           playGeminiTtsFallback(text);
                         }
-                      }, 550);
+                      }, waitLimitMs);
                       utter.onstart = function () {
                         started = true;
+                        browserTtsUnavailable = false;
                         clearTimeout(fallbackTimer);
                         markTtsActive(true, estMs);
                       };
@@ -7774,6 +7817,7 @@
                       utter.onerror = function () {
                         clearTimeout(fallbackTimer);
                         if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                        browserTtsUnavailable = true;
                         playGeminiTtsFallback(text);
                       };
                       markTtsActive(true, estMs);
@@ -7946,10 +7990,28 @@
                 var mic = $('#botMic');
                 var wakeBtn = $('#botWake');
                 var face = $('#astrobotFace');
-                var wave = $('#botWave');
+                var meterBox = $('#botMeter');
+                var meterStateEl = $('#botMeterState');
+                var meterDbEl = $('#botMeterDb');
+                var waveCanvas = $('#botWaveCanvas');
+                var volFillEl = $('#botVolFill');
+                var volPeakEl = $('#botVolPeak');
                 var transcriptBox = $('#botTranscriptBox');
                 var activeCapture = null;
                 var wakeState = { enabled: false, stop: null, paused: false };
+
+                var meterState = {
+                  alive: true,
+                  rafId: 0,
+                  mode: 'idle',
+                  analyser: null,
+                  timeBuf: null,
+                  freqBuf: null,
+                  manualLevel: 0,
+                  smoothLevel: 0,
+                  peakHold: 0,
+                  peakHoldAt: 0
+                };
 
                 var setTranscriptStatus = function (label, text) {
                   if (!transcriptBox) return;
@@ -7957,24 +8019,165 @@
                   transcriptBox.innerHTML = '<strong>' + esc(label) + '</strong> ' + esc(text);
                 };
 
+                var setMeterMode = function (mode, label) {
+                  meterState.mode = mode || 'idle';
+                  if (meterBox) {
+                    meterBox.classList.remove('recording', 'awake', 'listening');
+                    if (meterState.mode !== 'idle') meterBox.classList.add(meterState.mode);
+                  }
+                  if (meterStateEl) {
+                    if (label) meterStateEl.textContent = label;
+                    else if (meterState.mode === 'recording') meterStateEl.textContent = 'Recording';
+                    else if (meterState.mode === 'awake') meterStateEl.textContent = 'TARS Awake';
+                    else if (meterState.mode === 'listening') meterStateEl.textContent = 'Listening';
+                    else meterStateEl.textContent = 'Mic Idle';
+                  }
+                };
+
+                var setMeterAnalyser = function (analyser, mode, label) {
+                  meterState.analyser = analyser || null;
+                  if (analyser) {
+                    meterState.timeBuf = new Uint8Array(analyser.fftSize);
+                    meterState.freqBuf = new Uint8Array(analyser.frequencyBinCount);
+                  } else {
+                    meterState.timeBuf = null;
+                    meterState.freqBuf = null;
+                  }
+                  if (mode) setMeterMode(mode, label);
+                };
+
                 var resetWave = function () {
-                  if (wave) {
-                    wave.classList.remove('recording', 'awake');
-                    wave.querySelectorAll('span').forEach(function (sp) { sp.style.height = '6px'; });
+                  meterState.manualLevel = 0;
+                  if (!activeCapture && !meterState.analyser) {
+                    if (wakeState.enabled) {
+                      setMeterMode(Date.now() < followUpUntil ? 'awake' : 'listening');
+                    } else {
+                      setMeterMode('idle');
+                    }
                   }
                 };
 
                 var updateWave = function (level, modeClass) {
-                  if (!wave) return;
-                  wave.classList.remove('recording', 'awake');
-                  wave.classList.add(modeClass || 'recording');
-                  var bars = wave.querySelectorAll('span');
-                  var norm = Math.min(1, Math.sqrt(Math.max(0, level)) * 3.2);
-                  for (var i = 0; i < bars.length; i++) {
-                    var scale = i === 2 ? 1 : (i === 1 || i === 3 ? 0.78 : 0.55);
-                    bars[i].style.height = Math.round(6 + norm * 18 * scale) + 'px';
-                  }
+                  var norm = Math.min(1, Math.sqrt(Math.max(0, level)) * 3.0);
+                  if (norm > meterState.manualLevel) meterState.manualLevel = norm;
+                  if (modeClass) setMeterMode(modeClass);
                 };
+
+                (function startMeterRenderLoop() {
+                  var drawMeter = function () {
+                    if (!meterState.alive || location.hash !== '#emergency') return;
+                    meterState.rafId = requestAnimationFrame(drawMeter);
+
+                    var instant = 0;
+                    var hasSignal = false;
+                    if (meterState.analyser && meterState.timeBuf && meterState.freqBuf) {
+                      hasSignal = true;
+                      meterState.analyser.getByteTimeDomainData(meterState.timeBuf);
+                      meterState.analyser.getByteFrequencyData(meterState.freqBuf);
+                      var sumSq = 0;
+                      for (var i = 0; i < meterState.timeBuf.length; i++) {
+                        var s = (meterState.timeBuf[i] - 128) / 128;
+                        sumSq += s * s;
+                      }
+                      var rms = Math.sqrt(sumSq / meterState.timeBuf.length);
+                      instant = Math.min(1, Math.sqrt(rms) * 2.5);
+                    } else {
+                      instant = meterState.manualLevel;
+                      meterState.manualLevel *= 0.88;
+                    }
+
+                    meterState.smoothLevel = meterState.smoothLevel * 0.65 + instant * 0.35;
+                    var now = Date.now();
+                    if (meterState.smoothLevel >= meterState.peakHold || now - meterState.peakHoldAt > 900) {
+                      meterState.peakHold = meterState.smoothLevel;
+                      meterState.peakHoldAt = now;
+                    } else {
+                      meterState.peakHold = Math.max(meterState.smoothLevel, meterState.peakHold * 0.985);
+                    }
+
+                    var pct = Math.round(meterState.smoothLevel * 100);
+                    var peakPct = Math.round(meterState.peakHold * 100);
+                    if (volFillEl) volFillEl.style.width = pct + '%';
+                    if (volPeakEl) volPeakEl.style.left = Math.min(99, peakPct) + '%';
+                    if (meterDbEl) {
+                      if (meterState.mode === 'idle' && !hasSignal) {
+                        meterDbEl.textContent = 'Input: —';
+                      } else if (hasSignal || meterState.smoothLevel > 0.01) {
+                        var db = meterState.smoothLevel > 0.001 ? Math.max(-60, Math.round(20 * Math.log10(meterState.smoothLevel))) : -60;
+                        meterDbEl.textContent = (db <= -58 ? 'Quiet' : (db + ' dB')) + ' · ' + pct + '%';
+                      } else {
+                        meterDbEl.textContent = meterState.mode === 'awake' ? 'Ready' : 'Standby';
+                      }
+                    }
+
+                    if (waveCanvas && waveCanvas.getContext) {
+                      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+                      var cw = waveCanvas.clientWidth || 320;
+                      var ch = waveCanvas.clientHeight || 48;
+                      if (waveCanvas.width !== Math.floor(cw * dpr) || waveCanvas.height !== Math.floor(ch * dpr)) {
+                        waveCanvas.width = Math.max(1, Math.floor(cw * dpr));
+                        waveCanvas.height = Math.max(1, Math.floor(ch * dpr));
+                      }
+                      var ctx = waveCanvas.getContext('2d');
+                      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                      ctx.clearRect(0, 0, cw, ch);
+
+                      var mid = ch / 2;
+                      var accent = meterState.mode === 'recording'
+                        ? '#ef5b5b'
+                        : (meterState.mode === 'awake' ? '#34c27a' : (meterState.mode === 'listening' ? '#79dce8' : 'rgba(121,220,232,0.45)'));
+
+                      // Center baseline
+                      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                      ctx.lineWidth = 1;
+                      ctx.beginPath();
+                      ctx.moveTo(0, mid);
+                      ctx.lineTo(cw, mid);
+                      ctx.stroke();
+
+                      // Mirrored spectrum bars
+                      var barCount = 36;
+                      var slot = cw / barCount;
+                      var barW = Math.max(2, slot * 0.52);
+                      ctx.fillStyle = accent;
+                      for (var b = 0; b < barCount; b++) {
+                        var mag = 0.06;
+                        if (hasSignal && meterState.freqBuf) {
+                          var binIdx = Math.min(meterState.freqBuf.length - 1, Math.floor((b / barCount) * (meterState.freqBuf.length * 0.65)));
+                          mag = Math.max(0.06, meterState.freqBuf[binIdx] / 255);
+                        } else if (meterState.smoothLevel > 0.01) {
+                          var waveEnv = Math.sin((now * 0.008) + b * 0.45) * 0.5 + 0.5;
+                          mag = Math.max(0.06, meterState.smoothLevel * (0.45 + 0.55 * waveEnv));
+                        } else if (meterState.mode === 'listening' || meterState.mode === 'awake') {
+                          mag = 0.08 + 0.05 * Math.sin(now * 0.004 + b * 0.35);
+                        }
+                        var barH = Math.max(3, mag * (ch - 10));
+                        var bx = b * slot + (slot - barW) / 2;
+                        ctx.globalAlpha = 0.25 + mag * 0.6;
+                        ctx.fillRect(bx, mid - barH / 2, barW, barH);
+                      }
+
+                      // Live time-domain oscilloscope trace
+                      if (hasSignal && meterState.timeBuf) {
+                        ctx.globalAlpha = 0.92;
+                        ctx.strokeStyle = meterState.mode === 'recording' ? '#ffd5d5' : '#e4fbff';
+                        ctx.lineWidth = 1.6;
+                        ctx.beginPath();
+                        var len = meterState.timeBuf.length;
+                        for (var x = 0; x < len; x++) {
+                          var px = (x / (len - 1)) * cw;
+                          var v = (meterState.timeBuf[x] - 128) / 128;
+                          var py = mid + v * (ch * 0.44);
+                          if (x === 0) ctx.moveTo(px, py);
+                          else ctx.lineTo(px, py);
+                        }
+                        ctx.stroke();
+                      }
+                      ctx.globalAlpha = 1;
+                    }
+                  };
+                  meterState.rafId = requestAnimationFrame(drawMeter);
+                })();
 
                 var syncWakeUI = function () {
                   var awakeNow = Date.now() < followUpUntil;
@@ -7986,6 +8189,11 @@
                     else if (awakeNow) wakeBtn.textContent = '✨ TARS Awake';
                     else wakeBtn.textContent = '🎧 Hey TARS: On';
                   }
+                  if (!activeCapture) {
+                    if (!wakeState.enabled) setMeterMode('idle');
+                    else if (awakeNow) setMeterMode('awake');
+                    else setMeterMode('listening');
+                  }
                 };
 
                 var stopWakeListener = function () {
@@ -7995,6 +8203,7 @@
                     try { wakeState.stop(); } catch (e) {}
                     wakeState.stop = null;
                   }
+                  if (!activeCapture) setMeterAnalyser(null, 'idle');
                   resetWave();
                   syncWakeUI();
                 };
@@ -8043,11 +8252,16 @@
                   }
                   var sampleRate = audioCtx.sampleRate || 48000;
                   var source = audioCtx.createMediaStreamSource(stream);
+                  var analyser = audioCtx.createAnalyser();
+                  analyser.fftSize = 256;
+                  analyser.smoothingTimeConstant = 0.72;
+                  source.connect(analyser);
+                  setMeterAnalyser(analyser, 'listening');
                   var processor = audioCtx.createScriptProcessor(2048, 1, 1);
                   var sink = audioCtx.createGain();
                   sink.gain.value = 0;
 
-                  var preRollMaxBlocks = Math.max(5, Math.ceil((0.6 * sampleRate) / 2048));
+                  var preRollMaxBlocks = Math.max(3, Math.ceil((0.38 * sampleRate) / 2048));
                   var preRoll = [];
                   var utteranceChunks = [];
                   var utteranceSamples = 0;
@@ -8228,7 +8442,7 @@
                       if (rms >= holdThresh) lastSpeechAt = now;
                       updateWave(rms, Date.now() < followUpUntil ? 'awake' : 'recording');
 
-                      if (now - lastSpeechAt >= 650 || now - captureStartedAt >= 6500) {
+                      if (now - lastSpeechAt >= 360 || now - captureStartedAt >= 5500) {
                         var doneChunks = utteranceChunks;
                         var doneSamples = utteranceSamples;
                         var donePeak = utterancePeak;
@@ -8261,8 +8475,10 @@
                     clearInterval(uiTimer);
                     window.removeEventListener('pointerdown', unlockAudio);
                     window.removeEventListener('keydown', unlockAudio);
+                    if (meterState.analyser === analyser) setMeterAnalyser(null);
                     try { processor.disconnect(); } catch (e) {}
                     try { sink.disconnect(); } catch (e) {}
+                    try { analyser.disconnect(); } catch (e) {}
                     try { source.disconnect(); } catch (e) {}
                     try { audioCtx.close(); } catch (e) {}
                     try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
@@ -8289,6 +8505,8 @@
                     var startedOnce = false;
                     var chimedIndex = -1;
                     var handledIndex = -1;
+                    var settledInterimText = {};
+                    var interimCommitTimer = 0;
                     var restartTimer = 0;
                     var uiTimer = 0;
 
@@ -8305,17 +8523,64 @@
                       restartTimer = setTimeout(function () {
                         if (!alive || !wakeState.enabled || location.hash !== '#emergency') return;
                         if (wakeState.paused || isTarsSpeaking || Date.now() < ttsMuteUntil) {
-                          scheduleRestart(220);
+                          scheduleRestart(180);
                           return;
                         }
                         try {
                           chimedIndex = -1;
                           handledIndex = -1;
+                          settledInterimText = {};
                           rec.start();
                         } catch (e) {
-                          scheduleRestart(350);
+                          scheduleRestart(280);
                         }
-                      }, delayMs || 160);
+                      }, delayMs || 120);
+                    };
+
+                    var commitTranscript = function (idx, matchedTranscript, matchedParsed, isWakeChimed) {
+                      clearTimeout(interimCommitTimer);
+                      if (idx <= handledIndex) return;
+                      handledIndex = idx;
+                      resetWave();
+                      if (!matchedTranscript) return;
+
+                      if (matchedParsed.woke) {
+                        if (!isWakeChimed) playWakeChime();
+                        followUpUntil = Date.now() + 14000;
+                        syncWakeUI();
+                        setTranscriptStatus('Hey TARS:', matchedTranscript);
+                        if (matchedParsed.command) {
+                          handleQuery(matchedParsed.command, 'You (Hey TARS)', true, {
+                            mode: 'Hey TARS',
+                            fullTranscript: matchedTranscript
+                          });
+                        } else {
+                          var emEl = $('#botEmoji');
+                          if (emEl) emEl.textContent = '👂';
+                          var wakeReply = "Yes? I'm listening.";
+                          speak(wakeReply, '👂', true);
+                          var activeCrewWake = cur();
+                          appendVoiceLog({
+                            crew: activeCrewWake ? activeCrewWake.d.name : '',
+                            day: activeCrewWake ? Math.floor(activeCrewWake.day()) : null,
+                            mode: 'Hey TARS',
+                            transcript: matchedTranscript,
+                            reply: wakeReply,
+                            emoji: '👂',
+                            severity: 'normal'
+                          });
+                        }
+                      } else if (Date.now() < followUpUntil) {
+                        followUpUntil = Date.now() + 14000;
+                        syncWakeUI();
+                        setTranscriptStatus('Transcribed:', matchedTranscript);
+                        handleQuery(matchedTranscript, 'You (voice)', true, {
+                          mode: 'Follow-up',
+                          fullTranscript: matchedTranscript
+                        });
+                      } else {
+                        setTranscriptStatus('Standby:', 'Heard "' + matchedTranscript + '" — say "Hey TARS" to wake.');
+                      }
                     };
 
                     rec.onstart = function () {
@@ -8324,6 +8589,7 @@
                         wakeState.enabled = true;
                         wakeState.stop = function () {
                           alive = false;
+                          clearTimeout(interimCommitTimer);
                           clearTimeout(restartTimer);
                           clearInterval(uiTimer);
                           try { rec.abort(); } catch (e) {}
@@ -8337,7 +8603,7 @@
                             try { rec.abort(); } catch (e) {}
                           }
                           syncWakeUI();
-                        }, 300);
+                        }, 260);
                         syncWakeUI();
                         setTranscriptStatus('Hey TARS active:', 'Listening hands-free — say "Hey TARS" anytime.');
                         finishStartup(true);
@@ -8367,10 +8633,12 @@
 
                         if (!result.isFinal) {
                           if (matchedTranscript) {
-                            updateWave(0.14, (matchedParsed.woke || Date.now() < followUpUntil) ? 'awake' : 'recording');
+                            updateWave(0.16, (matchedParsed.woke || Date.now() < followUpUntil) ? 'awake' : 'recording');
                           }
-                          if (matchedParsed.woke && chimedIndex !== i) {
+                          var wasChimed = chimedIndex === i;
+                          if (matchedParsed.woke && !wasChimed) {
                             chimedIndex = i;
+                            wasChimed = true;
                             playWakeChime();
                             followUpUntil = Date.now() + 14000;
                             syncWakeUI();
@@ -8378,50 +8646,24 @@
                           } else if (Date.now() < followUpUntil && matchedTranscript) {
                             setTranscriptStatus('Listening:', matchedTranscript + ' …');
                           }
+
+                          // Instant interim settlement: execute after a brief 260ms pause instead of waiting ~1.5s for isFinal
+                          if (matchedTranscript && (matchedParsed.woke || Date.now() < followUpUntil)) {
+                            if (settledInterimText[i] !== matchedTranscript) {
+                              settledInterimText[i] = matchedTranscript;
+                              clearTimeout(interimCommitTimer);
+                              (function (idxCopy, txCopy, parsedCopy, chimedCopy) {
+                                interimCommitTimer = setTimeout(function () {
+                                  if (!alive || wakeState.paused || isTarsSpeaking || idxCopy <= handledIndex) return;
+                                  commitTranscript(idxCopy, txCopy, parsedCopy, chimedCopy);
+                                }, 260);
+                              })(i, matchedTranscript, matchedParsed, wasChimed);
+                            }
+                          }
                           continue;
                         }
 
-                        handledIndex = i;
-                        resetWave();
-                        if (!matchedTranscript) continue;
-
-                        if (matchedParsed.woke) {
-                          if (chimedIndex !== i) playWakeChime();
-                          followUpUntil = Date.now() + 14000;
-                          syncWakeUI();
-                          setTranscriptStatus('Hey TARS:', matchedTranscript);
-                          if (matchedParsed.command) {
-                            handleQuery(matchedParsed.command, 'You (Hey TARS)', true, {
-                              mode: 'Hey TARS',
-                              fullTranscript: matchedTranscript
-                            });
-                          } else {
-                            var emEl = $('#botEmoji');
-                            if (emEl) emEl.textContent = '👂';
-                            var wakeReply = "Yes? I'm listening.";
-                            speak(wakeReply, '👂', true);
-                            var activeCrewWake = cur();
-                            appendVoiceLog({
-                              crew: activeCrewWake ? activeCrewWake.d.name : '',
-                              day: activeCrewWake ? Math.floor(activeCrewWake.day()) : null,
-                              mode: 'Hey TARS',
-                              transcript: matchedTranscript,
-                              reply: wakeReply,
-                              emoji: '👂',
-                              severity: 'normal'
-                            });
-                          }
-                        } else if (Date.now() < followUpUntil) {
-                          followUpUntil = Date.now() + 14000;
-                          syncWakeUI();
-                          setTranscriptStatus('Transcribed:', matchedTranscript);
-                          handleQuery(matchedTranscript, 'You (voice)', true, {
-                            mode: 'Follow-up',
-                            fullTranscript: matchedTranscript
-                          });
-                        } else {
-                          setTranscriptStatus('Standby:', 'Heard "' + matchedTranscript + '" — say "Hey TARS" to wake.');
-                        }
+                        commitTranscript(i, matchedTranscript, matchedParsed, chimedIndex === i);
                       }
                     };
 
@@ -8446,9 +8688,10 @@
                     };
 
                     rec.onend = function () {
+                      clearTimeout(interimCommitTimer);
                       resetWave();
                       if (alive && wakeState.enabled && location.hash === '#emergency') {
-                        scheduleRestart(160);
+                        scheduleRestart(120);
                       }
                     };
 
@@ -8515,8 +8758,23 @@
                 } catch (e) {}
 
                 if (mic) {
+                  var micSession = null;
+                  var cleanupMicSession = function () {
+                    if (!micSession) return;
+                    clearTimeout(micSession.settleTimer);
+                    if (micSession.rec) {
+                      try { micSession.rec.abort(); } catch (e) {}
+                      micSession.rec = null;
+                    }
+                    micSession = null;
+                  };
+
                   window.addEventListener('hashchange', function onLeaveEmergency() {
                     if (location.hash !== '#emergency') {
+                      meterState.alive = false;
+                      if (meterState.rafId) cancelAnimationFrame(meterState.rafId);
+                      setMeterAnalyser(null, 'idle');
+                      cleanupMicSession();
                       if (activeCapture) {
                         activeCapture.cancel();
                         activeCapture = null;
@@ -8528,43 +8786,80 @@
                     }
                   });
 
-                  mic.onclick = async function () {
-                    if (activeCapture) {
-                      var capToStop = activeCapture;
-                      activeCapture = null;
-                      mic.disabled = true;
+                  var finishMicRecording = async function () {
+                    if (!activeCapture) return;
+                    var capToStop = activeCapture;
+                    var session = micSession;
+                    activeCapture = null;
+                    micSession = null;
+                    if (session) clearTimeout(session.settleTimer);
+
+                    var fastText = session ? (session.finalText + ' ' + session.interimText).trim() : '';
+                    if (session && session.rec) {
+                      try { session.rec.stop(); } catch (e) {}
+                    }
+
+                    if (fastText) {
+                      // Instant path: answer immediately from live SpeechRecognition without waiting for upload/API round-trip
+                      try { capToStop.cancel(); } catch (e) {}
+                      mic.disabled = false;
                       mic.classList.remove('recording');
-                      mic.textContent = '⏳ Transcribing...';
-                      setTranscriptStatus('Status:', 'Transcribing audio with Gemini...');
+                      mic.textContent = '🎤 Speak';
+                      setMeterAnalyser(null, 'idle');
+                      setTranscriptStatus('Transcribed:', fastText);
+                      handleQuery(fastText, 'You (transcribed)', true, {
+                        mode: 'Speak',
+                        fullTranscript: fastText
+                      });
+                      wakeState.paused = false;
                       resetWave();
                       try {
-                        var result = await capToStop.stop();
-                        var transcript = await transcribeCapture(result);
-                        if (!transcript) {
-                          setTranscriptStatus('Transcript:', 'No speech detected in the recording.');
-                          toast('No speech detected. Please try speaking again.');
-                        } else {
-                          setTranscriptStatus('Transcribed:', transcript);
-                          handleQuery(transcript, 'You (transcribed)', true, {
-                            mode: 'Speak',
-                            fullTranscript: transcript
-                          });
+                        if (session && session.resumeWake && localStorage.getItem('vitv_tars_wake') !== '0') {
+                          startWakeListener().catch(function () {});
                         }
-                      } catch (err) {
-                        var msg = err && err.message ? err.message : 'Unable to transcribe audio.';
-                        setTranscriptStatus('Transcription error:', msg);
-                        toast(msg);
-                      } finally {
-                        mic.disabled = false;
-                        mic.classList.remove('recording');
-                        mic.textContent = '🎤 Speak';
-                        wakeState.paused = false;
-                        try {
-                          if (!wakeState.enabled && localStorage.getItem('vitv_tars_wake') !== '0') {
-                            startWakeListener().catch(function () {});
-                          }
-                        } catch (e) {}
+                      } catch (e) {}
+                      return;
+                    }
+
+                    mic.disabled = true;
+                    mic.classList.remove('recording');
+                    mic.textContent = '⏳ Transcribing...';
+                    setTranscriptStatus('Status:', 'Transcribing audio...');
+                    setMeterAnalyser(null, 'idle', 'Transcribing…');
+                    try {
+                      var result = await capToStop.stop();
+                      var transcript = await transcribeCapture(result);
+                      if (!transcript) {
+                        setTranscriptStatus('Transcript:', 'No speech detected in the recording.');
+                        toast('No speech detected. Please try speaking again.');
+                      } else {
+                        setTranscriptStatus('Transcribed:', transcript);
+                        handleQuery(transcript, 'You (transcribed)', true, {
+                          mode: 'Speak',
+                          fullTranscript: transcript
+                        });
                       }
+                    } catch (err) {
+                      var msg = err && err.message ? err.message : 'Unable to transcribe audio.';
+                      setTranscriptStatus('Transcription error:', msg);
+                      toast(msg);
+                    } finally {
+                      mic.disabled = false;
+                      mic.classList.remove('recording');
+                      mic.textContent = '🎤 Speak';
+                      wakeState.paused = false;
+                      resetWave();
+                      try {
+                        if (!wakeState.enabled && ((session && session.resumeWake) || localStorage.getItem('vitv_tars_wake') !== '0')) {
+                          startWakeListener().catch(function () {});
+                        }
+                      } catch (e) {}
+                    }
+                  };
+
+                  mic.onclick = async function () {
+                    if (activeCapture) {
+                      await finishMicRecording();
                       return;
                     }
 
@@ -8574,18 +8869,89 @@
                       return;
                     }
 
+                    var wasWakeEnabled = wakeState.enabled;
                     try {
                       stopAllSpeech();
+                      if (wasWakeEnabled) stopWakeListener();
                       wakeState.paused = true;
-                      activeCapture = await startVoiceCapture(function (lvl) { updateWave(lvl, 'recording'); });
+                      setMeterMode('recording', 'Recording');
+
+                      var session = {
+                        rec: null,
+                        finalText: '',
+                        interimText: '',
+                        settleTimer: 0,
+                        resumeWake: wasWakeEnabled
+                      };
+                      micSession = session;
+
+                      activeCapture = await startVoiceCapture(
+                        function (lvl) { updateWave(lvl, 'recording'); },
+                        function (an) {
+                          if (an) setMeterAnalyser(an, 'recording', 'Recording');
+                        }
+                      );
                       mic.classList.add('recording');
                       mic.textContent = '⏹️ Stop';
-                      setTranscriptStatus('Recording:', 'Listening from microphone… tap Stop when done.');
+                      setTranscriptStatus('Recording:', 'Speak now — TARS answers as soon as you finish or tap Stop.');
                       var em = $('#botEmoji');
                       if (em) em.textContent = '👂';
+
+                      // Start live SpeechRecognition in parallel for instant 0ms transcription & auto-answer on pause/phrase end
+                      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                      if (SR && micSession === session && activeCapture) {
+                        try {
+                          var liveRec = new SR();
+                          liveRec.continuous = true;
+                          liveRec.interimResults = true;
+                          liveRec.lang = 'en-US';
+                          liveRec.onresult = function (ev) {
+                            if (micSession !== session || !activeCapture) return;
+                            var fin = '';
+                            var inter = '';
+                            var gotFinal = false;
+                            for (var k = 0; k < ev.results.length; k++) {
+                              var r = ev.results[k];
+                              var t = (r[0] && r[0].transcript ? r[0].transcript : '').trim();
+                              if (!t) continue;
+                              if (r.isFinal) {
+                                fin += (fin ? ' ' : '') + t;
+                                gotFinal = true;
+                              } else {
+                                inter += (inter ? ' ' : '') + t;
+                              }
+                            }
+                            session.finalText = fin;
+                            session.interimText = inter;
+                            var preview = (fin + ' ' + inter).trim();
+                            if (preview) {
+                              setTranscriptStatus('Hearing:', preview + (gotFinal ? '' : ' …'));
+                            }
+                            clearTimeout(session.settleTimer);
+                            if (gotFinal && fin) {
+                              finishMicRecording();
+                            } else if (preview) {
+                              session.settleTimer = setTimeout(function () {
+                                if (micSession === session && activeCapture) {
+                                  finishMicRecording();
+                                }
+                              }, 480);
+                            }
+                          };
+                          liveRec.onerror = function () {
+                            session.rec = null;
+                          };
+                          session.rec = liveRec;
+                          liveRec.start();
+                        } catch (e) {
+                          session.rec = null;
+                        }
+                      }
                     } catch (err) {
+                      cleanupMicSession();
                       activeCapture = null;
                       wakeState.paused = false;
+                      setMeterAnalyser(null, 'idle');
                       resetWave();
                       mic.disabled = false;
                       mic.classList.remove('recording');
