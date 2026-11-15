@@ -829,6 +829,46 @@
       }
       .mpill b{font-family:var(--font-mono);font-weight:600}
 
+      .fpillsel{position:relative}
+      .fpill{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        padding:7px 13px;
+        min-height:40px;
+        border-radius:999px;
+        background:rgba(255,255,255,0.06);
+        border:1px solid var(--line);
+        color:#fff;
+        font-size:13px;
+        white-space:nowrap;
+        backdrop-filter:blur(14px);
+        transition:border-color .2s, background .2s;
+      }
+      .fpill:hover{border-color:var(--line2);background:rgba(255,255,255,0.1)}
+      .fpill.is-warn{border-color:rgba(245,185,65,0.45);background:rgba(245,185,65,0.10)}
+      .fpill.is-alert{border-color:rgba(239,91,91,0.48);background:rgba(239,91,91,0.12)}
+      .fpill b{font-family:var(--font-mono);font-weight:600}
+      .fmenu{
+        position:absolute;
+        right:0;
+        top:calc(100% + 8px);
+        width:min(340px, 90vw);
+        background:rgba(12,14,18,0.92);
+        backdrop-filter:blur(32px);
+        -webkit-backdrop-filter:blur(32px);
+        border:1px solid var(--line2);
+        border-radius:16px;
+        padding:12px;
+        box-shadow:0 24px 54px rgba(0,0,0,0.65);
+        display:none;
+        animation:pop .2s var(--ease);
+        z-index:20;
+      }
+      .fmenu.on{display:block}
+      .fmenu-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,0.045);font-size:12.5px}
+      .fmenu-row+.fmenu-row{margin-top:6px}
+
       .spill{
         display:inline-flex;
         align-items:center;
@@ -935,7 +975,7 @@
         #app.mobileopen #side .logo,#app.mobileopen #nav a span,#app.mobileopen .navsec{opacity:1;pointer-events:auto;width:auto}
         #sideToggle{display:none}
         #menuBtn{display:grid}
-        .mpill .hide-s{display:none}
+        .mpill .hide-s,.fpill .hide-s{display:none}
         .crewbtn .cname{display:none}
         .ptitle p{display:none}
         .spill span{display:none}
@@ -1840,6 +1880,10 @@
             </div>
             <button class="spill hidden" id="streamPill" type="button" title="The wearable is streaming. Open Live vitals"><i></i><span>Wearable live</span></button>
             <div class="mpill" id="mpill"></div>
+            <div class="fpillsel" id="fpillsel">
+              <button class="fpill" id="fpillBtn" type="button" aria-haspopup="true" title="24–48h Drift Vector Forecast"></button>
+              <div class="fmenu" id="fmenu" role="menu"></div>
+            </div>
             <div class="crewsel">
               <button class="crewbtn" id="crewBtn" type="button" aria-haspopup="true"></button>
               <div class="crewmenu" id="crewMenu" role="menu"></div>
@@ -5846,6 +5890,97 @@
             } else {
               $('#mpill').innerHTML = '<span class="t3">No active mission</span>';
             }
+            renderForecastWidget(c);
+          }
+
+          function renderForecastWidget(c, precomputed) {
+            var wrap = $('#fpillsel'), btn = $('#fpillBtn'), menu = $('#fmenu');
+            if (!wrap || !btn || !menu) return;
+            if (!c) {
+              wrap.classList.add('hidden');
+              return;
+            }
+            wrap.classList.remove('hidden');
+            if (!U.driftEnv || U.driftCrewId !== c.d.id) {
+              U.driftCrewId = c.d.id;
+              U.driftEnvPreset = 'mission';
+              U.driftEnv = missionEnvBaseline(c);
+            }
+            var F = precomputed || computeDriftForecast(c, U.driftEnv, U.driftHorizon);
+            var riskLabels = ['Nominal', 'Drifting', 'Alert'];
+            var lvlCol = COLV[F.worstLvl] || COLV[0];
+            btn.classList.toggle('is-warn', F.worstLvl === 1);
+            btn.classList.toggle('is-alert', F.worstLvl === 2);
+
+            var summaryTxt = F.earliest
+              ? ('T+' + F.earliest.crossH + 'h ' + F.earliest.v.toUpperCase())
+              : (riskLabels[F.worstLvl] + ' · Idx ' + Math.round(F.predIdx));
+            var peakSign = F.peakVar.netDrift >= 0 ? '+' : '';
+            var peakTxt = F.peakVar.v.toUpperCase() + ' ' + peakSign + fmt(F.peakVar.netDrift, F.peakVar.dp) + (F.peakVar.u ? ' ' + F.peakVar.u : '');
+
+            btn.innerHTML =
+              '<span class="dot" style="background:' + lvlCol + '"></span>' +
+              '<span><b>' + F.horizonH + 'h</b> <span class="hide-s">Forecast</span></span>' +
+              '<span class="hide-s t3">·</span>' +
+              '<span class="hide-s num">' + esc(summaryTxt) + '</span>' +
+              '<span class="hide-s t3">· ' + esc(peakTxt) + '</span>' +
+              CHEVD;
+
+            var topRows = F.summaries.slice().sort(function (a, b) {
+              return (b.lvl - a.lvl) || (b.peakZ - a.peakZ);
+            }).slice(0, 3);
+            var activePreset = DRIFT_PRESETS.find(function (p) { return p.id === U.driftEnvPreset; });
+            var envTitle = activePreset ? activePreset.name : 'Custom surroundings';
+
+            menu.innerHTML =
+              '<div class="row between" style="margin-bottom:8px"><div><b style="font-size:13.5px">Drift Vector (' + F.horizonH + 'h)</b><div class="xs t3">' + esc(envTitle) + ' · ' + U.driftEnv.g + ' g</div></div>' + st(F.worstLvl, riskLabels[F.worstLvl]) + '</div>' +
+              '<div class="seg" style="width:100%;margin-bottom:10px">' +
+                [24, 36, 48].map(function (h) {
+                  return '<button type="button" data-fh="' + h + '" aria-pressed="' + (U.driftHorizon === h) + '" style="flex:1;padding:5px 6px">' + h + 'h</button>';
+                }).join('') +
+              '</div>' +
+              '<div style="margin-bottom:10px">' +
+                topRows.map(function (r) {
+                  var sgn = r.netDrift >= 0 ? '+' : '';
+                  return '<div class="fmenu-row"><span class="grow"><b>' + esc(r.n) + '</b><div class="xs t3">' + esc(r.driver) + '</div></span><span class="num" style="text-align:right"><b>' + fmt(r.vEnd, r.dp) + '</b> ' + esc(r.u) + '<div class="xs" style="color:' + COLV[r.lvl] + '">' + sgn + fmt(r.netDrift, r.dp) + '</div></span></div>';
+                }).join('') +
+              '</div>' +
+              '<div class="row between" style="gap:8px">' +
+                '<select id="fPresetSel" aria-label="Quick surroundings preset" style="min-height:34px;padding:4px 8px;font-size:12.5px;flex:1">' +
+                  DRIFT_PRESETS.map(function (p) {
+                    return '<option value="' + p.id + '"' + (U.driftEnvPreset === p.id ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+                  }).join('') +
+                  (U.driftEnvPreset === 'custom' ? '<option value="custom" selected>Custom surroundings</option>' : '') +
+                '</select>' +
+                '<button class="btn p sm" id="fOpenDrift" type="button">Details →</button>' +
+              '</div>';
+
+            menu.onclick = function (e) { e.stopPropagation(); };
+            $$('#fmenu [data-fh]').forEach(function (b) {
+              b.onclick = function () {
+                U.driftHorizon = Number(b.dataset.fh);
+                if (U.route === 'drift') render();
+                else renderForecastWidget(c);
+              };
+            });
+            var ps = $('#fPresetSel');
+            if (ps) {
+              ps.onchange = function () {
+                if (ps.value === 'custom') return;
+                U.driftEnvPreset = ps.value;
+                U.driftEnv = applyDriftPreset(c, U.driftEnvPreset);
+                if (U.route === 'drift') render();
+                else renderForecastWidget(c);
+              };
+            }
+            var od = $('#fOpenDrift');
+            if (od) {
+              od.onclick = function () {
+                menu.classList.remove('on');
+                if (U.route === 'drift') render();
+                else location.hash = 'drift';
+              };
+            }
           }
 
           function syncSideScroll() {
@@ -8120,6 +8255,8 @@
                   $('#driftAdvisories').innerHTML = F.advisories.map(function (a) {
                     return '<div class="banner l' + a.lvl + '"><div><b>' + esc(a.t) + '</b><div class="s t2" style="margin-top:3px">' + esc(a.d) + '</div></div></div>';
                   }).join('');
+
+                  renderForecastWidget(c, F);
                 }
 
                 function syncSliderLabels() {
@@ -10432,8 +10569,30 @@
               if (!$('#drawer').classList.contains('on')) $('#scrim').classList.remove('on');
             });
           });
-          $('#crewBtn').onclick = function (e) { e.stopPropagation(); $('#crewMenu').classList.toggle('on'); };
-          document.addEventListener('click', function () { var m = $('#crewMenu'); if (m) m.classList.remove('on'); });
+          $('#crewBtn').onclick = function (e) {
+            e.stopPropagation();
+            var fm = $('#fmenu'), fb = $('#fpillBtn'), cm = $('#crewMenu'), cb = $('#crewBtn');
+            if (fm) fm.classList.remove('on');
+            if (fb) fb.setAttribute('aria-expanded', 'false');
+            var open = cm.classList.toggle('on');
+            if (cb) cb.setAttribute('aria-expanded', open ? 'true' : 'false');
+          };
+          $('#fpillBtn').onclick = function (e) {
+            e.stopPropagation();
+            var cm = $('#crewMenu'), cb = $('#crewBtn'), fm = $('#fmenu'), fb = $('#fpillBtn');
+            if (cm) cm.classList.remove('on');
+            if (cb) cb.setAttribute('aria-expanded', 'false');
+            var open = fm.classList.toggle('on');
+            if (fb) fb.setAttribute('aria-expanded', open ? 'true' : 'false');
+          };
+          function closeTopMenus() {
+            var m = $('#crewMenu'), cb = $('#crewBtn'), fm = $('#fmenu'), fb = $('#fpillBtn');
+            if (m) m.classList.remove('on');
+            if (cb) cb.setAttribute('aria-expanded', 'false');
+            if (fm) fm.classList.remove('on');
+            if (fb) fb.setAttribute('aria-expanded', 'false');
+          }
+          document.addEventListener('click', closeTopMenus);
           $('#scrim').onclick = closeDrawer;
           $('#modal').onclick = function (e) { if (e.target && e.target.id === 'modal') closeModal(); };
           window.addEventListener('hashchange', function () { if (dashInitialized) render(); });
@@ -10441,7 +10600,7 @@
             if (innerWidth > 720) $('#app').classList.remove('mobileopen');
             syncSideScroll();
           });
-          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDrawer(); closeModal(); } });
+          document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeTopMenus(); closeDrawer(); closeModal(); } });
           var sideEl = $('#side');
           if (sideEl) {
             sideEl.addEventListener('wheel', function (e) {
