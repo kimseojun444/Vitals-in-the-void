@@ -7,7 +7,7 @@
     <img src="https://img.shields.io/badge/NASA%20Space%20Apps-Challenge%20Page-blue?style=for-the-badge&logo=nasa" alt="NASA Space Apps Challenge">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://vitalsofhevoid.health">
+  <a href="https://vitalsofthevoid.health">
     <img src="https://img.shields.io/badge/Live%20Website-vitalsofhevoid.health-purple?style=for-the-badge&logo=rocket" alt="Live Website">
   </a>
 </p>
