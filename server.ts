@@ -17,9 +17,13 @@ async function startServer() {
   const app = express();
   app.use(express.json({ limit: "25mb" }));
 
+  app.options("/api/tars/transcribe", (_req, res) => {
+    res.sendStatus(204);
+  });
+
   app.post("/api/tars/transcribe", async (req, res) => {
     try {
-      const { audioBase64, mimeType } = req.body ?? {};
+      const { audioBase64, mimeType, mode } = req.body ?? {};
       if (typeof audioBase64 !== "string" || !audioBase64.trim()) {
         res.status(400).json({ error: "Missing audio recording data." });
         return;
@@ -53,6 +57,7 @@ async function startServer() {
       console.log("[/api/tars/transcribe]", {
         mimeType: cleanMimeType,
         audioBytes,
+        mode: mode || "standard",
         textLen: text.length,
         finishReason,
       });
@@ -68,9 +73,67 @@ async function startServer() {
     }
   });
 
+  app.post("/api/tars/speak", async (req, res) => {
+    try {
+      const { text } = req.body ?? {};
+      if (typeof text !== "string" || !text.trim()) {
+        res.status(400).json({ error: "Missing text to speak." });
+        return;
+      }
+      if (!process.env.GEMINI_API_KEY) {
+        res.status(500).json({ error: "GEMINI_API_KEY is not configured on the server." });
+        return;
+      }
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash-lite-tts",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: text.trim().slice(0, 600),
+                speechMetadata: {
+                  style: "Calm, clear, supportive spacecraft AI assistant",
+                },
+              },
+            ],
+          },
+        ],
+        config: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: "Charon" },
+            },
+          },
+        },
+      });
+
+      const inlineData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      if (!inlineData?.data) {
+        res.status(502).json({ error: "No audio returned from speech model." });
+        return;
+      }
+
+      res.json({
+        audioBase64: inlineData.data,
+        mimeType: inlineData.mimeType || "audio/wav",
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Speech generation failed.";
+      const status =
+        typeof (err as { status?: number })?.status === "number"
+          ? (err as { status: number }).status
+          : 500;
+      console.error("[/api/tars/speak] Error:", err);
+      res.status(status >= 400 && status < 600 ? status : 500).json({ error: message });
+    }
+  });
+
   const distDir = path.resolve("dist");
   const isDev =
-    process.env.NODE_ENV === "development" || !fs.existsSync(path.join(distDir, "index.html"));
+    process.argv.includes("--dev") || !fs.existsSync(path.join(distDir, "index.html"));
 
   if (isDev) {
     const { createServer: createViteServer } = await import("vite");

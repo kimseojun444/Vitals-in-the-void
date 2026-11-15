@@ -1591,10 +1591,22 @@
       @keyframes wave-idle{0%,100%{height:6px;opacity:.45}50%{height:12px;opacity:.75}}
       .waveform span{width:4px;height:6px;border-radius:999px;background:rgba(121,220,232,0.55);transition:height .1s ease,background .2s ease}
       .waveform.recording span{background:var(--bad)}
+      .waveform.awake span{background:#34c27a}
       #botMic.recording{background:var(--bad);border-color:var(--bad);color:#fff;animation:ping 1.4s infinite}
+      #botWake.wake-on{border-color:rgba(121,220,232,0.65);background:rgba(121,220,232,0.16);color:#d8f8ff}
+      #botWake.wake-active{border-color:#34c27a;background:rgba(52,194,122,0.24);color:#d7ffe9;box-shadow:0 0 18px rgba(52,194,122,0.35)}
+      #astrobotFace.awake{box-shadow:0 0 44px rgba(52,194,122,0.75), 0 0 0 4px rgba(121,220,232,0.45)!important;transform:scale(1.05);transition:transform .25s ease, box-shadow .25s ease}
       .tars-transcript{width:100%;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid var(--line);text-align:left;font-size:13px;color:var(--text2);display:none}
       .tars-transcript.is-visible{display:block}
       .tars-transcript strong{color:#fff}
+      .voice-log-list{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+      .voice-log-item{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+      .voice-log-item.is-alert{border-color:rgba(239,91,91,0.45);background:rgba(239,91,91,0.09)}
+      .vl-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11.5px;color:var(--text3)}
+      .vl-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid var(--line);background:rgba(255,255,255,0.08);color:var(--text2)}
+      .vl-badge.wake{border-color:rgba(121,220,232,0.5);background:rgba(121,220,232,0.14);color:#d8f8ff}
+      .vl-badge.ptt{border-color:rgba(52,194,122,0.5);background:rgba(52,194,122,0.14);color:#d7ffe9}
+      .vl-badge.followup{border-color:rgba(245,185,65,0.5);background:rgba(245,185,65,0.14);color:#ffeab8}
       @media (prefers-reduced-motion:reduce){
         .dash-screen, .dash-screen *, .mars-loader, .mars-loading-ui{transition-duration:.01ms!important; animation-duration:.01ms!important}
         .glass-tile,.glass-tile::after{transition:none}
@@ -1715,6 +1727,15 @@
         var heroStopped = false;
         var video = document.querySelector('.sky video');
         if (video && typeof video.play === 'function') {
+          var slowSkyVideo = function () {
+            try {
+              video.defaultPlaybackRate = 0.5;
+              video.playbackRate = 0.5;
+            } catch (e) {}
+          };
+          slowSkyVideo();
+          video.addEventListener('loadedmetadata', slowSkyVideo);
+          video.addEventListener('playing', slowSkyVideo);
           var p = video.play();
           if (p && typeof p.catch === 'function') p.catch(function () {});
         }
@@ -2722,8 +2743,20 @@
           }, 500);
 
           initAstronautDashboard();
-          if (dashBgVideo && typeof dashBgVideo.load === 'function') {
-            try { dashBgVideo.load(); } catch (e) {}
+          var slowDashVideo = function () {
+            if (!dashBgVideo) return;
+            try {
+              dashBgVideo.defaultPlaybackRate = 0.5;
+              dashBgVideo.playbackRate = 0.5;
+            } catch (e) {}
+          };
+          if (dashBgVideo) {
+            dashBgVideo.addEventListener('loadedmetadata', slowDashVideo);
+            dashBgVideo.addEventListener('playing', slowDashVideo);
+            if (typeof dashBgVideo.load === 'function') {
+              try { dashBgVideo.load(); } catch (e) {}
+            }
+            slowDashVideo();
           }
 
           var finished = false;
@@ -2739,7 +2772,8 @@
             document.body.classList.add('dash-active');
 
             if (dashBgVideo && typeof dashBgVideo.play === 'function') {
-              dashBgVideo.play().catch(function () {});
+              slowDashVideo();
+              dashBgVideo.play().then(slowDashVideo).catch(function () {});
             }
 
             setTimeout(function () {
@@ -5382,7 +5416,7 @@
               }
             };
           }
-          async function transcribeCapture(capture) {
+          async function transcribeCapture(capture, opts) {
             if (!capture || !capture.blob || !capture.blob.size) {
               throw new Error('No audio was captured. Please try again.');
             }
@@ -5394,14 +5428,25 @@
             }
             var base64 = await blobToBase64(capture.blob);
             var cleanMime = (capture.mimeType || 'audio/wav').split(';')[0] || 'audio/wav';
+            var payload = { audioBase64: base64, mimeType: cleanMime };
+            if (opts && opts.mode) payload.mode = opts.mode;
             var resp = await fetch('/api/tars/transcribe', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ audioBase64: base64, mimeType: cleanMime })
+              body: JSON.stringify(payload)
             });
             var data = await resp.json().catch(function () { return {}; });
             if (!resp.ok) {
-              throw new Error(data.error || ('Transcription failed (' + resp.status + ')'));
+              var apiErr = null;
+              if (resp.status === 405 && !data.error) {
+                apiErr = new Error('Transcription API unavailable on this static host (405). Open the live Development App URL or run npm start.');
+              } else if (resp.status === 429) {
+                apiErr = new Error('Transcription rate limit reached — please wait a few seconds and try again.');
+              } else {
+                apiErr = new Error(data.error || ('Transcription failed (' + resp.status + ')'));
+              }
+              apiErr.status = resp.status;
+              throw apiErr;
             }
             return (data.text || '').trim();
           }
@@ -7513,11 +7558,11 @@
             return {
               html: '<div class="grid split"><div class="card hi" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px"><div class="robot-avatar" id="astrobotFace" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#34c27a,#0a3b22);display:grid;place-items:center;box-shadow:0 0 30px rgba(52,194,122,0.35);position:relative;margin-bottom:16px"><div style="font-size:38px;transition:transform .2s" id="botEmoji">🤖</div><div class="robot-waves" style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(52,194,122,0.5);animation:spin 12s linear infinite"></div></div>' +
                 '<h2 id="botTitle">TARS Emergency Guide</h2>' +
-                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Tap Speak to record audio for Gemini transcription, type, or tap below.</p>' +
-                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
+                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Enable <b>Hey TARS</b> to call out hands-free, or tap <b>Speak</b>.</p>' +
+                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><button class="btn" id="botWake" type="button" title="Hands-free Hey TARS wake word listening">🎧 Hey TARS: Off</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;min-width:160px;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
                 '<div class="waveform" style="display:flex;gap:4px;align-items:center;height:24px;margin-top:14px" id="botWave"><span></span><span></span><span></span><span></span><span></span></div>' +
-                '<div class="tars-transcript" id="botTranscriptBox" aria-live="polite"></div>' +
-                '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>TARS:</b> Station systems nominal. Voice code word "TARS code red" or the sidebar Code Red button alerts all crew &amp; NASA Earth Center.</p></div></div>' +
+                '<div class="tars-transcript is-visible" id="botTranscriptBox" aria-live="polite"><strong>Standby:</strong> Tap <b>🎧 Hey TARS: Off</b> to listen hands-free, or tap <b>🎤 Speak</b>.</div>' +
+                '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>TARS:</b> Station systems nominal. Say "Hey TARS" (with hands-free enabled), "TARS code red", or type below.</p></div></div>' +
                 '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency to activate instant guidance and step-by-step protocols.</p><div class="stack gap8" style="margin-top:14px">' +
                 '<button class="sub row between" data-esc="dcs" style="text-align:left;background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.35)"><span class="grow"><b>Decompression Sickness (DCS)</b><br><span class="xs t3">Joint pain, skin mottling, dizziness after EVA</span></span><span class="btn sm danger">Emergency</span></button>' +
                 '<button class="sub row between" data-esc="spe" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Solar Particle Event (SPE)</b><br><span class="xs t3">Radiation dose-rate spike / storm alert</span></span><span class="btn sm warning">Shelter</span></button>' +
@@ -7525,10 +7570,164 @@
                 '<button class="sub row between" data-esc="cardiac" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Cardiac Arrhythmia / Faint</b><br><span class="xs t3">QTc &gt; 500 ms, palpitations or syncope</span></span><span class="btn sm warning">Medical</span></button>' +
                 '<button class="sub row between" data-esc="breathe" style="text-align:left"><span class="grow"><b>Calm Down &amp; Guided Breathing</b><br><span class="xs t3">Anxiety, panic or high stress protocol</span></span><span class="btn sm">Relax</span></button>' +
                 '</div></div>' +
-                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">Tap <b>Speak</b> to record microphone audio (tap <b>Stop</b> when finished to transcribe with Gemini), or type commands like:</p><ul class="acts t2" style="margin-top:8px"><li>“What do I do for decompression sickness?”</li><li>“Help, solar storm alert!”</li><li>“I feel dizzy and short of breath.”</li><li>“Guide me through breathing exercises.”</li></ul></div></div></div>',
+                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">Turn on <b>Hey TARS</b> to call out anytime like Google Home or Alexa, or tap <b>Speak</b> for push-to-talk:</p><ul class="acts t2" style="margin-top:8px"><li>“Hey TARS, what are my vitals?”</li><li>“Hey TARS, what do I do for decompression sickness?”</li><li>“TARS code red!”</li><li>“Hey TARS, guide me through breathing exercises.”</li></ul></div></div></div>' +
+                '<div class="card section" id="botVoiceLogCard"><div class="row between"><div><div class="row" style="gap:8px;align-items:center"><h3>Voice Log</h3><span class="pill" id="botVoiceLogCount">0 entries</span></div><p class="s t3" style="margin-top:4px">Scrollable history of all past transcribed voice interactions with TARS.</p></div><button class="btn sm" id="botVoiceLogClear" type="button">Clear log</button></div><div class="voice-log-list dash-scroll" id="botVoiceLogList" style="margin-top:14px"></div></div>',
               bind: function () {
+                var VOICE_LOG_KEY = 'vitv_tars_voice_log';
                 var speaking = true;
                 var synth = window.speechSynthesis;
+                try { if (synth && synth.getVoices) synth.getVoices(); } catch (e) {}
+                var isTarsSpeaking = false;
+                var ttsMuteUntil = 0;
+                var ttsSafetyTimer = 0;
+                var followUpUntil = 0;
+                var activeAudioEl = null;
+
+                var loadVoiceLog = function () {
+                  try {
+                    var raw = localStorage.getItem(VOICE_LOG_KEY);
+                    var parsed = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(parsed) ? parsed : [];
+                  } catch (e) {
+                    return [];
+                  }
+                };
+
+                var saveVoiceLog = function (items) {
+                  try {
+                    localStorage.setItem(VOICE_LOG_KEY, JSON.stringify(items.slice(0, 100)));
+                  } catch (e) {}
+                };
+
+                var formatLogTime = function (iso) {
+                  try {
+                    var d = new Date(iso);
+                    return d.toLocaleString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    });
+                  } catch (e) {
+                    return iso || '';
+                  }
+                };
+
+                var renderVoiceLog = function () {
+                  var listEl = $('#botVoiceLogList');
+                  var countEl = $('#botVoiceLogCount');
+                  var items = loadVoiceLog();
+                  if (countEl) {
+                    countEl.textContent = items.length + (items.length === 1 ? ' entry' : ' entries');
+                  }
+                  if (!listEl) return;
+                  if (!items.length) {
+                    listEl.innerHTML = '<div class="sub s t3" style="text-align:center;padding:18px">No transcribed voice interactions yet. Enable <b>Hey TARS</b> or tap <b>🎤 Speak</b> to record a voice command.</div>';
+                    return;
+                  }
+                  listEl.innerHTML = items.map(function (it) {
+                    var modeClass = it.mode === 'Hey TARS' ? 'wake' : (it.mode === 'Follow-up' ? 'followup' : 'ptt');
+                    var alertClass = it.severity === 'alert' ? ' is-alert' : '';
+                    var crewMeta = it.crew ? (esc(it.crew) + (it.day != null ? (' · Day ' + it.day) : '')) : '';
+                    return '<div class="voice-log-item' + alertClass + '">' +
+                      '<div class="vl-meta">' +
+                      '<div class="row" style="gap:6px;align-items:center">' +
+                      '<span class="vl-badge ' + modeClass + '">' + esc(it.mode || 'Voice') + '</span>' +
+                      (crewMeta ? '<span>' + crewMeta + '</span>' : '') +
+                      '</div>' +
+                      '<span class="mono">' + esc(formatLogTime(it.ts)) + '</span>' +
+                      '</div>' +
+                      '<div class="s"><span class="t3 b">You:</span> “' + esc(it.transcript || '') + '”</div>' +
+                      '<div class="s t2"><span class="b" style="color:' + (it.severity === 'alert' ? 'var(--bad)' : '#d8f8ff') + '">' + esc(it.emoji || '🤖') + ' TARS:</span> ' + esc(it.reply || '') + '</div>' +
+                      '</div>';
+                  }).join('');
+                };
+
+                var appendVoiceLog = function (entry) {
+                  var items = loadVoiceLog();
+                  items.unshift({
+                    id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 7),
+                    ts: new Date().toISOString(),
+                    crew: entry.crew || '',
+                    day: entry.day != null ? entry.day : null,
+                    mode: entry.mode || 'Speak',
+                    transcript: entry.transcript || '',
+                    reply: entry.reply || '',
+                    emoji: entry.emoji || '🤖',
+                    severity: entry.severity || 'normal'
+                  });
+                  saveVoiceLog(items);
+                  renderVoiceLog();
+                };
+
+                renderVoiceLog();
+                var clearLogBtn = $('#botVoiceLogClear');
+                if (clearLogBtn) {
+                  clearLogBtn.onclick = function () {
+                    saveVoiceLog([]);
+                    renderVoiceLog();
+                    toast('Voice log cleared');
+                  };
+                }
+
+                var markTtsActive = function (active, maxDurationMs) {
+                  clearTimeout(ttsSafetyTimer);
+                  isTarsSpeaking = active;
+                  if (active) {
+                    ttsSafetyTimer = setTimeout(function () {
+                      isTarsSpeaking = false;
+                      ttsMuteUntil = Date.now() + 450;
+                      if (followUpUntil > 0) {
+                        followUpUntil = Math.max(followUpUntil, Date.now() + 14000);
+                      }
+                    }, maxDurationMs || 14000);
+                  } else {
+                    ttsMuteUntil = Date.now() + 450;
+                    if (followUpUntil > 0) {
+                      followUpUntil = Math.max(followUpUntil, Date.now() + 14000);
+                    }
+                  }
+                };
+
+                var stopAllSpeech = function () {
+                  if (synth) {
+                    try { synth.cancel(); } catch (e) {}
+                  }
+                  if (activeAudioEl) {
+                    try { activeAudioEl.pause(); } catch (e) {}
+                    activeAudioEl = null;
+                  }
+                  markTtsActive(false);
+                };
+
+                var playGeminiTtsFallback = async function (text) {
+                  try {
+                    var resp = await fetch('/api/tars/speak', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ text: text })
+                    });
+                    if (!resp.ok) { markTtsActive(false); return; }
+                    var data = await resp.json().catch(function () { return {}; });
+                    if (!data.audioBase64) { markTtsActive(false); return; }
+                    var audio = new Audio('data:' + (data.mimeType || 'audio/wav') + ';base64,' + data.audioBase64);
+                    activeAudioEl = audio;
+                    audio.onended = function () {
+                      if (activeAudioEl === audio) activeAudioEl = null;
+                      markTtsActive(false);
+                    };
+                    audio.onerror = function () {
+                      if (activeAudioEl === audio) activeAudioEl = null;
+                      markTtsActive(false);
+                    };
+                    markTtsActive(true, 18000);
+                    await audio.play();
+                  } catch (e) {
+                    markTtsActive(false);
+                  }
+                };
+
                 var speak = function (text, emoji, allowVoice) {
                   if (emoji) {
                     var em = $('#botEmoji');
@@ -7539,19 +7738,82 @@
                     log.innerHTML += '<p style="margin-top:8px"><b>TARS:</b> ' + esc(text) + '</p>';
                     log.scrollTop = log.scrollHeight;
                   }
-                  if (allowVoice !== true || !speaking || !synth) return;
+                  if (allowVoice !== true || !speaking) return;
+
+                  var estMs = Math.min(18000, Math.max(4000, text.length * 85));
+                  if (synth) {
+                    try {
+                      synth.cancel();
+                      if (synth.resume) synth.resume();
+                      var voices = synth.getVoices ? synth.getVoices() : [];
+                      if (voices && voices.length === 0) {
+                        playGeminiTtsFallback(text);
+                        return;
+                      }
+                      var utter = new SpeechSynthesisUtterance(text);
+                      utter.rate = 1.04;
+                      utter.pitch = 1.02;
+                      window.__tarsUtter = utter;
+                      var started = false;
+                      var fallbackTimer = setTimeout(function () {
+                        if (!started && !synth.speaking) {
+                          try { synth.cancel(); } catch (e) {}
+                          playGeminiTtsFallback(text);
+                        }
+                      }, 550);
+                      utter.onstart = function () {
+                        started = true;
+                        clearTimeout(fallbackTimer);
+                        markTtsActive(true, estMs);
+                      };
+                      utter.onend = function () {
+                        clearTimeout(fallbackTimer);
+                        if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                        markTtsActive(false);
+                      };
+                      utter.onerror = function () {
+                        clearTimeout(fallbackTimer);
+                        if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                        playGeminiTtsFallback(text);
+                      };
+                      markTtsActive(true, estMs);
+                      synth.speak(utter);
+                      return;
+                    } catch (e) {}
+                  }
+                  playGeminiTtsFallback(text);
+                };
+
+                var playWakeChime = function () {
+                  var AC = window.AudioContext || window.webkitAudioContext;
+                  if (!AC) return;
                   try {
-                    synth.cancel();
-                    var utter = new SpeechSynthesisUtterance(text);
-                    utter.rate = 1.05;
-                    utter.pitch = 1.1;
-                    synth.speak(utter);
+                    var ctx = new AC();
+                    if (ctx.state === 'suspended') {
+                      ctx.resume().catch(function () {});
+                    }
+                    var now = ctx.currentTime;
+                    var notes = [659.25, 987.77];
+                    notes.forEach(function (freq, idx) {
+                      var osc = ctx.createOscillator();
+                      var gain = ctx.createGain();
+                      osc.type = 'sine';
+                      osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+                      gain.gain.setValueAtTime(0.001, now + idx * 0.09);
+                      gain.gain.exponentialRampToValueAtTime(0.11, now + idx * 0.09 + 0.02);
+                      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.22);
+                      osc.connect(gain);
+                      gain.connect(ctx.destination);
+                      osc.start(now + idx * 0.09);
+                      osc.stop(now + idx * 0.09 + 0.24);
+                    });
+                    setTimeout(function () { try { ctx.close(); } catch (e) {} }, 600);
                   } catch (e) {}
                 };
 
-                speak('Hello! I am TARS, your station emergency voice guide. Tap Speak to talk to me, or type a query below.', '🤖', false);
+                speak('Hello! I am TARS, your station emergency voice guide. Enable Hey TARS to call out hands-free, or tap Speak.', '🤖', false);
 
-                var handleQuery = function (rawQ, sourceLabel, isVoiceInput) {
+                var handleQuery = function (rawQ, sourceLabel, isVoiceInput, logMeta) {
                   var trimmed = (rawQ || '').trim();
                   var q = trimmed.toLowerCase();
                   if (!q) return;
@@ -7561,22 +7823,86 @@
                     log.scrollTop = log.scrollHeight;
                   }
                   var voiceReply = isVoiceInput === true;
+                  var replyText = '';
+                  var replyEmoji = '🤖';
+                  var replySeverity = 'normal';
+
                   if (q.indexOf('tars code red') >= 0 || q.indexOf('code red') >= 0) {
+                    if (voiceReply) markTtsActive(true, 9000);
                     triggerCodeRed(voiceReply);
-                    return;
-                  }
-                  if (q.indexOf('decompression') >= 0 || q.indexOf('bends') >= 0 || q.indexOf('dcs') >= 0 || q.indexOf('joint pain') >= 0) {
-                    speak('Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.', '🚨', voiceReply);
+                    replyText = 'CODE RED EMERGENCY BROADCAST ACTIVATED! All crew devices and NASA Earth Center alerted.';
+                    replyEmoji = '🚨';
+                    replySeverity = 'alert';
+                  } else if (/^(stop|cancel|never mind|nevermind|quiet|stand down|sleep)\b/.test(q)) {
+                    followUpUntil = 0;
+                    stopAllSpeech();
+                    replyText = 'Standing by.';
+                    speak(replyText, replyEmoji, voiceReply);
+                  } else if (q.indexOf('decompression') >= 0 || q.indexOf('bends') >= 0 || q.indexOf('dcs') >= 0 || q.indexOf('joint pain') >= 0) {
+                    replyText = 'Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.';
+                    replyEmoji = '🚨';
+                    replySeverity = 'alert';
+                    speak(replyText, replyEmoji, voiceReply);
                   } else if (q.indexOf('solar') >= 0 || q.indexOf('radiation') >= 0 || q.indexOf('storm') >= 0 || q.indexOf('spe') >= 0) {
-                    speak('Solar particle event warning! Radiation dose rate spike detected. Move to the storm shelter and protected crew quarters immediately. Put on your personal dosimeter and await further ground instructions.', '☢️', voiceReply);
-                  } else if (q.indexOf('hypox') >= 0 || q.indexOf('oxygen') >= 0 || q.indexOf('breath') >= 0 && q.indexOf('short') >= 0 || q.indexOf('co2') >= 0) {
-                    speak('Hypoxia or suit hazard alert! Oxygen saturation below normal or suit carbon dioxide elevated. Check your regulator, re-seat the mask, and notify the commander at once.', '⚠️', voiceReply);
+                    replyText = 'Solar particle event warning! Radiation dose rate spike detected. Move to the storm shelter and protected crew quarters immediately. Put on your personal dosimeter and await further ground instructions.';
+                    replyEmoji = '☢️';
+                    replySeverity = 'alert';
+                    speak(replyText, replyEmoji, voiceReply);
+                  } else if (q.indexOf('hypox') >= 0 || q.indexOf('oxygen') >= 0 || (q.indexOf('breath') >= 0 && q.indexOf('short') >= 0) || q.indexOf('co2') >= 0) {
+                    replyText = 'Hypoxia or suit hazard alert! Oxygen saturation below normal or suit carbon dioxide elevated. Check your regulator, re-seat the mask, and notify the commander at once.';
+                    replyEmoji = '⚠️';
+                    replySeverity = 'alert';
+                    speak(replyText, replyEmoji, voiceReply);
                   } else if (q.indexOf('cardiac') >= 0 || q.indexOf('heart') >= 0 || q.indexOf('faint') >= 0 || q.indexOf('dizzy') >= 0 || q.indexOf('palpitat') >= 0) {
-                    speak('Cardiac alert! Heart rate or QTc irregularity detected. Stop all activity immediately, sit down, take slow breaths, and contact medical.', '❤️', voiceReply);
+                    replyText = 'Cardiac alert! Heart rate or QTc irregularity detected. Stop all activity immediately, sit down, take slow breaths, and contact medical.';
+                    replyEmoji = '❤️';
+                    replySeverity = 'alert';
+                    speak(replyText, replyEmoji, voiceReply);
                   } else if (q.indexOf('breathe') >= 0 || q.indexOf('calm') >= 0 || q.indexOf('stress') >= 0 || q.indexOf('panic') >= 0 || q.indexOf('anxiety') >= 0) {
-                    speak('Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.', '🧘', voiceReply);
+                    replyText = 'Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.';
+                    replyEmoji = '🧘';
+                    speak(replyText, replyEmoji, voiceReply);
+                  } else if (q.indexOf('vital') >= 0 || q.indexOf('status') >= 0 || q.indexOf('health') >= 0 || q.indexOf('report') >= 0) {
+                    var active = cur();
+                    if (active) {
+                      var h = headerOf(active);
+                      var hrObj = active.last('hr');
+                      var spo2Obj = active.last('spo2');
+                      var tempObj = active.last('ctemp');
+                      var summary = 'Crew telemetry for ' + active.d.name + ' on mission day ' + Math.floor(active.day()) + ': ';
+                      summary += hrObj ? ('heart rate ' + Math.round(hrObj.v) + ' beats per minute, ') : '';
+                      summary += spo2Obj ? ('oxygen saturation ' + Math.round(spo2Obj.v) + ' percent, ') : '';
+                      summary += tempObj ? ('core temperature ' + tempObj.v.toFixed(1) + ' degrees Celsius. ') : '';
+                      summary += h.al ? (h.al + ' active alerts.') : 'all monitored systems within nominal limits.';
+                      replyText = summary;
+                      replyEmoji = '🩺';
+                      speak(replyText, replyEmoji, voiceReply);
+                    } else {
+                      replyText = 'No active crew profile selected. Station systems nominal.';
+                      speak(replyText, replyEmoji, voiceReply);
+                    }
+                  } else if (/^(hi|hello|hey|good morning|good evening|are you there|you there)/.test(q)) {
+                    replyText = 'All systems nominal, Commander. How can I assist you?';
+                    speak(replyText, replyEmoji, voiceReply);
+                  } else if (q.indexOf('thank') >= 0) {
+                    replyText = 'You are welcome, Commander. Standing by.';
+                    speak(replyText, replyEmoji, voiceReply);
                   } else {
-                    speak('I received: "' + trimmed + '". For safety, please check the emergency scenario protocol cards on the right or contact the Crew Medical Officer.', '🤖', voiceReply);
+                    replyText = 'I heard: "' + trimmed + '". For medical protocols, ask about vitals, decompression sickness, solar storm, hypoxia, cardiac symptoms, or guided breathing.';
+                    speak(replyText, replyEmoji, voiceReply);
+                  }
+
+                  if (voiceReply) {
+                    var activeCrew = cur();
+                    appendVoiceLog({
+                      crew: activeCrew ? activeCrew.d.name : '',
+                      day: activeCrew ? Math.floor(activeCrew.day()) : null,
+                      mode: (logMeta && logMeta.mode) || 'Speak',
+                      transcript: (logMeta && logMeta.fullTranscript) || trimmed,
+                      reply: replyText,
+                      emoji: replyEmoji,
+                      severity: replySeverity
+                    });
                   }
                 };
 
@@ -7612,15 +7938,18 @@
                   mb.onclick = function () {
                     speaking = !speaking;
                     mb.textContent = speaking ? '🔊' : '🔇';
-                    if (!speaking && synth) synth.cancel();
-                    toast(speaking ? 'TARS voice enabled' : 'TARS voice muted');
+                    if (!speaking) stopAllSpeech();
+                    toast(speaking ? 'TARS voice replies enabled' : 'TARS voice replies muted');
                   };
                 }
 
                 var mic = $('#botMic');
+                var wakeBtn = $('#botWake');
+                var face = $('#astrobotFace');
                 var wave = $('#botWave');
                 var transcriptBox = $('#botTranscriptBox');
                 var activeCapture = null;
+                var wakeState = { enabled: false, stop: null, paused: false };
 
                 var setTranscriptStatus = function (label, text) {
                   if (!transcriptBox) return;
@@ -7630,21 +7959,560 @@
 
                 var resetWave = function () {
                   if (wave) {
-                    wave.classList.remove('recording');
+                    wave.classList.remove('recording', 'awake');
                     wave.querySelectorAll('span').forEach(function (sp) { sp.style.height = '6px'; });
                   }
                 };
 
-                var updateWave = function (level) {
+                var updateWave = function (level, modeClass) {
                   if (!wave) return;
-                  wave.classList.add('recording');
+                  wave.classList.remove('recording', 'awake');
+                  wave.classList.add(modeClass || 'recording');
                   var bars = wave.querySelectorAll('span');
-                  var norm = Math.min(1, Math.sqrt(Math.max(0, level)) * 2.4);
+                  var norm = Math.min(1, Math.sqrt(Math.max(0, level)) * 3.2);
                   for (var i = 0; i < bars.length; i++) {
                     var scale = i === 2 ? 1 : (i === 1 || i === 3 ? 0.78 : 0.55);
                     bars[i].style.height = Math.round(6 + norm * 18 * scale) + 'px';
                   }
                 };
+
+                var syncWakeUI = function () {
+                  var awakeNow = Date.now() < followUpUntil;
+                  if (face) face.classList.toggle('awake', awakeNow);
+                  if (wakeBtn) {
+                    wakeBtn.classList.toggle('wake-on', wakeState.enabled && !awakeNow);
+                    wakeBtn.classList.toggle('wake-active', wakeState.enabled && awakeNow);
+                    if (!wakeState.enabled) wakeBtn.textContent = '🎧 Hey TARS: Off';
+                    else if (awakeNow) wakeBtn.textContent = '✨ TARS Awake';
+                    else wakeBtn.textContent = '🎧 Hey TARS: On';
+                  }
+                };
+
+                var stopWakeListener = function () {
+                  wakeState.enabled = false;
+                  followUpUntil = 0;
+                  if (wakeState.stop) {
+                    try { wakeState.stop(); } catch (e) {}
+                    wakeState.stop = null;
+                  }
+                  resetWave();
+                  syncWakeUI();
+                };
+
+                var parseWakeUtterance = function (text) {
+                  var clean = (text || '').trim();
+                  if (!clean) return { woke: false, command: '' };
+                  if (/\btars\s+code\s+red\b/i.test(clean)) {
+                    return { woke: true, command: clean };
+                  }
+                  var directMatch = clean.match(/(?:^|[\s,.!?])(?:hey|ok|okay|hi|yo|hello|a)?[\s,]*\b(?:t\.?\s*a\.?\s*r\.?\s*s\.?|tars|tarz|tares|tarse|tar's|taurs|tors)\b[\s,.:!?-]*(.*)$/i);
+                  if (directMatch) {
+                    return { woke: true, command: (directMatch[1] || '').trim() };
+                  }
+                  var aliasMatch = clean.match(/(?:^|[\s,.!?])(?:hey|ok|okay|hi|yo|hello)[\s,]+\b(?:tar|stars|toss|taz|charles|cars)\b[\s,.:!?-]*(.*)$/i);
+                  if (aliasMatch) {
+                    return { woke: true, command: (aliasMatch[1] || '').trim() };
+                  }
+                  return { woke: false, command: '' };
+                };
+
+                var startVadWakeListener = async function () {
+                  if (wakeState.enabled) return;
+                  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Microphone capture is not supported in this browser.');
+                  }
+                  var stream;
+                  try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+                    });
+                  } catch (e) {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                  }
+                  var AC = window.AudioContext || window.webkitAudioContext;
+                  if (!AC) {
+                    stream.getTracks().forEach(function (t) { t.stop(); });
+                    throw new Error('Web Audio API is required for Hey TARS wake-word listening.');
+                  }
+                  var audioCtx = new AC();
+                  if (audioCtx.state === 'suspended') {
+                    await Promise.race([
+                      audioCtx.resume().catch(function () {}),
+                      new Promise(function (resolve) { setTimeout(resolve, 250); })
+                    ]);
+                  }
+                  var sampleRate = audioCtx.sampleRate || 48000;
+                  var source = audioCtx.createMediaStreamSource(stream);
+                  var processor = audioCtx.createScriptProcessor(2048, 1, 1);
+                  var sink = audioCtx.createGain();
+                  sink.gain.value = 0;
+
+                  var preRollMaxBlocks = Math.max(5, Math.ceil((0.6 * sampleRate) / 2048));
+                  var preRoll = [];
+                  var utteranceChunks = [];
+                  var utteranceSamples = 0;
+                  var utterancePeak = 0;
+                  var capturing = false;
+                  var speechStreak = 0;
+                  var lastSpeechAt = 0;
+                  var captureStartedAt = 0;
+                  var noiseFloor = 0.0025;
+                  var inFlight = false;
+                  var pendingUtterance = null;
+                  var rateLimitUntil = 0;
+                  var alive = true;
+
+                  var unlockAudio = function () {
+                    if (alive && audioCtx.state === 'suspended') {
+                      audioCtx.resume().then(function () {
+                        if (alive) setTranscriptStatus('Hey TARS active:', 'Listening hands-free — say "Hey TARS" anytime.');
+                      }).catch(function () {});
+                    }
+                  };
+                  window.addEventListener('pointerdown', unlockAudio, { passive: true });
+                  window.addEventListener('keydown', unlockAudio, { passive: true });
+
+                  var handleTranscriptResult = function (transcript) {
+                    var parsed = parseWakeUtterance(transcript);
+                    var awakeWindow = Date.now() < followUpUntil;
+
+                    if (parsed.woke) {
+                      playWakeChime();
+                      followUpUntil = Date.now() + 14000;
+                      syncWakeUI();
+                      setTranscriptStatus('Hey TARS:', transcript);
+                      if (parsed.command) {
+                        handleQuery(parsed.command, 'You (Hey TARS)', true, {
+                          mode: 'Hey TARS',
+                          fullTranscript: transcript
+                        });
+                      } else {
+                        var emEl = $('#botEmoji');
+                        if (emEl) emEl.textContent = '👂';
+                        var wakeReply = "Yes? I'm listening.";
+                        speak(wakeReply, '👂', true);
+                        var activeCrewWake = cur();
+                        appendVoiceLog({
+                          crew: activeCrewWake ? activeCrewWake.d.name : '',
+                          day: activeCrewWake ? Math.floor(activeCrewWake.day()) : null,
+                          mode: 'Hey TARS',
+                          transcript: transcript,
+                          reply: wakeReply,
+                          emoji: '👂',
+                          severity: 'normal'
+                        });
+                      }
+                    } else if (awakeWindow) {
+                      followUpUntil = Date.now() + 14000;
+                      syncWakeUI();
+                      setTranscriptStatus('Transcribed:', transcript);
+                      handleQuery(transcript, 'You (voice)', true, {
+                        mode: 'Follow-up',
+                        fullTranscript: transcript
+                      });
+                    } else {
+                      setTranscriptStatus('Standby:', 'Heard "' + transcript + '" — say "Hey TARS" to wake.');
+                    }
+                  };
+
+                  var flushUtterance = async function (chunks, totalSamples, peakVal) {
+                    if (!alive) return;
+                    if (Date.now() < rateLimitUntil) return;
+                    var dur = totalSamples / sampleRate;
+                    if (dur < 0.28 || peakVal < 0.0025) return;
+                    if (inFlight) {
+                      pendingUtterance = { chunks: chunks, totalSamples: totalSamples, peakVal: peakVal };
+                      return;
+                    }
+                    inFlight = true;
+                    setTranscriptStatus('Listening:', 'Checking speech…');
+                    try {
+                      var merged = new Float32Array(totalSamples);
+                      var off = 0;
+                      for (var k = 0; k < chunks.length; k++) {
+                        merged.set(chunks[k], off);
+                        off += chunks[k].length;
+                      }
+                      var wavBlob = encodeWavFromFloat32(merged, sampleRate);
+                      var transcript = await transcribeCapture({
+                        blob: wavBlob,
+                        mimeType: 'audio/wav',
+                        peak: peakVal,
+                        durationSec: dur
+                      }, { mode: 'wake' });
+                      if (!alive) return;
+                      if (!transcript) {
+                        setTranscriptStatus(
+                          Date.now() < followUpUntil ? 'TARS Awake:' : 'Hey TARS active:',
+                          Date.now() < followUpUntil ? 'Listening for follow-up…' : 'Listening hands-free — say "Hey TARS" anytime.'
+                        );
+                        return;
+                      }
+                      handleTranscriptResult(transcript);
+                    } catch (err) {
+                      if (alive) {
+                        if (err && err.status === 429) {
+                          rateLimitUntil = Date.now() + 20000;
+                        }
+                        var msg = err && err.message ? err.message : 'Unable to transcribe audio.';
+                        setTranscriptStatus('Transcription error:', msg);
+                      }
+                    } finally {
+                      inFlight = false;
+                      syncWakeUI();
+                      if (alive && pendingUtterance && Date.now() >= rateLimitUntil) {
+                        var nextUtt = pendingUtterance;
+                        pendingUtterance = null;
+                        flushUtterance(nextUtt.chunks, nextUtt.totalSamples, nextUtt.peakVal);
+                      }
+                    }
+                  };
+
+                  processor.onaudioprocess = function (ev) {
+                    if (!alive) return;
+                    if (wakeState.paused || isTarsSpeaking || Date.now() < ttsMuteUntil) {
+                      capturing = false;
+                      speechStreak = 0;
+                      utteranceChunks = [];
+                      utteranceSamples = 0;
+                      utterancePeak = 0;
+                      preRoll = [];
+                      return;
+                    }
+                    var ch = ev.inputBuffer.getChannelData(0);
+                    var copy = new Float32Array(ch.length);
+                    var sumSq = 0;
+                    var blockPeak = 0;
+                    for (var i = 0; i < ch.length; i++) {
+                      var v = ch[i];
+                      copy[i] = v;
+                      sumSq += v * v;
+                      var a = v < 0 ? -v : v;
+                      if (a > blockPeak) blockPeak = a;
+                    }
+                    var rms = Math.sqrt(sumSq / ch.length);
+                    var now = Date.now();
+                    var trigThresh = Math.max(0.0042, noiseFloor * 2.5);
+                    var holdThresh = Math.max(0.0025, noiseFloor * 1.65);
+
+                    if (!capturing) {
+                      preRoll.push(copy);
+                      if (preRoll.length > preRollMaxBlocks) preRoll.shift();
+
+                      if (rms >= trigThresh) {
+                        speechStreak++;
+                        updateWave(rms, Date.now() < followUpUntil ? 'awake' : 'recording');
+                        if (speechStreak >= 2) {
+                          capturing = true;
+                          captureStartedAt = now;
+                          lastSpeechAt = now;
+                          utteranceChunks = preRoll.slice();
+                          utteranceSamples = 0;
+                          utterancePeak = blockPeak;
+                          for (var p = 0; p < utteranceChunks.length; p++) utteranceSamples += utteranceChunks[p].length;
+                          preRoll = [];
+                        }
+                      } else {
+                        speechStreak = 0;
+                        if (rms < noiseFloor * 1.65) {
+                          noiseFloor = Math.min(0.015, Math.max(0.0012, noiseFloor * 0.96 + rms * 0.04));
+                        }
+                        if (Date.now() < followUpUntil) updateWave(rms * 0.5, 'awake');
+                        else if (rms > trigThresh * 0.65) updateWave(rms * 0.7, 'recording');
+                        else resetWave();
+                      }
+                    } else {
+                      utteranceChunks.push(copy);
+                      utteranceSamples += copy.length;
+                      if (blockPeak > utterancePeak) utterancePeak = blockPeak;
+                      if (rms >= holdThresh) lastSpeechAt = now;
+                      updateWave(rms, Date.now() < followUpUntil ? 'awake' : 'recording');
+
+                      if (now - lastSpeechAt >= 650 || now - captureStartedAt >= 6500) {
+                        var doneChunks = utteranceChunks;
+                        var doneSamples = utteranceSamples;
+                        var donePeak = utterancePeak;
+                        capturing = false;
+                        speechStreak = 0;
+                        utteranceChunks = [];
+                        utteranceSamples = 0;
+                        utterancePeak = 0;
+                        resetWave();
+                        flushUtterance(doneChunks, doneSamples, donePeak);
+                      }
+                    }
+                  };
+
+                  source.connect(processor);
+                  processor.connect(sink);
+                  sink.connect(audioCtx.destination);
+
+                  var uiTimer = setInterval(function () {
+                    if (!alive || location.hash !== '#emergency') {
+                      clearInterval(uiTimer);
+                      return;
+                    }
+                    syncWakeUI();
+                  }, 500);
+
+                  wakeState.enabled = true;
+                  wakeState.stop = function () {
+                    alive = false;
+                    clearInterval(uiTimer);
+                    window.removeEventListener('pointerdown', unlockAudio);
+                    window.removeEventListener('keydown', unlockAudio);
+                    try { processor.disconnect(); } catch (e) {}
+                    try { sink.disconnect(); } catch (e) {}
+                    try { source.disconnect(); } catch (e) {}
+                    try { audioCtx.close(); } catch (e) {}
+                    try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+                  };
+                  syncWakeUI();
+                  if (audioCtx.state === 'suspended') {
+                    setTranscriptStatus('Tap anywhere:', 'Browser paused audio — click anywhere to finish activating Hey TARS.');
+                  } else {
+                    setTranscriptStatus('Hey TARS active:', 'Listening hands-free — say "Hey TARS" anytime.');
+                  }
+                };
+
+                var startSpeechWakeListener = function () {
+                  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                  if (!SR) return Promise.resolve(false);
+                  return new Promise(function (resolve, reject) {
+                    var rec = new SR();
+                    rec.continuous = true;
+                    rec.interimResults = true;
+                    rec.lang = 'en-US';
+                    rec.maxAlternatives = 3;
+
+                    var alive = true;
+                    var startedOnce = false;
+                    var chimedIndex = -1;
+                    var handledIndex = -1;
+                    var restartTimer = 0;
+                    var uiTimer = 0;
+
+                    var finishStartup = function (ok, err) {
+                      if (startedOnce) return;
+                      startedOnce = true;
+                      if (ok) resolve(true);
+                      else reject(err || new Error('Speech recognition unavailable'));
+                    };
+
+                    var scheduleRestart = function (delayMs) {
+                      clearTimeout(restartTimer);
+                      if (!alive || !wakeState.enabled || location.hash !== '#emergency') return;
+                      restartTimer = setTimeout(function () {
+                        if (!alive || !wakeState.enabled || location.hash !== '#emergency') return;
+                        if (wakeState.paused || isTarsSpeaking || Date.now() < ttsMuteUntil) {
+                          scheduleRestart(220);
+                          return;
+                        }
+                        try {
+                          chimedIndex = -1;
+                          handledIndex = -1;
+                          rec.start();
+                        } catch (e) {
+                          scheduleRestart(350);
+                        }
+                      }, delayMs || 160);
+                    };
+
+                    rec.onstart = function () {
+                      if (!alive) return;
+                      if (!startedOnce) {
+                        wakeState.enabled = true;
+                        wakeState.stop = function () {
+                          alive = false;
+                          clearTimeout(restartTimer);
+                          clearInterval(uiTimer);
+                          try { rec.abort(); } catch (e) {}
+                        };
+                        uiTimer = setInterval(function () {
+                          if (!alive || location.hash !== '#emergency') {
+                            clearInterval(uiTimer);
+                            return;
+                          }
+                          if (isTarsSpeaking || wakeState.paused) {
+                            try { rec.abort(); } catch (e) {}
+                          }
+                          syncWakeUI();
+                        }, 300);
+                        syncWakeUI();
+                        setTranscriptStatus('Hey TARS active:', 'Listening hands-free — say "Hey TARS" anytime.');
+                        finishStartup(true);
+                      }
+                    };
+
+                    rec.onresult = function (ev) {
+                      if (!alive || wakeState.paused || isTarsSpeaking || Date.now() < ttsMuteUntil) return;
+                      for (var i = ev.resultIndex; i < ev.results.length; i++) {
+                        if (i <= handledIndex) continue;
+                        var result = ev.results[i];
+                        var bestTranscript = (result[0] && result[0].transcript ? result[0].transcript : '').trim();
+                        var matchedParsed = null;
+                        var matchedTranscript = bestTranscript;
+
+                        for (var alt = 0; alt < result.length; alt++) {
+                          var cand = (result[alt] && result[alt].transcript ? result[alt].transcript : '').trim();
+                          if (!cand) continue;
+                          var p = parseWakeUtterance(cand);
+                          if (p.woke) {
+                            matchedParsed = p;
+                            matchedTranscript = cand;
+                            break;
+                          }
+                        }
+                        if (!matchedParsed) matchedParsed = parseWakeUtterance(bestTranscript);
+
+                        if (!result.isFinal) {
+                          if (matchedTranscript) {
+                            updateWave(0.14, (matchedParsed.woke || Date.now() < followUpUntil) ? 'awake' : 'recording');
+                          }
+                          if (matchedParsed.woke && chimedIndex !== i) {
+                            chimedIndex = i;
+                            playWakeChime();
+                            followUpUntil = Date.now() + 14000;
+                            syncWakeUI();
+                            setTranscriptStatus('Hey TARS:', matchedTranscript + ' …');
+                          } else if (Date.now() < followUpUntil && matchedTranscript) {
+                            setTranscriptStatus('Listening:', matchedTranscript + ' …');
+                          }
+                          continue;
+                        }
+
+                        handledIndex = i;
+                        resetWave();
+                        if (!matchedTranscript) continue;
+
+                        if (matchedParsed.woke) {
+                          if (chimedIndex !== i) playWakeChime();
+                          followUpUntil = Date.now() + 14000;
+                          syncWakeUI();
+                          setTranscriptStatus('Hey TARS:', matchedTranscript);
+                          if (matchedParsed.command) {
+                            handleQuery(matchedParsed.command, 'You (Hey TARS)', true, {
+                              mode: 'Hey TARS',
+                              fullTranscript: matchedTranscript
+                            });
+                          } else {
+                            var emEl = $('#botEmoji');
+                            if (emEl) emEl.textContent = '👂';
+                            var wakeReply = "Yes? I'm listening.";
+                            speak(wakeReply, '👂', true);
+                            var activeCrewWake = cur();
+                            appendVoiceLog({
+                              crew: activeCrewWake ? activeCrewWake.d.name : '',
+                              day: activeCrewWake ? Math.floor(activeCrewWake.day()) : null,
+                              mode: 'Hey TARS',
+                              transcript: matchedTranscript,
+                              reply: wakeReply,
+                              emoji: '👂',
+                              severity: 'normal'
+                            });
+                          }
+                        } else if (Date.now() < followUpUntil) {
+                          followUpUntil = Date.now() + 14000;
+                          syncWakeUI();
+                          setTranscriptStatus('Transcribed:', matchedTranscript);
+                          handleQuery(matchedTranscript, 'You (voice)', true, {
+                            mode: 'Follow-up',
+                            fullTranscript: matchedTranscript
+                          });
+                        } else {
+                          setTranscriptStatus('Standby:', 'Heard "' + matchedTranscript + '" — say "Hey TARS" to wake.');
+                        }
+                      }
+                    };
+
+                    rec.onerror = function (ev) {
+                      if (!alive) return;
+                      var errCode = ev && ev.error ? ev.error : 'unknown';
+                      if (errCode === 'no-speech' || errCode === 'aborted') return;
+                      if (errCode === 'not-allowed') {
+                        alive = false;
+                        stopWakeListener();
+                        finishStartup(false, new Error('Microphone permission denied.'));
+                        return;
+                      }
+                      // Fall back seamlessly to Web Audio VAD + Gemini transcription if SpeechRecognition endpoint fails
+                      alive = false;
+                      if (wakeState.enabled) stopWakeListener();
+                      if (!startedOnce) {
+                        finishStartup(false, new Error('fallback:' + errCode));
+                      } else {
+                        startVadWakeListener().catch(function () {});
+                      }
+                    };
+
+                    rec.onend = function () {
+                      resetWave();
+                      if (alive && wakeState.enabled && location.hash === '#emergency') {
+                        scheduleRestart(160);
+                      }
+                    };
+
+                    try {
+                      rec.start();
+                      setTimeout(function () {
+                        if (!startedOnce && alive) {
+                          alive = false;
+                          try { rec.abort(); } catch (e) {}
+                          finishStartup(false, new Error('fallback:timeout'));
+                        }
+                      }, 1500);
+                    } catch (e) {
+                      finishStartup(false, e);
+                    }
+                  });
+                };
+
+                var startWakeListener = async function () {
+                  if (wakeState.enabled) return;
+                  try {
+                    var ok = await startSpeechWakeListener();
+                    if (ok) return;
+                  } catch (err) {
+                    var msg = err && err.message ? err.message : '';
+                    if (msg && msg.indexOf('fallback:') !== 0 && /denied/i.test(msg)) {
+                      throw err;
+                    }
+                  }
+                  await startVadWakeListener();
+                };
+
+                if (wakeBtn) {
+                  wakeBtn.onclick = async function () {
+                    if (wakeState.enabled) {
+                      stopWakeListener();
+                      try { localStorage.setItem('vitv_tars_wake', '0'); } catch (e) {}
+                      setTranscriptStatus('Standby:', 'Hey TARS hands-free listening turned off.');
+                      toast('Hey TARS wake-word listening off');
+                      return;
+                    }
+                    try {
+                      await startWakeListener();
+                      try { localStorage.setItem('vitv_tars_wake', '1'); } catch (e) {}
+                      toast('Hey TARS active — call out "Hey TARS" anytime!');
+                    } catch (err) {
+                      stopWakeListener();
+                      var errMsg = err && err.message ? err.message : 'Microphone permission denied or unavailable.';
+                      setTranscriptStatus('Microphone error:', errMsg);
+                      toast('Microphone error: ' + errMsg);
+                    }
+                  };
+                }
+
+                // Auto-enable Hey TARS if user previously enabled it and mic permission is already granted
+                try {
+                  if (localStorage.getItem('vitv_tars_wake') !== '0' && navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'microphone' }).then(function (perm) {
+                      if (perm.state === 'granted' && location.hash === '#emergency' && !wakeState.enabled) {
+                        startWakeListener().catch(function () {});
+                      }
+                    }).catch(function () {});
+                  }
+                } catch (e) {}
 
                 if (mic) {
                   window.addEventListener('hashchange', function onLeaveEmergency() {
@@ -7653,6 +8521,8 @@
                         activeCapture.cancel();
                         activeCapture = null;
                       }
+                      stopWakeListener();
+                      stopAllSpeech();
                       resetWave();
                       window.removeEventListener('hashchange', onLeaveEmergency);
                     }
@@ -7675,7 +8545,10 @@
                           toast('No speech detected. Please try speaking again.');
                         } else {
                           setTranscriptStatus('Transcribed:', transcript);
-                          handleQuery(transcript, 'You (transcribed)', true);
+                          handleQuery(transcript, 'You (transcribed)', true, {
+                            mode: 'Speak',
+                            fullTranscript: transcript
+                          });
                         }
                       } catch (err) {
                         var msg = err && err.message ? err.message : 'Unable to transcribe audio.';
@@ -7685,6 +8558,12 @@
                         mic.disabled = false;
                         mic.classList.remove('recording');
                         mic.textContent = '🎤 Speak';
+                        wakeState.paused = false;
+                        try {
+                          if (!wakeState.enabled && localStorage.getItem('vitv_tars_wake') !== '0') {
+                            startWakeListener().catch(function () {});
+                          }
+                        } catch (e) {}
                       }
                       return;
                     }
@@ -7696,8 +8575,9 @@
                     }
 
                     try {
-                      if (synth) synth.cancel();
-                      activeCapture = await startVoiceCapture(updateWave);
+                      stopAllSpeech();
+                      wakeState.paused = true;
+                      activeCapture = await startVoiceCapture(function (lvl) { updateWave(lvl, 'recording'); });
                       mic.classList.add('recording');
                       mic.textContent = '⏹️ Stop';
                       setTranscriptStatus('Recording:', 'Listening from microphone… tap Stop when done.');
@@ -7705,6 +8585,7 @@
                       if (em) em.textContent = '👂';
                     } catch (err) {
                       activeCapture = null;
+                      wakeState.paused = false;
                       resetWave();
                       mic.disabled = false;
                       mic.classList.remove('recording');
@@ -7798,10 +8679,10 @@
                 y: Math.random(),
                 z: 0.35 + Math.random() * 0.9,
                 r: 0.7 + Math.random() * 1.4,
-                vx: (Math.random() - 0.5) * 0.000045,
-                vy: (Math.random() - 0.5) * 0.000035,
+                vx: (Math.random() - 0.5) * 0.000025,
+                vy: (Math.random() - 0.5) * 0.000020,
                 ph: Math.random() * Math.PI * 2,
-                sp: 0.5 + Math.random() * 1.2
+                sp: 0.4 + Math.random() * 0.9
               });
             }
             function resizeFx() {
@@ -7824,11 +8705,11 @@
               if (!document.body.classList.contains('dash-active') || document.hidden) return;
               var dt = Math.min(50, now - last);
               last = now;
-              mx += (tx - mx) * 0.04;
-              my += (ty - my) * 0.04;
+              mx += (tx - mx) * 0.03;
+              my += (ty - my) * 0.03;
               ctx.clearRect(0, 0, W, H);
-              var px = (mx - 0.5) * 28, py = (my - 0.5) * 20;
-              var t = now * 0.00018;
+              var px = (mx - 0.5) * 14, py = (my - 0.5) * 10;
+              var t = now * 0.00010;
 
               /* Minimal slow orbital arcs */
               var cx = W * 0.80 - px * 0.45, cy = H * 0.24 - py * 0.45;
