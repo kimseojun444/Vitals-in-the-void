@@ -1,0 +1,6 @@
+{
+  "name": "Vitals of the Void",
+  "description": "A full-viewport space-themed hero section featuring Vitals of the Void.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
