@@ -1708,6 +1708,26 @@
       .tars-transcript{width:100%;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid var(--line);text-align:left;font-size:13px;color:var(--text2);display:none}
       .tars-transcript.is-visible{display:block}
       .tars-transcript strong{color:#fff}
+      .tars-calib{width:100%;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.045);border:1px solid var(--line);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;text-align:left}
+      @media(max-width:540px){.tars-calib{grid-template-columns:minmax(0,1fr)}}
+      .tars-calib-item{display:flex;flex-direction:column;gap:4px}
+      .tars-calib-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;font-size:12px;color:var(--text2)}
+      .tars-calib-head b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:#79dce8;font-size:12px}
+      .tars-calib input[type=range]{width:100%;accent-color:#34c27a;cursor:pointer;height:5px}
+      .tars-chips{width:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+      .tars-chip{padding:5px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,0.05);color:var(--text2);font-size:12px;cursor:pointer;transition:background .16s,border-color .16s,color .16s}
+      .tars-chip:hover{background:rgba(121,220,232,0.14);border-color:rgba(121,220,232,0.5);color:#fff}
+      .tars-log-wrap{width:100%;margin-top:12px;border-radius:14px;background:rgba(0,0,0,0.28);border:1px solid var(--line);display:flex;flex-direction:column;text-align:left;overflow:hidden}
+      .tars-log-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:11.5px;color:var(--text3)}
+      .tars-log-list{max-height:280px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+      .tars-msg{padding:9px 12px;border-radius:12px;font-size:13.5px;line-height:1.48;max-width:94%;word-break:break-word}
+      .tars-msg.is-user{align-self:flex-end;background:rgba(121,220,232,0.14);border:1px solid rgba(121,220,232,0.32);color:#effbff}
+      .tars-msg.is-bot{align-self:flex-start;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--text1);display:flex;align-items:flex-start;gap:8px}
+      .tars-msg.is-alert{background:rgba(239,91,91,0.14);border-color:rgba(239,91,91,0.48);color:#ffe0e0}
+      .tars-msg.is-error{align-self:stretch;max-width:100%;background:rgba(245,185,65,0.12);border:1px solid rgba(245,185,65,0.42);color:#ffebb8;font-size:12.5px}
+      .tars-msg.is-thinking{opacity:.78;font-style:italic}
+      .tars-msg-say{background:none;border:0;color:var(--text3);cursor:pointer;padding:2px 4px;border-radius:6px;font-size:13px;line-height:1;flex:none;margin-left:auto}
+      .tars-msg-say:hover{color:#fff;background:rgba(255,255,255,0.1)}
       .voice-log-list{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
       .voice-log-item{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
       .voice-log-item.is-alert{border-color:rgba(239,91,91,0.45);background:rgba(239,91,91,0.09)}
@@ -5867,7 +5887,7 @@
             crew: ['Crew', 'Profiles, baselines and settings'],
             reference: ['Reference', 'How the software reaches its conclusions'],
             games: ['Games', 'Short station mini-games for off-duty breaks'],
-            emergency: ['TARS AI', 'Station emergency voice assistant & medical protocol guide']
+            emergency: ['TARS AI', 'Spacecraft AI companion — casual space chat, dry humor, live telemetry & emergency protocols']
           };
 
           function renderHeader(hdr) {
@@ -9392,22 +9412,41 @@
           VIEWS.emergency = async function () {
             var c = cur();
             if (c) renderHeader(headerOf(c)); else renderHeader();
+            var initHumor = 75;
+            var initHonesty = 90;
+            try {
+              var sh = localStorage.getItem('vitv_tars_humor');
+              if (sh != null && !isNaN(Number(sh))) initHumor = clamp(Number(sh), 0, 100);
+              var so = localStorage.getItem('vitv_tars_honesty');
+              if (so != null && !isNaN(Number(so))) initHonesty = clamp(Number(so), 50, 100);
+            } catch (e) {}
+
             return {
               html: '<div class="grid split"><div class="card hi" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px"><div class="robot-avatar" id="astrobotFace" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#34c27a,#0a3b22);display:grid;place-items:center;box-shadow:0 0 30px rgba(52,194,122,0.35);position:relative;margin-bottom:16px"><div style="font-size:38px;transition:transform .2s" id="botEmoji">🤖</div><div class="robot-waves" style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(52,194,122,0.5);animation:spin 12s linear infinite"></div></div>' +
-                '<h2 id="botTitle">TARS Emergency Guide</h2>' +
-                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Enable <b>Hey TARS</b> to call out hands-free, or tap <b>Speak</b>.</p>' +
-                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><button class="btn" id="botWake" type="button" title="Hands-free Hey TARS wake word listening">🎧 Hey TARS: Off</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;min-width:160px;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
+                '<h2 id="botTitle">TARS AI Companion</h2>' +
+                '<p class="s t2" id="botSub" style="margin-top:6px">Spacecraft AI buddy with dry space wit, casual orbit chat, live crew awareness, and instant medical protocols.</p>' +
+                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><button class="btn" id="botWake" type="button" title="Hands-free Hey TARS wake word listening">🎧 Hey TARS: Off</button><input id="botPrompt" placeholder="Chat, ask for a space joke, or check vitals..." style="flex:1;min-width:160px;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
+                '<div class="tars-calib" aria-label="TARS personality calibration">' +
+                  '<div class="tars-calib-item"><div class="tars-calib-head"><label for="botHumor">Humor setting</label><b id="botHumorVal">' + initHumor + '%</b></div><input id="botHumor" type="range" min="0" max="100" step="5" value="' + initHumor + '"></div>' +
+                  '<div class="tars-calib-item"><div class="tars-calib-head"><label for="botHonesty">Honesty setting</label><b id="botHonestyVal">' + initHonesty + '%</b></div><input id="botHonesty" type="range" min="50" max="100" step="5" value="' + initHonesty + '"></div>' +
+                '</div>' +
+                '<div class="tars-chips" id="botChips">' +
+                  '<button type="button" class="tars-chip" data-tars-chip="Tell me a dry space joke about zero-g life">😂 Tell me a space joke</button>' +
+                  '<button type="button" class="tars-chip" data-tars-chip="I am bored on night shift, keep me company">☕ Night shift chat</button>' +
+                  '<button type="button" class="tars-chip" data-tars-chip="Check my current vitals and roast or compliment how I am doing">🩺 Vitals check + wit</button>' +
+                  '<button type="button" class="tars-chip" data-tars-chip="What do you miss most about Earth, TARS?">🌍 Orbit banter</button>' +
+                '</div>' +
                 '<div class="tars-meter" id="botMeter" aria-label="Microphone audio waveform and volume meter"><div class="tars-meter-top"><span class="tars-meter-status"><i class="tars-meter-dot" id="botMeterDot"></i><span id="botMeterState">Mic Idle</span></span><span class="mono" id="botMeterDb">Input: —</span></div><canvas id="botWaveCanvas" height="48"></canvas><div class="tars-vol-track"><div class="tars-vol-fill" id="botVolFill"></div><div class="tars-vol-peak" id="botVolPeak"></div></div></div>' +
-                '<div class="tars-transcript is-visible" id="botTranscriptBox" aria-live="polite"><strong>Standby:</strong> Tap <b>🎧 Hey TARS: Off</b> to listen hands-free, or tap <b>🎤 Speak</b>.</div>' +
-                '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>TARS:</b> Station systems nominal. Say "Hey TARS" (with hands-free enabled), "TARS code red", or type below.</p></div></div>' +
-                '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency to activate instant guidance and step-by-step protocols.</p><div class="stack gap8" style="margin-top:14px">' +
+                '<div class="tars-transcript is-visible" id="botTranscriptBox" aria-live="polite"><strong>Standby:</strong> Type anything below for casual chat or jokes, or tap <b>🎤 Speak</b> / <b>🎧 Hey TARS</b>.</div>' +
+                '<div class="tars-log-wrap"><div class="tars-log-bar"><span>TARS Comms Channel · Gemini AI</span><button type="button" class="btn sm" id="botClearChat" style="padding:3px 9px;min-height:24px;font-size:11px">Clear chat</button></div><div class="tars-log-list dash-scroll" id="botLog"></div></div></div>' +
+                '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency for instant deterministic guidance, or ask TARS directly in chat.</p><div class="stack gap8" style="margin-top:14px">' +
                 '<button class="sub row between" data-esc="dcs" style="text-align:left;background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.35)"><span class="grow"><b>Decompression Sickness (DCS)</b><br><span class="xs t3">Joint pain, skin mottling, dizziness after EVA</span></span><span class="btn sm danger">Emergency</span></button>' +
                 '<button class="sub row between" data-esc="spe" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Solar Particle Event (SPE)</b><br><span class="xs t3">Radiation dose-rate spike / storm alert</span></span><span class="btn sm warning">Shelter</span></button>' +
                 '<button class="sub row between" data-esc="hypox" style="text-align:left;background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.35)"><span class="grow"><b>Hypoxia / Suit O₂ Failure</b><br><span class="xs t3">SpO₂ &lt; 90% or suit CO₂ &gt; 23 mmHg</span></span><span class="btn sm danger">Oxygen</span></button>' +
                 '<button class="sub row between" data-esc="cardiac" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Cardiac Arrhythmia / Faint</b><br><span class="xs t3">QTc &gt; 500 ms, palpitations or syncope</span></span><span class="btn sm warning">Medical</span></button>' +
                 '<button class="sub row between" data-esc="breathe" style="text-align:left"><span class="grow"><b>Calm Down &amp; Guided Breathing</b><br><span class="xs t3">Anxiety, panic or high stress protocol</span></span><span class="btn sm">Relax</span></button>' +
                 '</div></div>' +
-                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">Turn on <b>Hey TARS</b> to call out anytime like Google Home or Alexa, or tap <b>Speak</b> for push-to-talk:</p><ul class="acts t2" style="margin-top:8px"><li>“Hey TARS, what are my vitals?”</li><li>“Hey TARS, what is my Earth uplink status?”</li><li>“Hey TARS, what do I do for decompression sickness?”</li><li>“TARS code red!”</li></ul></div>' +
+                '<div class="card"><h3>Chat &amp; Voice Ideas</h3><p class="s t2" style="margin-top:6px">TARS uses live mission telemetry and your Humor % slider to riff with you in orbit:</p><ul class="acts t2" style="margin-top:8px"><li>“Tell me a joke about space food or zero-g”</li><li>“Hey TARS, how are my vitals looking today?”</li><li>“Hey TARS, I can’t sleep — distract me”</li><li>“TARS code red!” (instant emergency broadcast)</li></ul></div>' +
                 '<div id="uplinkBoxTars">' + (c ? earthUplinkCardHTML(c) : '') + '</div>' +
                 '</div></div>' +
                 '<div class="card section" id="botVoiceLogCard"><div class="row between"><div><div class="row" style="gap:8px;align-items:center"><h3>Voice Log</h3><span class="pill" id="botVoiceLogCount">0 entries</span></div><p class="s t3" style="margin-top:4px">Scrollable history of all past transcribed voice interactions with TARS.</p></div><button class="btn sm" id="botVoiceLogClear" type="button">Clear log</button></div><div class="voice-log-list dash-scroll" id="botVoiceLogList" style="margin-top:14px"></div></div>',
@@ -9423,6 +9462,26 @@
                 var ttsSafetyTimer = 0;
                 var followUpUntil = 0;
                 var activeAudioEl = null;
+                var chatHistory = [];
+                var humorPct = initHumor;
+                var honestyPct = initHonesty;
+
+                var humorSlider = $('#botHumor'), humorValEl = $('#botHumorVal');
+                var honestySlider = $('#botHonesty'), honestyValEl = $('#botHonestyVal');
+                if (humorSlider && humorValEl) {
+                  humorSlider.oninput = function () {
+                    humorPct = Number(humorSlider.value);
+                    humorValEl.textContent = humorPct + '%';
+                    try { localStorage.setItem('vitv_tars_humor', String(humorPct)); } catch (e) {}
+                  };
+                }
+                if (honestySlider && honestyValEl) {
+                  honestySlider.oninput = function () {
+                    honestyPct = Number(honestySlider.value);
+                    honestyValEl.textContent = honestyPct + '%';
+                    try { localStorage.setItem('vitv_tars_honesty', String(honestyPct)); } catch (e) {}
+                  };
+                }
 
                 var loadVoiceLog = function () {
                   try {
@@ -9589,18 +9648,8 @@
                   }
                 };
 
-                var speak = function (text, emoji, allowVoice) {
-                  if (emoji) {
-                    var em = $('#botEmoji');
-                    if (em) em.textContent = emoji;
-                  }
-                  var log = $('#botLog');
-                  if (log) {
-                    log.innerHTML += '<p style="margin-top:8px"><b>TARS:</b> ' + esc(text) + '</p>';
-                    log.scrollTop = log.scrollHeight;
-                  }
-                  if (allowVoice !== true || !speaking) return;
-
+                var playSpeechAudio = function (text, forceSpeak) {
+                  if (!forceSpeak && !speaking) return;
                   var estMs = Math.min(18000, Math.max(3500, text.length * 80));
                   if (synth && !browserTtsUnavailable) {
                     try {
@@ -9608,18 +9657,16 @@
                       if (synth.resume) synth.resume();
                       var voices = synth.getVoices ? synth.getVoices() : [];
                       var utter = new SpeechSynthesisUtterance(text);
-                      utter.rate = 1.08;
-                      utter.pitch = 1.02;
+                      utter.rate = 1.05;
+                      utter.pitch = 0.96;
                       window.__tarsUtter = utter;
                       var started = false;
-                      var waitLimitMs = (voices && voices.length > 0) ? 240 : 180;
                       var fallbackTimer = setTimeout(function () {
                         if (!started && !synth.speaking) {
-                          browserTtsUnavailable = true;
                           try { synth.cancel(); } catch (e) {}
                           playGeminiTtsFallback(text);
                         }
-                      }, waitLimitMs);
+                      }, 900);
                       utter.onstart = function () {
                         started = true;
                         browserTtsUnavailable = false;
@@ -9634,7 +9681,7 @@
                       utter.onerror = function () {
                         clearTimeout(fallbackTimer);
                         if (window.__tarsUtter === utter) window.__tarsUtter = null;
-                        browserTtsUnavailable = true;
+                        if (!voices || voices.length === 0) browserTtsUnavailable = true;
                         playGeminiTtsFallback(text);
                       };
                       markTtsActive(true, estMs);
@@ -9643,6 +9690,49 @@
                     } catch (e) {}
                   }
                   playGeminiTtsFallback(text);
+                };
+
+                var appendChatBubble = function (kind, text, emoji, severity) {
+                  var log = $('#botLog');
+                  if (!log) return null;
+                  var div = document.createElement('div');
+                  if (kind === 'user') {
+                    div.className = 'tars-msg is-user';
+                    div.innerHTML = '<b>You:</b> ' + esc(text);
+                  } else if (kind === 'error') {
+                    div.className = 'tars-msg is-error';
+                    div.innerHTML = '<b>⚠️ TARS Uplink:</b> ' + esc(text);
+                  } else if (kind === 'thinking') {
+                    div.className = 'tars-msg is-bot is-thinking';
+                    div.innerHTML = '<span>💭</span><span>TARS is thinking…</span>';
+                  } else {
+                    div.className = 'tars-msg is-bot' + (severity === 'alert' ? ' is-alert' : '');
+                    var span = document.createElement('span');
+                    span.className = 'grow';
+                    span.innerHTML = '<b>' + esc(emoji || '🤖') + ' TARS:</b> ' + esc(text);
+                    var sayBtn = document.createElement('button');
+                    sayBtn.type = 'button';
+                    sayBtn.className = 'tars-msg-say';
+                    sayBtn.title = 'Read reply aloud';
+                    sayBtn.textContent = '🔊';
+                    sayBtn.onclick = function () { playSpeechAudio(text, true); };
+                    div.appendChild(span);
+                    div.appendChild(sayBtn);
+                  }
+                  log.appendChild(div);
+                  log.scrollTop = log.scrollHeight;
+                  return div;
+                };
+
+                var speak = function (text, emoji, allowVoice, severity) {
+                  if (emoji) {
+                    var em = $('#botEmoji');
+                    if (em) em.textContent = emoji;
+                  }
+                  appendChatBubble('bot', text, emoji, severity);
+                  if (allowVoice === true && speaking) {
+                    playSpeechAudio(text, false);
+                  }
                 };
 
                 var playWakeChime = function () {
@@ -9672,23 +9762,66 @@
                   } catch (e) {}
                 };
 
-                speak('Hello! I am TARS, your station emergency voice guide. Enable Hey TARS to call out hands-free, or tap Speak.', '🤖', false);
+                var buildTarsCrewContext = function () {
+                  var active = cur();
+                  if (!active) return {};
+                  var h = headerOf(active);
+                  var vitals = {};
+                  var hrO = active.last('hr'); if (hrO) vitals['Heart rate'] = Math.round(hrO.v) + ' bpm';
+                  var spO = active.last('spo2'); if (spO) vitals['SpO2'] = Math.round(spO.v) + '%';
+                  var tpO = active.last('ctemp'); if (tpO) vitals['Core temp'] = tpO.v.toFixed(1) + ' °C';
+                  var slO = active.last('sleep'); if (slO) vitals['Sleep'] = slO.v.toFixed(1) + ' h';
+                  var stO = active.last('stress'); if (stO) vitals['Stress'] = Math.round(stO.v) + '/10';
+                  var mdO = active.last('mood'); if (mdO) vitals['Mood'] = Math.round(mdO.v) + '/10';
 
-                var handleQuery = function (rawQ, sourceLabel, isVoiceInput, logMeta) {
+                  var driftNote = '';
+                  try {
+                    var dfEnv = U.driftEnv || missionEnvBaseline(active);
+                    var df = computeDriftForecast(active, dfEnv, U.driftHorizon || 48);
+                    if (df && df.earliestCrit) {
+                      driftNote = 'Critical safety threshold projected on ' + df.earliestCrit.n + ' at T+' + fmt(df.earliestCrit.critCrossH, 1) + 'h.';
+                    } else if (df && df.earliest) {
+                      driftNote = 'Clinical drift projected on ' + df.earliest.n + ' at T+' + fmt(df.earliest.crossH, 1) + 'h.';
+                    } else if (df) {
+                      driftNote = 'All 24-48h Drift Vector biomarkers nominal.';
+                    }
+                  } catch (e) {}
+
+                  return {
+                    crewName: active.d.name,
+                    role: active.d.role || '',
+                    missionDay: Math.floor(active.day()),
+                    environment: h ? h.env : '',
+                    gravityG: h ? h.g : 0,
+                    alerts: h ? h.al : 0,
+                    vitals: vitals,
+                    driftSummary: driftNote
+                  };
+                };
+
+                var clearChatBtn = $('#botClearChat');
+                if (clearChatBtn) {
+                  clearChatBtn.onclick = function () {
+                    chatHistory = [];
+                    var log = $('#botLog');
+                    if (log) log.innerHTML = '';
+                    speak('Comms log cleared. Humor setting is at ' + humorPct + ' percent. Ready whenever you are, Commander.', '🤖', false);
+                  };
+                }
+
+                speak('All systems nominal. Humor setting is at ' + humorPct + ' percent. Ask for a space joke, check your vitals, or just keep me company on shift.', '🤖', false);
+
+                var handleQuery = async function (rawQ, sourceLabel, isVoiceInput, logMeta) {
                   var trimmed = (rawQ || '').trim();
                   var q = trimmed.toLowerCase();
                   if (!q) return;
-                  var log = $('#botLog');
-                  if (log) {
-                    log.innerHTML += '<p style="margin-top:8px;color:var(--text3)"><b>' + esc(sourceLabel || 'You') + ':</b> ' + esc(trimmed) + '</p>';
-                    log.scrollTop = log.scrollHeight;
-                  }
+                  appendChatBubble('user', trimmed);
                   var voiceReply = isVoiceInput === true;
                   var replyText = '';
                   var replyEmoji = '🤖';
                   var replySeverity = 'normal';
 
-                  if (q.indexOf('tars code red') >= 0 || q.indexOf('code red') >= 0) {
+                  if (q.indexOf('tars code red') >= 0 || q === 'code red') {
                     if (voiceReply) markTtsActive(true, 9000);
                     triggerCodeRed(voiceReply);
                     replyText = 'CODE RED EMERGENCY BROADCAST ACTIVATED! All crew devices and NASA Earth Center alerted.';
@@ -9699,72 +9832,78 @@
                     stopAllSpeech();
                     replyText = 'Standing by.';
                     speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('decompression') >= 0 || q.indexOf('bends') >= 0 || q.indexOf('dcs') >= 0 || q.indexOf('joint pain') >= 0) {
-                    replyText = 'Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.';
-                    replyEmoji = '🚨';
-                    replySeverity = 'alert';
-                    speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('solar') >= 0 || q.indexOf('radiation') >= 0 || q.indexOf('storm') >= 0 || q.indexOf('spe') >= 0) {
-                    replyText = 'Solar particle event warning! Radiation dose rate spike detected. Move to the storm shelter and protected crew quarters immediately. Put on your personal dosimeter and await further ground instructions.';
-                    replyEmoji = '☢️';
-                    replySeverity = 'alert';
-                    speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('hypox') >= 0 || q.indexOf('oxygen') >= 0 || (q.indexOf('breath') >= 0 && q.indexOf('short') >= 0) || q.indexOf('co2') >= 0) {
-                    replyText = 'Hypoxia or suit hazard alert! Oxygen saturation below normal or suit carbon dioxide elevated. Check your regulator, re-seat the mask, and notify the commander at once.';
-                    replyEmoji = '⚠️';
-                    replySeverity = 'alert';
-                    speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('cardiac') >= 0 || q.indexOf('heart') >= 0 || q.indexOf('faint') >= 0 || q.indexOf('dizzy') >= 0 || q.indexOf('palpitat') >= 0) {
-                    replyText = 'Cardiac alert! Heart rate or QTc irregularity detected. Stop all activity immediately, sit down, take slow breaths, and contact medical.';
-                    replyEmoji = '❤️';
-                    replySeverity = 'alert';
-                    speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('breathe') >= 0 || q.indexOf('calm') >= 0 || q.indexOf('stress') >= 0 || q.indexOf('panic') >= 0 || q.indexOf('anxiety') >= 0) {
-                    replyText = 'Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.';
-                    replyEmoji = '🧘';
-                    speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('uplink') >= 0 || q.indexOf('earth') >= 0 || q.indexOf('surgeon') >= 0 || q.indexOf('drift') >= 0 || q.indexOf('packet') >= 0) {
-                    var activeUpCrew = cur();
-                    var upInfo = activeUpCrew ? computeEarthUplink(activeUpCrew) : null;
-                    if (upInfo && upInfo.flagged) {
-                      replyText = 'Earth Flight Surgeon Uplink status: ' + upInfo.statusLabel + '. Predictive drift flagged on ' + upInfo.primary.name + ' (' + fmt(upInfo.primary.val, upInfo.primary.dp) + ' ' + upInfo.primary.unit + ', critical ETA ' + upInfo.etaText + '). ' + upInfo.tarsDirective;
-                      replyEmoji = '📡';
+                  } else if (logMeta && logMeta.instantProtocol) {
+                    if (q.indexOf('decompression') >= 0) {
+                      replyText = 'Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.';
+                      replyEmoji = '🚨';
+                      replySeverity = 'alert';
+                    } else if (q.indexOf('solar') >= 0) {
+                      replyText = 'Solar particle event warning! Radiation dose rate spike detected. Move to the storm shelter and protected crew quarters immediately. Put on your personal dosimeter and await further ground instructions.';
+                      replyEmoji = '☢️';
+                      replySeverity = 'alert';
+                    } else if (q.indexOf('hypox') >= 0) {
+                      replyText = 'Hypoxia or suit hazard alert! Oxygen saturation below normal or suit carbon dioxide elevated. Check your regulator, re-seat the mask, and notify the commander at once.';
+                      replyEmoji = '⚠️';
+                      replySeverity = 'alert';
+                    } else if (q.indexOf('cardiac') >= 0) {
+                      replyText = 'Cardiac alert! Heart rate or QTc irregularity detected. Stop all activity immediately, sit down, take slow breaths, and contact medical.';
+                      replyEmoji = '❤️';
+                      replySeverity = 'alert';
                     } else {
-                      replyText = 'Earth Flight Surgeon Uplink is on Standby. All 24 to 48 hour biomarker trajectories are nominal.';
-                      replyEmoji = '📡';
+                      replyText = 'Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.';
+                      replyEmoji = '🧘';
                     }
-                    speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('vital') >= 0 || q.indexOf('status') >= 0 || q.indexOf('health') >= 0 || q.indexOf('report') >= 0) {
-                    var active = cur();
-                    if (active) {
-                      var h = headerOf(active);
-                      var hrObj = active.last('hr');
-                      var spo2Obj = active.last('spo2');
-                      var tempObj = active.last('ctemp');
-                      var summary = 'Crew telemetry for ' + active.d.name + ' on mission day ' + Math.floor(active.day()) + ': ';
-                      summary += hrObj ? ('heart rate ' + Math.round(hrObj.v) + ' beats per minute, ') : '';
-                      summary += spo2Obj ? ('oxygen saturation ' + Math.round(spo2Obj.v) + ' percent, ') : '';
-                      summary += tempObj ? ('core temperature ' + tempObj.v.toFixed(1) + ' degrees Celsius. ') : '';
-                      summary += h.al ? (h.al + ' active alerts.') : 'all monitored systems within nominal limits.';
-                      replyText = summary;
-                      replyEmoji = '🩺';
-                      speak(replyText, replyEmoji, voiceReply);
-                    } else {
-                      replyText = 'No active crew profile selected. Station systems nominal.';
-                      speak(replyText, replyEmoji, voiceReply);
-                    }
-                  } else if (/^(hi|hello|hey|good morning|good evening|are you there|you there)/.test(q)) {
-                    replyText = 'All systems nominal, Commander. How can I assist you?';
-                    speak(replyText, replyEmoji, voiceReply);
-                  } else if (q.indexOf('thank') >= 0) {
-                    replyText = 'You are welcome, Commander. Standing by.';
-                    speak(replyText, replyEmoji, voiceReply);
+                    speak(replyText, replyEmoji, voiceReply, replySeverity);
                   } else {
-                    replyText = 'I heard: "' + trimmed + '". For medical protocols, ask about vitals, decompression sickness, solar storm, hypoxia, cardiac symptoms, or guided breathing.';
-                    speak(replyText, replyEmoji, voiceReply);
+                    var thinkingEl = appendChatBubble('thinking', '');
+                    var emWait = $('#botEmoji');
+                    if (emWait) emWait.textContent = '💭';
+                    var sb = $('#botSend');
+                    if (sb) sb.disabled = true;
+                    try {
+                      var resp = await fetch('/api/tars/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          message: trimmed,
+                          history: chatHistory.slice(-10),
+                          humor: humorPct,
+                          honesty: honestyPct,
+                          context: buildTarsCrewContext()
+                        })
+                      });
+                      var data = await resp.json().catch(function () { return {}; });
+                      if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+                      if (!resp.ok || !data.reply) {
+                        var errText = (data && data.error) ? data.error : ('Server error (' + resp.status + ')');
+                        appendChatBubble('error', errText);
+                        setTranscriptStatus('TARS AI error:', errText);
+                        if (emWait) emWait.textContent = '⚠️';
+                        toast(errText);
+                        return;
+                      }
+                      replyText = data.reply;
+                      replyEmoji = data.emoji || '🤖';
+                      replySeverity = data.severity === 'alert' ? 'alert' : 'normal';
+                      chatHistory.push({ role: 'user', text: trimmed });
+                      chatHistory.push({ role: 'model', text: replyText });
+                      if (chatHistory.length > 24) chatHistory = chatHistory.slice(-24);
+                      speak(replyText, replyEmoji, voiceReply, replySeverity);
+                      setTranscriptStatus('TARS:', replyText);
+                    } catch (err) {
+                      if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+                      var netMsg = (err && err.message) ? err.message : 'Unable to reach TARS AI server.';
+                      appendChatBubble('error', netMsg);
+                      setTranscriptStatus('Connection error:', netMsg);
+                      if (emWait) emWait.textContent = '⚠️';
+                      toast(netMsg);
+                      return;
+                    } finally {
+                      if (sb) sb.disabled = false;
+                    }
                   }
 
-                  if (voiceReply) {
+                  if (voiceReply && replyText) {
                     var activeCrew = cur();
                     appendVoiceLog({
                       crew: activeCrew ? activeCrew.d.name : '',
@@ -9781,11 +9920,17 @@
                 $$('[data-esc]').forEach(function (b) {
                   b.onclick = function () {
                     var t = b.dataset.esc;
-                    if (t === 'dcs') handleQuery('decompression sickness');
-                    else if (t === 'spe') handleQuery('solar particle event');
-                    else if (t === 'hypox') handleQuery('hypoxia');
-                    else if (t === 'cardiac') handleQuery('cardiac');
-                    else if (t === 'breathe') handleQuery('breathe');
+                    if (t === 'dcs') handleQuery('decompression sickness', 'Protocol', false, { instantProtocol: true });
+                    else if (t === 'spe') handleQuery('solar particle event', 'Protocol', false, { instantProtocol: true });
+                    else if (t === 'hypox') handleQuery('hypoxia', 'Protocol', false, { instantProtocol: true });
+                    else if (t === 'cardiac') handleQuery('cardiac', 'Protocol', false, { instantProtocol: true });
+                    else if (t === 'breathe') handleQuery('breathe', 'Protocol', false, { instantProtocol: true });
+                  };
+                });
+
+                $$('[data-tars-chip]').forEach(function (ch) {
+                  ch.onclick = function () {
+                    handleQuery(ch.dataset.tarsChip, 'You');
                   };
                 });
 
@@ -10574,9 +10719,9 @@
                   };
                 }
 
-                // Auto-enable Hey TARS if user previously enabled it and mic permission is already granted
+                // Auto-enable Hey TARS only if user explicitly enabled it earlier and mic permission is already granted
                 try {
-                  if (localStorage.getItem('vitv_tars_wake') !== '0' && navigator.permissions && navigator.permissions.query) {
+                  if (localStorage.getItem('vitv_tars_wake') === '1' && navigator.permissions && navigator.permissions.query) {
                     navigator.permissions.query({ name: 'microphone' }).then(function (perm) {
                       if (perm.state === 'granted' && location.hash === '#emergency' && !wakeState.enabled) {
                         startWakeListener().catch(function () {});

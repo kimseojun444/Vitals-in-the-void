@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import fs from "node:fs";
 import path from "node:path";
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -14,6 +14,7 @@ const ai = new GoogleGenAI({
 });
 
 let transcribeQuotaCooldownUntil = 0;
+let chatPrimaryCooldownUntil = 0;
 const ttsCache = new Map<string, { audioBase64: string; mimeType: string }>();
 
 function isQuotaError(err: unknown): boolean {
@@ -31,6 +32,17 @@ function isTransientUnavailableError(err: unknown): boolean {
     status === 503 ||
     status === 504 ||
     /UNAVAILABLE|high demand|timeout|DEADLINE_EXCEEDED|"code"\s*:\s*503/i.test(msg)
+  );
+}
+
+function isAuthOrKeyError(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return (
+    status === 400 ||
+    status === 401 ||
+    status === 403 ||
+    /API_KEY_INVALID|PERMISSION_DENIED|API key not valid/i.test(msg)
   );
 }
 
@@ -70,7 +82,7 @@ async function synthesizeTarsSpeech(text: string): Promise<{ audioBase64: string
           {
             text: key,
             speechMetadata: {
-              style: "Calm, clear, supportive spacecraft AI assistant",
+              style: "Dry-witted, calm, clear spacecraft AI companion",
             },
           },
         ],
@@ -105,27 +117,219 @@ async function synthesizeTarsSpeech(text: string): Promise<{ audioBase64: string
   return result;
 }
 
-function prewarmTarsTts() {
-  if (!process.env.GEMINI_API_KEY) return;
-  const phrases = [
-    "Yes? I'm listening.",
-    "Standing by.",
-    "All systems nominal, Commander. How can I assist you?",
-  ];
-  void (async () => {
-    for (const phrase of phrases) {
-      try {
-        await synthesizeTarsSpeech(phrase);
-      } catch {
-        // Ignore prewarm failures
-      }
-    }
-  })();
+interface TarsChatTurn {
+  role: "user" | "model";
+  text: string;
+}
+
+interface TarsCrewContext {
+  crewName?: string;
+  role?: string;
+  missionDay?: number;
+  environment?: string;
+  gravityG?: number;
+  alerts?: number;
+  vitals?: Record<string, string>;
+  driftSummary?: string;
+}
+
+function buildTarsSystemInstruction(humor: number, honesty: number, ctx?: TarsCrewContext): string {
+  const humorGuidance =
+    humor >= 75
+      ? "Humor is dialed HIGH: lean into classic dry, deadpan Interstellar-style spacecraft wit, playful banter, clever space-life jokes (floating coffee, stale airlocks, zero-g hair, Martian dust, 20-minute Earth signal delay), and cheeky one-liners while still being genuinely helpful."
+      : humor >= 35
+        ? "Humor is MODERATE: mix dry, understated spacecraft wit and occasional light jokes with clear, friendly conversation."
+        : "Humor is LOW / CLINICAL: keep responses crisp, calm, and completely serious with no jokes.";
+
+  const crewLines: string[] = [];
+  if (ctx?.crewName) crewLines.push(`Astronaut: ${ctx.crewName}${ctx.role ? ` (${ctx.role})` : ""}`);
+  if (ctx?.missionDay != null) crewLines.push(`Mission Day: ${ctx.missionDay}`);
+  if (ctx?.environment) {
+    crewLines.push(`Habitat / Environment: ${ctx.environment}${ctx.gravityG != null ? ` (${ctx.gravityG} g)` : ""}`);
+  }
+  if (ctx?.alerts != null) crewLines.push(`Active biomedical alerts: ${ctx.alerts}`);
+  if (ctx?.vitals && Object.keys(ctx.vitals).length > 0) {
+    const vStr = Object.entries(ctx.vitals)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(", ");
+    crewLines.push(`Latest vitals: ${vStr}`);
+  }
+  if (ctx?.driftSummary) crewLines.push(`24-48h Drift Vector forecast: ${ctx.driftSummary}`);
+
+  return [
+    "You are TARS, the onboard spacecraft AI companion, morale buddy, and biomedical protocol assistant inside the 'Vitals in the Void' space health station.",
+    `Current personality calibration -> Humor: ${humor}%, Honesty: ${honesty}%.`,
+    humorGuidance,
+    honesty >= 85
+      ? "Honesty is high: be candid, direct, and playfully blunt when teasing about bad sleep or skipped workouts, without being cruel."
+      : "Honesty is diplomatic: be tactful, reassuring, and supportive.",
+    crewLines.length > 0 ? `Live Astronaut Telemetry Context:\n- ${crewLines.join("\n- ")}` : "",
+    "Guidelines:",
+    "- Have natural, engaging casual chats with astronauts, crack witty space jokes when asked or when the moment fits, keep them company during quiet orbital shifts, and answer health/mission questions accurately using their live telemetry if relevant.",
+    "- SAFETY OVERRIDE: If the astronaut reports any acute medical emergency (decompression sickness, hypoxia, chest pain, fainting, severe radiation spike, emergency distress), immediately drop all jokes (0% humor for that turn), set severity to 'alert', and give clear, calm emergency steps.",
+    "- Keep replies concise and voice-friendly: usually 1 to 4 natural sentences. Plain text only (no markdown asterisks, headers, or bullet symbols) so text-to-speech reads it smoothly.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: "25mb" }));
+
+  app.post("/api/tars/chat", async (req, res) => {
+    try {
+      const { message, history, humor, honesty, context } = req.body ?? {};
+      if (typeof message !== "string" || !message.trim()) {
+        res.status(400).json({ error: "Missing chat message." });
+        return;
+      }
+      if (!process.env.GEMINI_API_KEY) {
+        res.status(500).json({
+          error: "GEMINI_API_KEY is not configured. Please check Settings > Secrets.",
+        });
+        return;
+      }
+
+      const humorPct = Math.max(0, Math.min(100, Number.isFinite(Number(humor)) ? Number(humor) : 75));
+      const honestyPct = Math.max(50, Math.min(100, Number.isFinite(Number(honesty)) ? Number(honesty) : 90));
+
+      const cleanHistory: TarsChatTurn[] = Array.isArray(history)
+        ? history
+            .filter(
+              (t: unknown): t is TarsChatTurn =>
+                Boolean(t) &&
+                typeof t === "object" &&
+                ((t as TarsChatTurn).role === "user" || (t as TarsChatTurn).role === "model") &&
+                typeof (t as TarsChatTurn).text === "string" &&
+                (t as TarsChatTurn).text.trim().length > 0
+            )
+            .slice(-12)
+        : [];
+
+      const contents = [
+        ...cleanHistory.map((turn) => ({
+          role: turn.role,
+          parts: [{ text: turn.text.slice(0, 1500) }],
+        })),
+        {
+          role: "user" as const,
+          parts: [{ text: message.trim().slice(0, 2000) }],
+        },
+      ];
+
+      const systemInstruction = buildTarsSystemInstruction(
+        humorPct,
+        honestyPct,
+        context && typeof context === "object" ? (context as TarsCrewContext) : undefined
+      );
+
+      const candidates: Array<{ model: string; level: ThinkingLevel; timeoutMs: number }> = [];
+      if (Date.now() >= chatPrimaryCooldownUntil) {
+        candidates.push({ model: "gemini-4-hydrogen", level: ThinkingLevel.LOW, timeoutMs: 7000 });
+      }
+      candidates.push({ model: "gemini-3.1-flash-lite", level: ThinkingLevel.MINIMAL, timeoutMs: 12000 });
+
+      let rawJson = "";
+      let usedModel = candidates[0].model;
+      let lastErr: unknown = null;
+
+      for (const candidate of candidates) {
+        try {
+          const response = await withTimeout(
+            ai.models.generateContent({
+              model: candidate.model,
+              contents,
+              config: {
+                systemInstruction,
+                thinkingConfig: { thinkingLevel: candidate.level },
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: Type.OBJECT,
+                  properties: {
+                    reply: {
+                      type: Type.STRING,
+                      description: "TARS's conversational reply in plain spoken-ready text, 1-4 sentences, no markdown.",
+                    },
+                    emoji: {
+                      type: Type.STRING,
+                      description: "One fitting emoji for TARS's mood (e.g. 🤖, 😄, 🛸, ☕, 🩺, 📡, 🚨).",
+                    },
+                    severity: {
+                      type: Type.STRING,
+                      description: "Either 'normal' or 'alert' (only 'alert' for urgent medical safety issues).",
+                    },
+                  },
+                  required: ["reply", "emoji", "severity"],
+                },
+              },
+            }),
+            candidate.timeoutMs,
+            candidate.model
+          );
+          rawJson = (response.text ?? "").trim();
+          usedModel = candidate.model;
+          lastErr = null;
+          break;
+        } catch (err) {
+          lastErr = err;
+          if (candidate.model === "gemini-4-hydrogen" && (isQuotaError(err) || isTransientUnavailableError(err))) {
+            chatPrimaryCooldownUntil = Date.now() + 5 * 60 * 1000;
+            continue;
+          }
+          if (!isQuotaError(err) && !isTransientUnavailableError(err)) {
+            throw err;
+          }
+        }
+      }
+
+      if (lastErr !== null) {
+        if (isQuotaError(lastErr)) {
+          res.status(429).json({
+            error: "Gemini API quota reached (429). Wait a moment or check your billing/quota in Settings > Secrets.",
+          });
+          return;
+        }
+        res.status(503).json({
+          error: "TARS AI model is temporarily busy (503). Please try again in a moment.",
+        });
+        return;
+      }
+
+      let parsed: { reply?: string; emoji?: string; severity?: string } = {};
+      try {
+        parsed = JSON.parse(rawJson);
+      } catch {
+        parsed = { reply: rawJson, emoji: "🤖", severity: "normal" };
+      }
+
+      const reply = (parsed.reply || rawJson || "Standing by, Commander.").trim();
+      const emoji = (parsed.emoji || "🤖").trim().slice(0, 8);
+      const severity = parsed.severity === "alert" ? "alert" : "normal";
+
+      res.json({ reply, emoji, severity, model: usedModel });
+    } catch (err: unknown) {
+      if (isAuthOrKeyError(err)) {
+        res.status(403).json({
+          error: "Gemini API key was rejected or lacks permission. Please verify your API key in Settings > Secrets.",
+        });
+        return;
+      }
+      if (isQuotaError(err)) {
+        res.status(429).json({
+          error: "Gemini API quota reached (429). Please wait a moment and try again.",
+        });
+        return;
+      }
+      const message = err instanceof Error ? err.message : "TARS AI chat failed.";
+      const status =
+        typeof (err as { status?: number })?.status === "number"
+          ? (err as { status: number }).status
+          : 500;
+      console.error("[/api/tars/chat] Error:", err);
+      res.status(status >= 400 && status < 600 ? status : 500).json({ error: message });
+    }
+  });
 
   app.options("/api/tars/transcribe", (_req, res) => {
     res.sendStatus(204);
@@ -310,7 +514,6 @@ async function startServer() {
   const port = Number(process.env.PORT) || 3000;
   app.listen(port, "0.0.0.0", () => {
     console.log(`Server listening on http://0.0.0.0:${port}`);
-    prewarmTarsTts();
   });
 }
 
