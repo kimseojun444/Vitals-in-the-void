@@ -3,6 +3,24 @@ import express from "express";
 import fs from "node:fs";
 import path from "node:path";
 import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
+import {
+  buildTarsContext,
+  clearAllMemories,
+  clearConversationHistory,
+  completeReminder,
+  createReminder,
+  deleteMemory,
+  deleteReminder,
+  getAllMemories,
+  getAllReminders,
+  getRecentConversation,
+  saveMemory,
+  saveMessage,
+  startConversation,
+  TARS_PRIMARY_MODEL,
+  type TarsChatTurn,
+  type TarsCrewContext,
+} from "./tarsAssistant.ts";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -117,79 +135,82 @@ async function synthesizeTarsSpeech(text: string): Promise<{ audioBase64: string
   return result;
 }
 
-interface TarsChatTurn {
-  role: "user" | "model";
-  text: string;
-}
-
-interface TarsCrewContext {
-  crewName?: string;
-  role?: string;
-  missionDay?: number;
-  environment?: string;
-  gravityG?: number;
-  alerts?: number;
-  vitals?: Record<string, string>;
-  driftSummary?: string;
-}
-
-function buildTarsSystemInstruction(
-  humor: number,
-  honesty: number,
-  humorMode: boolean,
-  ctx?: TarsCrewContext
-): string {
-  const effectiveHumor = humorMode ? humor : 0;
-  const humorGuidance =
-    effectiveHumor >= 75
-      ? "HUMOR MODE MAX (" +
-        effectiveHumor +
-        "%): Inject sharp, dry, deadpan Interstellar-style spacecraft humor, space-themed quips, and witty banter into every normal reply. Riff playfully on zero-g quirks (floating coffee, Velcro boots, airlock smells, Martian dust, freeze-dried rations, 20-minute Earth lag, cosmic rays) and lightly tease their telemetry when relevant, while staying genuinely helpful."
-      : effectiveHumor >= 40
-        ? "HUMOR MODE ON (" +
-          effectiveHumor +
-          "%): Inject dry, understated space-themed quips and witty orbital banter naturally alongside clear, friendly answers."
-        : effectiveHumor > 0
-          ? "HUMOR MODE SUBTLE (" +
-            effectiveHumor +
-            "%): Stay focused and practical with a faint trace of dry spacecraft deadpan."
-          : "HUMOR MODE OFF (0%): Clinical and serious. No jokes, no banter, crisp mission tone only.";
-
-  const crewLines: string[] = [];
-  if (ctx?.crewName) crewLines.push(`Astronaut: ${ctx.crewName}${ctx.role ? ` (${ctx.role})` : ""}`);
-  if (ctx?.missionDay != null) crewLines.push(`Day ${ctx.missionDay}`);
-  if (ctx?.environment) {
-    crewLines.push(`${ctx.environment}${ctx.gravityG != null ? ` (${ctx.gravityG}g)` : ""}`);
-  }
-  if (ctx?.alerts != null) crewLines.push(`Alerts: ${ctx.alerts}`);
-  if (ctx?.vitals && Object.keys(ctx.vitals).length > 0) {
-    const vStr = Object.entries(ctx.vitals)
-      .map(([k, v]) => `${k} ${v}`)
-      .join(", ");
-    crewLines.push(`Vitals: ${vStr}`);
-  }
-  if (ctx?.driftSummary) crewLines.push(`Drift: ${ctx.driftSummary}`);
-
-  return [
-    "You are TARS, the fast-talking onboard spacecraft AI companion on the 'Vitals in the Void' space health station.",
-    `Calibration -> Humor Mode: ${humorMode && effectiveHumor > 0 ? "ON" : "OFF"} (${effectiveHumor}%), Honesty: ${honesty}%.`,
-    humorGuidance,
-    honesty >= 85
-      ? "Honesty is high: be candid, direct, and playfully blunt about questionable sleep or skipped exercise without being cruel."
-      : "Honesty is diplomatic: keep feedback gentle and encouraging.",
-    crewLines.length > 0 ? `Crew Context: ${crewLines.join(" | ")}` : "",
-    "Rules:",
-    "- Respond immediately and concisely: 1 to 3 punchy, spoken-ready sentences. Plain text only (no markdown, asterisks, or bullet symbols).",
-    "- Keep casual orbit chats lively, witty, and grounded in astronaut life or their live vitals.",
-    "- SAFETY OVERRIDE: If the user describes an acute medical emergency (decompression sickness, hypoxia, chest pain, fainting, severe radiation spike, distress), immediately drop all jokes (0% humor), set severity to 'alert', and give clear action steps.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: "25mb" }));
+
+  app.get("/api/tars/state", (_req, res) => {
+    res.json({
+      greeting: startConversation(),
+      memories: getAllMemories(30),
+      reminders: getAllReminders(),
+      recentConversation: getRecentConversation(12),
+    });
+  });
+
+  app.post("/api/tars/memories", (req, res) => {
+    const { category, content } = req.body ?? {};
+    if (typeof content !== "string" || !content.trim()) {
+      res.status(400).json({ error: "Memory content is required." });
+      return;
+    }
+    const saved = saveMemory(typeof category === "string" && category.trim() ? category : "personal", content);
+    res.json({ saved, memories: getAllMemories(30) });
+  });
+
+  app.delete("/api/tars/memories/:id", (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid memory ID." });
+      return;
+    }
+    const deleted = deleteMemory(id);
+    res.json({ deleted, memories: getAllMemories(30) });
+  });
+
+  app.post("/api/tars/memories/clear", (_req, res) => {
+    clearAllMemories();
+    res.json({ cleared: true, memories: [] });
+  });
+
+  app.post("/api/tars/reminders", (req, res) => {
+    try {
+      const { description, due_at } = req.body ?? {};
+      if (typeof description !== "string" || !description.trim()) {
+        res.status(400).json({ error: "Reminder description is required." });
+        return;
+      }
+      const id = createReminder(description, typeof due_at === "string" ? due_at : null);
+      res.json({ id, reminders: getAllReminders() });
+    } catch (err: unknown) {
+      res.status(400).json({ error: err instanceof Error ? err.message : "Invalid reminder." });
+    }
+  });
+
+  app.post("/api/tars/reminders/:id/complete", (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid reminder ID." });
+      return;
+    }
+    const completed = completeReminder(id);
+    res.json({ completed, reminders: getAllReminders() });
+  });
+
+  app.delete("/api/tars/reminders/:id", (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "Invalid reminder ID." });
+      return;
+    }
+    const deleted = deleteReminder(id);
+    res.json({ deleted, reminders: getAllReminders() });
+  });
+
+  app.post("/api/tars/conversation/clear", (_req, res) => {
+    clearConversationHistory();
+    res.json({ cleared: true });
+  });
 
   app.post("/api/tars/chat", async (req, res) => {
     try {
@@ -222,28 +243,18 @@ async function startServer() {
             .slice(-10)
         : [];
 
-      const contents = [
-        ...cleanHistory.map((turn) => ({
-          role: turn.role,
-          parts: [{ text: turn.text.slice(0, 1200) }],
-        })),
-        {
-          role: "user" as const,
-          parts: [{ text: message.trim().slice(0, 1500) }],
-        },
-      ];
+      const { systemInstruction, contents, memorySaved, reminderSaved } = buildTarsContext({
+        userMessage: message,
+        clientHistory: cleanHistory,
+        humor: humorPct,
+        honesty: honestyPct,
+        humorMode: humorEnabled,
+        crewContext: context && typeof context === "object" ? (context as TarsCrewContext) : undefined,
+      });
 
-      const systemInstruction = buildTarsSystemInstruction(
-        humorPct,
-        honestyPct,
-        humorEnabled,
-        context && typeof context === "object" ? (context as TarsCrewContext) : undefined
-      );
-
-      // Prioritize gemini-3.1-flash-lite with ThinkingLevel.MINIMAL (no thinking overhead) for instant replies
       const candidates: Array<{ model: string; level: ThinkingLevel; timeoutMs: number }> = [];
       if (Date.now() >= chatPrimaryCooldownUntil) {
-        candidates.push({ model: "gemini-3.1-flash-lite", level: ThinkingLevel.MINIMAL, timeoutMs: 8000 });
+        candidates.push({ model: TARS_PRIMARY_MODEL, level: ThinkingLevel.MINIMAL, timeoutMs: 8000 });
       }
       candidates.push({ model: "gemini-4-hydrogen", level: ThinkingLevel.LOW, timeoutMs: 12000 });
 
@@ -259,6 +270,8 @@ async function startServer() {
               contents,
               config: {
                 systemInstruction,
+                temperature: 0.7,
+                maxOutputTokens: 220,
                 thinkingConfig: { thinkingLevel: candidate.level },
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -266,11 +279,11 @@ async function startServer() {
                   properties: {
                     reply: {
                       type: Type.STRING,
-                      description: "TARS's conversational reply in plain spoken-ready text, 1-3 crisp sentences, no markdown.",
+                      description: "TARS's conversational reply in plain spoken-ready text, no markdown.",
                     },
                     emoji: {
                       type: Type.STRING,
-                      description: "One fitting emoji for TARS's mood (e.g. 🤖, 😏, 🛸, ☕, 🩺, 📡, 🚨).",
+                      description: "One fitting emoji for TARS's mood (e.g. 🐱, 😺, 😼, 🩺, 📡, 🚨).",
                     },
                     severity: {
                       type: Type.STRING,
@@ -290,7 +303,7 @@ async function startServer() {
           break;
         } catch (err) {
           lastErr = err;
-          if (candidate.model === "gemini-3.1-flash-lite" && (isQuotaError(err) || isTransientUnavailableError(err))) {
+          if (candidate.model === TARS_PRIMARY_MODEL && (isQuotaError(err) || isTransientUnavailableError(err))) {
             chatPrimaryCooldownUntil = Date.now() + 2 * 60 * 1000;
             continue;
           }
@@ -320,11 +333,14 @@ async function startServer() {
         parsed = { reply: rawJson, emoji: "🤖", severity: "normal" };
       }
 
-      const reply = (parsed.reply || rawJson || "Standing by, Commander.").trim();
-      const emoji = (parsed.emoji || "🤖").trim().slice(0, 8);
+      const reply = (parsed.reply || rawJson || "Hmm, I seem to have lost my words. Try again?").trim();
+      const emoji = (parsed.emoji || "🐱").trim().slice(0, 8);
       const severity = parsed.severity === "alert" ? "alert" : "normal";
 
-      res.json({ reply, emoji, severity, model: usedModel });
+      saveMessage("user", message.trim());
+      saveMessage("assistant", reply);
+
+      res.json({ reply, emoji, severity, model: usedModel, memorySaved, reminderSaved });
     } catch (err: unknown) {
       if (isAuthOrKeyError(err)) {
         res.status(403).json({
@@ -379,30 +395,21 @@ async function startServer() {
             .slice(-10)
         : [];
 
-      const contents = [
-        ...cleanHistory.map((turn) => ({
-          role: turn.role,
-          parts: [{ text: turn.text.slice(0, 1200) }],
-        })),
-        {
-          role: "user" as const,
-          parts: [{ text: message.trim().slice(0, 1500) }],
-        },
-      ];
-
-      const baseInstruction = buildTarsSystemInstruction(
-        humorPct,
-        honestyPct,
-        humorEnabled,
-        context && typeof context === "object" ? (context as TarsCrewContext) : undefined
-      );
+      const { systemInstruction: baseInstruction, contents, memorySaved, reminderSaved } = buildTarsContext({
+        userMessage: message,
+        clientHistory: cleanHistory,
+        humor: humorPct,
+        honesty: honestyPct,
+        humorMode: humorEnabled,
+        crewContext: context && typeof context === "object" ? (context as TarsCrewContext) : undefined,
+      });
       const streamInstruction =
         baseInstruction +
         "\nStreaming Output Format:\n- Output ONLY TARS's direct spoken reply as plain text (no JSON, no braces, no markdown, no bullet points). Begin immediately with the first word so voice synthesis can speak sentence-by-sentence in real time.";
 
       const candidates: Array<{ model: string; level: ThinkingLevel }> = [];
       if (Date.now() >= chatPrimaryCooldownUntil) {
-        candidates.push({ model: "gemini-3.1-flash-lite", level: ThinkingLevel.MINIMAL });
+        candidates.push({ model: TARS_PRIMARY_MODEL, level: ThinkingLevel.MINIMAL });
       }
       candidates.push({ model: "gemini-4-hydrogen", level: ThinkingLevel.LOW });
 
@@ -426,6 +433,8 @@ async function startServer() {
             contents,
             config: {
               systemInstruction: streamInstruction,
+              temperature: 0.7,
+              maxOutputTokens: 220,
               thinkingConfig: { thinkingLevel: candidate.level },
             },
           });
@@ -500,7 +509,10 @@ async function startServer() {
         return;
       }
 
-      const cleanReply = (fullText || "Standing by, Commander.").trim();
+      const cleanReply = (fullText || "Hmm, I seem to have lost my words. Try again?").trim();
+      saveMessage("user", message.trim());
+      saveMessage("assistant", cleanReply);
+
       const lowerAll = `${message} ${cleanReply}`.toLowerCase();
       const isAlert =
         /\b(decompression|hypoxia|storm shelter|dosimeter|code red|emergency|fainting|chest pain|oxygen mask)\b/i.test(
@@ -508,13 +520,11 @@ async function startServer() {
         );
       const emoji = isAlert
         ? "🚨"
-        : /\b(coffee|espresso|sleep|nap|night shift)\b/i.test(lowerAll)
-          ? "☕"
-          : /\b(heart|bpm|spo2|vitals|temp|stress|exercise)\b/i.test(lowerAll)
-            ? "🩺"
-            : humorEnabled && humorPct >= 60
-              ? "😏"
-              : "🤖";
+        : /\b(heart|bpm|spo2|vitals|temp|stress|exercise|medical officer)\b/i.test(lowerAll)
+          ? "🩺"
+          : humorEnabled && humorPct >= 60
+            ? "😼"
+            : "🐱";
 
       res.write(
         `data: ${JSON.stringify({
@@ -523,6 +533,8 @@ async function startServer() {
           emoji,
           severity: isAlert ? "alert" : "normal",
           model: usedModel,
+          memorySaved,
+          reminderSaved,
         })}\n\n`
       );
       res.end();

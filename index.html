@@ -1740,6 +1740,14 @@
       .tars-msg.is-thinking{opacity:.78;font-style:italic}
       .tars-msg-say{background:none;border:0;color:var(--text3);cursor:pointer;padding:2px 4px;border-radius:6px;font-size:13px;line-height:1;flex:none;margin-left:auto}
       .tars-msg-say:hover{color:#fff;background:rgba(255,255,255,0.1)}
+      .tars-mem-tabs{display:flex;gap:6px;margin-top:10px}
+      .tars-mem-tab{flex:1;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,0.04);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+      .tars-mem-tab[aria-pressed="true"]{background:rgba(121,220,232,0.14);border-color:rgba(121,220,232,0.55);color:#e8fbff}
+      .tars-mem-list{max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:10px}
+      .tars-mem-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.1);font-size:12.5px;text-align:left}
+      .tars-mem-item.is-done{opacity:.55;text-decoration:line-through}
+      .tars-mem-add{display:flex;gap:6px;margin-top:10px}
+      .tars-mem-add input{flex:1;min-width:0;background:rgba(255,255,255,0.06);border:1px solid var(--line);border-radius:9px;padding:6px 10px;color:#fff;font-size:12.5px}
       .voice-log-list{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
       .voice-log-item{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
       .voice-log-item.is-alert{border-color:rgba(239,91,91,0.45);background:rgba(239,91,91,0.09)}
@@ -9660,10 +9668,10 @@
             } catch (e) {}
 
             return {
-              html: '<div class="grid split"><div class="card hi" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px"><div class="robot-avatar" id="astrobotFace" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#34c27a,#0a3b22);display:grid;place-items:center;box-shadow:0 0 30px rgba(52,194,122,0.35);position:relative;margin-bottom:16px"><div style="font-size:38px;transition:transform .2s" id="botEmoji">🤖</div><div class="robot-waves" style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(52,194,122,0.5);animation:spin 12s linear infinite"></div></div>' +
+              html: '<div class="grid split"><div class="card hi" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px"><div class="robot-avatar" id="astrobotFace" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#79dce8,#144568);display:grid;place-items:center;box-shadow:0 0 30px rgba(121,220,232,0.35);position:relative;margin-bottom:16px"><div style="font-size:40px;transition:transform .2s" id="botEmoji">🐱</div><div class="robot-waves" style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(121,220,232,0.52);animation:spin 12s linear infinite"></div></div>' +
                 '<h2 id="botTitle">TARS AI Companion</h2>' +
-                '<p class="s t2" id="botSub" style="margin-top:6px">Spacecraft AI buddy with dry space wit, casual orbit chat, live crew awareness, and instant medical protocols.</p>' +
-                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><button class="btn" id="botWake" type="button" title="Hands-free Hey TARS wake word listening">🎧 Hey TARS: Off</button><input id="botPrompt" placeholder="Chat, ask for a space joke, or check vitals..." style="flex:1;min-width:160px;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
+                '<p class="s t2" id="botSub" style="margin-top:6px">V² Space Agency’s light-blue two-tailed feline astronaut companion — natural crew chat, memory, vitals awareness &amp; emergency protocols.</p>' +
+                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><button class="btn" id="botWake" type="button" title="Hands-free Hey TARS wake word listening">🎧 Hey TARS: Off</button><input id="botPrompt" placeholder="Chat with TARS, say “remember that…”, or check vitals..." style="flex:1;min-width:160px;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
                 '<div class="tars-calib" aria-label="TARS personality calibration">' +
                   '<div class="tars-mode-row">' +
                     '<button type="button" class="tars-mode-btn' + (initHumor > 0 ? ' is-on' : '') + '" id="botHumorMode" aria-pressed="' + (initHumor > 0 ? 'true' : 'false') + '">' + (initHumor >= 75 ? '😏 Humor Mode: ON · Full Dry Quips' : (initHumor >= 40 ? '😂 Humor Mode: ON · Space Banter' : (initHumor > 0 ? '🙂 Humor Mode: ON · Subtle Wit' : '🤖 Humor Mode: OFF · Clinical'))) + '</button>' +
@@ -9673,14 +9681,14 @@
                   '<div class="tars-calib-item"><div class="tars-calib-head"><label for="botHonesty">Honesty setting</label><b id="botHonestyVal">' + initHonesty + '%</b></div><input id="botHonesty" type="range" min="50" max="100" step="5" value="' + initHonesty + '"></div>' +
                 '</div>' +
                 '<div class="tars-chips" id="botChips">' +
-                  '<button type="button" class="tars-chip" data-tars-chip="Tell me a dry space joke about zero-g life">😂 Tell me a space joke</button>' +
+                  '<button type="button" class="tars-chip" data-tars-chip="Tell me a funny observation about zero-g life on station">😺 Zero-g banter</button>' +
                   '<button type="button" class="tars-chip" data-tars-chip="I am bored on night shift, keep me company">☕ Night shift chat</button>' +
-                  '<button type="button" class="tars-chip" data-tars-chip="Check my current vitals and roast or compliment how I am doing">🩺 Vitals check + wit</button>' +
-                  '<button type="button" class="tars-chip" data-tars-chip="What do you miss most about Earth, TARS?">🌍 Orbit banter</button>' +
+                  '<button type="button" class="tars-chip" data-tars-chip="Check my current vitals and give me an honest summary">🩺 Check my vitals</button>' +
+                  '<button type="button" class="tars-chip" data-tars-chip="Remember that my favorite drink on shift is hot tea">🧠 Save a memory</button>' +
                 '</div>' +
                 '<div class="tars-meter" id="botMeter" aria-label="Microphone audio waveform and volume meter"><div class="tars-meter-top"><span class="tars-meter-status"><i class="tars-meter-dot" id="botMeterDot"></i><span id="botMeterState">Mic Idle</span></span><span class="mono" id="botMeterDb">Input: —</span></div><canvas id="botWaveCanvas" height="48"></canvas><div class="tars-vol-track"><div class="tars-vol-fill" id="botVolFill"></div><div class="tars-vol-peak" id="botVolPeak"></div></div></div>' +
-                '<div class="tars-transcript is-visible" id="botTranscriptBox" aria-live="polite"><strong>Standby:</strong> Type anything below for casual chat or jokes, or tap <b>🎤 Speak</b> / <b>🎧 Hey TARS</b>.</div>' +
-                '<div class="tars-log-wrap"><div class="tars-log-bar"><span>TARS Comms Channel · Gemini AI (Fast Voice Mode)</span><button type="button" class="btn sm" id="botClearChat" style="padding:3px 9px;min-height:24px;font-size:11px">Clear chat</button></div><div class="tars-log-list dash-scroll" id="botLog"></div></div></div>' +
+                '<div class="tars-transcript is-visible" id="botTranscriptBox" aria-live="polite"><strong>Standby:</strong> Type anything below, say <b>“Remember that…”</b>, or tap <b>🎤 Speak</b> / <b>🎧 Hey TARS</b>.</div>' +
+                '<div class="tars-log-wrap"><div class="tars-log-bar"><span>TARS Comms Channel · V² Assistant + Gemini</span><button type="button" class="btn sm" id="botClearChat" style="padding:3px 9px;min-height:24px;font-size:11px">Clear chat</button></div><div class="tars-log-list dash-scroll" id="botLog"></div></div></div>' +
                 '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency for instant deterministic guidance, or ask TARS directly in chat.</p><div class="stack gap8" style="margin-top:14px">' +
                 '<button class="sub row between" data-esc="dcs" style="text-align:left;background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.35)"><span class="grow"><b>Decompression Sickness (DCS)</b><br><span class="xs t3">Joint pain, skin mottling, dizziness after EVA</span></span><span class="btn sm danger">Emergency</span></button>' +
                 '<button class="sub row between" data-esc="spe" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Solar Particle Event (SPE)</b><br><span class="xs t3">Radiation dose-rate spike / storm alert</span></span><span class="btn sm warning">Shelter</span></button>' +
@@ -9688,7 +9696,11 @@
                 '<button class="sub row between" data-esc="cardiac" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Cardiac Arrhythmia / Faint</b><br><span class="xs t3">QTc &gt; 500 ms, palpitations or syncope</span></span><span class="btn sm warning">Medical</span></button>' +
                 '<button class="sub row between" data-esc="breathe" style="text-align:left"><span class="grow"><b>Calm Down &amp; Guided Breathing</b><br><span class="xs t3">Anxiety, panic or high stress protocol</span></span><span class="btn sm">Relax</span></button>' +
                 '</div></div>' +
-                '<div class="card"><h3>Chat &amp; Voice Ideas</h3><p class="s t2" style="margin-top:6px">TARS uses live mission telemetry and your Humor % slider to riff with you in orbit:</p><ul class="acts t2" style="margin-top:8px"><li>“Tell me a joke about space food or zero-g”</li><li>“Hey TARS, how are my vitals looking today?”</li><li>“Hey TARS, I can’t sleep — distract me”</li><li>“TARS code red!” (instant emergency broadcast)</li></ul></div>' +
+                '<div class="card" id="botMemoryCard"><div class="row between"><div><h3>TARS Memory &amp; Reminders</h3><p class="xs t3" style="margin-top:2px">Persistent notes &amp; crew reminders used across conversations.</p></div><button type="button" class="btn sm" id="botMemClearBtn" style="padding:3px 9px;min-height:24px;font-size:11px">Clear memories</button></div>' +
+                  '<div class="tars-mem-tabs"><button type="button" class="tars-mem-tab" id="botTabMem" aria-pressed="true">Memories (<span id="botMemCount">0</span>)</button><button type="button" class="tars-mem-tab" id="botTabRem" aria-pressed="false">Reminders (<span id="botRemCount">0</span>)</button></div>' +
+                  '<form class="tars-mem-add" id="botMemForm"><input id="botMemInput" placeholder="Save a note for TARS to remember…" autocomplete="off"><button type="submit" class="btn sm p">Save</button></form>' +
+                  '<div class="tars-mem-list dash-scroll" id="botMemList"></div>' +
+                '</div>' +
                 '<div id="uplinkBoxTars">' + (c ? earthUplinkCardHTML(c) : '') + '</div>' +
                 '</div></div>' +
                 '<div class="card section" id="botVoiceLogCard"><div class="row between"><div><div class="row" style="gap:8px;align-items:center"><h3>Voice Log</h3><span class="pill" id="botVoiceLogCount">0 entries</span></div><p class="s t3" style="margin-top:4px">Scrollable history of all past transcribed voice interactions with TARS.</p></div><button class="btn sm" id="botVoiceLogClear" type="button">Clear log</button></div><div class="voice-log-list dash-scroll" id="botVoiceLogList" style="margin-top:14px"></div></div>',
@@ -10191,17 +10203,138 @@
                   };
                 };
 
+                var tarsMemTab = 'mem';
+                var tarsMemories = [];
+                var tarsReminders = [];
+
+                var renderTarsMemoryPanel = function () {
+                  var memCnt = $('#botMemCount'), remCnt = $('#botRemCount');
+                  var tabMem = $('#botTabMem'), tabRem = $('#botTabRem');
+                  var memIn = $('#botMemInput'), clrBtn = $('#botMemClearBtn');
+                  var list = $('#botMemList');
+                  if (memCnt) memCnt.textContent = String(tarsMemories.length);
+                  var pendingCount = tarsReminders.filter(function (r) { return !r.completed; }).length;
+                  if (remCnt) remCnt.textContent = String(pendingCount);
+                  if (tabMem) tabMem.setAttribute('aria-pressed', tarsMemTab === 'mem' ? 'true' : 'false');
+                  if (tabRem) tabRem.setAttribute('aria-pressed', tarsMemTab === 'rem' ? 'true' : 'false');
+                  if (memIn) memIn.placeholder = tarsMemTab === 'mem' ? 'Save a note for TARS to remember…' : 'Add a reminder for TARS…';
+                  if (clrBtn) clrBtn.style.display = tarsMemTab === 'mem' ? '' : 'none';
+                  if (!list) return;
+                  if (tarsMemTab === 'mem') {
+                    if (!tarsMemories.length) {
+                      list.innerHTML = '<div class="xs t3" style="padding:10px;text-align:center">No memories saved yet. Say “Remember that…” in chat or add a note above.</div>';
+                      return;
+                    }
+                    list.innerHTML = tarsMemories.map(function (m) {
+                      return '<div class="tars-mem-item"><span class="grow"><span class="xs t3" style="margin-right:6px">[' + esc(m.category) + ']</span>' + esc(m.content) + '</span><button type="button" class="btn ghost sm danger" data-del-mem="' + m.id + '" style="padding:2px 7px;min-height:24px;font-size:11px">×</button></div>';
+                    }).join('');
+                    $$('#botMemList [data-del-mem]').forEach(function (b) {
+                      b.onclick = async function () {
+                        var r = await fetch('/api/tars/memories/' + b.dataset.delMem, { method: 'DELETE' }).then(function (x) { return x.json(); }).catch(function () { return null; });
+                        if (r && Array.isArray(r.memories)) { tarsMemories = r.memories; renderTarsMemoryPanel(); }
+                      };
+                    });
+                  } else {
+                    if (!tarsReminders.length) {
+                      list.innerHTML = '<div class="xs t3" style="padding:10px;text-align:center">No reminders yet. Say “Remind me to…” in chat or add one above.</div>';
+                      return;
+                    }
+                    list.innerHTML = tarsReminders.map(function (rem) {
+                      var done = !!rem.completed;
+                      return '<div class="tars-mem-item' + (done ? ' is-done' : '') + '"><span class="grow">' + esc(rem.description) + '</span>' +
+                        (!done ? '<button type="button" class="btn sm" data-done-rem="' + rem.id + '" style="padding:2px 7px;min-height:24px;font-size:11px">Done</button>' : '') +
+                        '<button type="button" class="btn ghost sm danger" data-del-rem="' + rem.id + '" style="padding:2px 7px;min-height:24px;font-size:11px">×</button></div>';
+                    }).join('');
+                    $$('#botMemList [data-done-rem]').forEach(function (b) {
+                      b.onclick = async function () {
+                        var r = await fetch('/api/tars/reminders/' + b.dataset.doneRem + '/complete', { method: 'POST' }).then(function (x) { return x.json(); }).catch(function () { return null; });
+                        if (r && Array.isArray(r.reminders)) { tarsReminders = r.reminders; renderTarsMemoryPanel(); }
+                      };
+                    });
+                    $$('#botMemList [data-del-rem]').forEach(function (b) {
+                      b.onclick = async function () {
+                        var r = await fetch('/api/tars/reminders/' + b.dataset.delRem, { method: 'DELETE' }).then(function (x) { return x.json(); }).catch(function () { return null; });
+                        if (r && Array.isArray(r.reminders)) { tarsReminders = r.reminders; renderTarsMemoryPanel(); }
+                      };
+                    });
+                  }
+                };
+
+                var syncTarsServerState = async function () {
+                  try {
+                    var resp = await fetch('/api/tars/state');
+                    if (!resp.ok) return;
+                    var stData = await resp.json();
+                    if (Array.isArray(stData.memories)) tarsMemories = stData.memories;
+                    if (Array.isArray(stData.reminders)) tarsReminders = stData.reminders;
+                    renderTarsMemoryPanel();
+                  } catch (e) {}
+                };
+
+                var tabMemBtn = $('#botTabMem'), tabRemBtn = $('#botTabRem');
+                if (tabMemBtn) tabMemBtn.onclick = function () { tarsMemTab = 'mem'; renderTarsMemoryPanel(); };
+                if (tabRemBtn) tabRemBtn.onclick = function () { tarsMemTab = 'rem'; renderTarsMemoryPanel(); };
+
+                var memForm = $('#botMemForm');
+                if (memForm) {
+                  memForm.onsubmit = async function (ev) {
+                    ev.preventDefault();
+                    var inp = $('#botMemInput');
+                    var val = inp ? inp.value.trim() : '';
+                    if (!val) return;
+                    if (tarsMemTab === 'mem') {
+                      var mr = await fetch('/api/tars/memories', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ category: 'personal', content: val })
+                      }).then(function (x) { return x.json(); }).catch(function () { return null; });
+                      if (mr && Array.isArray(mr.memories)) {
+                        tarsMemories = mr.memories;
+                        if (inp) inp.value = '';
+                        renderTarsMemoryPanel();
+                        toast('Saved to TARS memory');
+                      }
+                    } else {
+                      var rr = await fetch('/api/tars/reminders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ description: val })
+                      }).then(function (x) { return x.json(); }).catch(function () { return null; });
+                      if (rr && Array.isArray(rr.reminders)) {
+                        tarsReminders = rr.reminders;
+                        if (inp) inp.value = '';
+                        renderTarsMemoryPanel();
+                        toast('Reminder saved');
+                      }
+                    }
+                  };
+                }
+
+                var memClearBtn = $('#botMemClearBtn');
+                if (memClearBtn) {
+                  memClearBtn.onclick = async function () {
+                    await fetch('/api/tars/memories/clear', { method: 'POST' }).catch(function () {});
+                    tarsMemories = [];
+                    renderTarsMemoryPanel();
+                    toast('Cleared TARS memories');
+                  };
+                }
+
+                renderTarsMemoryPanel();
+                syncTarsServerState();
+
                 var clearChatBtn = $('#botClearChat');
                 if (clearChatBtn) {
                   clearChatBtn.onclick = function () {
                     chatHistory = [];
+                    fetch('/api/tars/conversation/clear', { method: 'POST' }).catch(function () {});
                     var log = $('#botLog');
                     if (log) log.innerHTML = '';
-                    speak('Comms log cleared. Humor setting is at ' + humorPct + ' percent. Ready whenever you are, Commander.', '🤖', false);
+                    speak('V² crew systems online. TARS reporting for duty! Comms cleared — humor is at ' + humorPct + ' percent.', '🐱', false);
                   };
                 }
 
-                speak('All systems nominal. Humor setting is at ' + humorPct + ' percent. Ask for a space joke, check your vitals, or just keep me company on shift.', '🤖', false);
+                speak("V² crew systems online. TARS reporting for duty! Your favourite feline crew member is here. How's my astronaut doing today?", '🐱', false);
 
                 var handleQuery = async function (rawQ, sourceLabel, isVoiceInput, logMeta) {
                   var trimmed = (rawQ || '').trim();
@@ -10369,14 +10502,15 @@
                                 if (logEl) logEl.scrollTop = logEl.scrollHeight;
                                 flushReadySentences(false);
                               }
-                              if (evt.done) {
-                                replyText = (evt.reply || streamedText || 'Standing by, Commander.').trim();
-                                replyEmoji = evt.emoji || streamEmoji;
-                                replySeverity = evt.severity === 'alert' ? 'alert' : 'normal';
+                                if (evt.done) {
+                                  replyText = (evt.reply || streamedText || "Hmm, I seem to have lost my words. Try again?").trim();
+                                  replyEmoji = evt.emoji || streamEmoji;
+                                  replySeverity = evt.severity === 'alert' ? 'alert' : 'normal';
+                                  if (evt.memorySaved || evt.reminderSaved) syncTarsServerState();
+                                }
                               }
                             }
                           }
-                        }
 
                         if (!replyText && streamedText) replyText = streamedText.trim();
                         if (!replyText) throw new Error('Empty response from TARS.');
@@ -10395,8 +10529,9 @@
                           throw new Error((data && data.error) ? data.error : 'Empty response from TARS.');
                         }
                         replyText = data.reply;
-                        replyEmoji = data.emoji || '🤖';
+                        replyEmoji = data.emoji || '🐱';
                         replySeverity = data.severity === 'alert' ? 'alert' : 'normal';
+                        if (data.memorySaved || data.reminderSaved) syncTarsServerState();
                         speak(replyText, replyEmoji, voiceReply, replySeverity);
                       }
 
