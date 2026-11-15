@@ -1661,6 +1661,9 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
             </button>
           </div>
+          <div style="padding:10px 12px 4px">
+            <button class="btn danger" id="sidebarCodeRed" type="button" style="width:100%;justify-content:center;background:var(--bad);color:#fff;font-weight:700;box-shadow:0 0 16px rgba(239,91,91,0.45);padding:10px;border-radius:12px">🚨 CODE RED EMERGENCY</button>
+          </div>
           <nav id="nav" aria-label="Main"></nav>
         </aside>
 
@@ -5316,7 +5319,7 @@
             ['Health', [['monitor', 'Monitor'], ['assess', 'Assess'], ['eva', 'Spacewalk'], ['history', 'History']]],
             ['Daily life', [['routine', 'Routine'], ['rash', 'Rash check'], ['journal', 'Journal']]],
             ['Mission', [['supplies', 'Supplies'], ['crew', 'Crew'], ['reference', 'Reference']]],
-            ['Emergency', [['emergency', 'AstroBot AI']]]
+            ['Emergency', [['emergency', 'TARS AI']]]
           ];
           var NAV_BOTTOM = ['Games', [['games', 'Games']]];
           var ROUTES = NAV.concat([NAV_BOTTOM]).reduce(function (a, s) { return a.concat(s[1]); }, []);
@@ -5332,7 +5335,7 @@
             crew: ['Crew', 'Profiles, baselines and settings'],
             reference: ['Reference', 'How the software reaches its conclusions'],
             games: ['Games', 'Short station mini-games for off-duty breaks'],
-            emergency: ['AstroBot AI', 'Station emergency voice assistant & medical protocol guide']
+            emergency: ['TARS AI', 'Station emergency voice assistant & medical protocol guide']
           };
 
           function renderHeader(hdr) {
@@ -7217,17 +7220,37 @@
             }
           };
 
-          /* ================= EMERGENCY (ASTROBOT AI) ================= */
+          /* ================= EMERGENCY (TARS AI) ================= */
+          function triggerCodeRed() {
+            var synth = window.speechSynthesis;
+            if (synth) {
+              try {
+                synth.cancel();
+                var utter = new SpeechSynthesisUtterance('CODE RED EMERGENCY BROADCAST ACTIVATED! Alerting all crew devices and NASA Earth Center immediately. Stand by for emergency telemetry.');
+                utter.rate = 1.05; utter.pitch = 1.0;
+                synth.speak(utter);
+              } catch (e) {}
+            }
+            toast('🚨 CODE RED BROADCAST: All crew devices and NASA Earth Center alerted!', 8000);
+            if (window.Notification && Notification.permission === 'granted') {
+              new Notification('🚨 CODE RED EMERGENCY', { body: 'Broadcast sent to all crew devices and NASA Earth Center.' });
+            }
+            var log = $('#botLog');
+            if (log) {
+              log.innerHTML += '<p style="margin-top:8px;color:var(--bad)"><b>TARS (CODE RED):</b> Emergency broadcast transmitted to all crew units and NASA Earth Center!</p>';
+              log.scrollTop = log.scrollHeight;
+            }
+          }
           VIEWS.emergency = async function () {
             var c = cur();
             if (c) renderHeader(headerOf(c)); else renderHeader();
             return {
               html: '<div class="grid split"><div class="card hi" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px"><div class="robot-avatar" id="astrobotFace" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#34c27a,#0a3b22);display:grid;place-items:center;box-shadow:0 0 30px rgba(52,194,122,0.35);position:relative;margin-bottom:16px"><div style="font-size:38px;transition:transform .2s" id="botEmoji">🤖</div><div class="robot-waves" style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(52,194,122,0.5);animation:spin 12s linear infinite"></div></div>' +
-                '<h2 id="botTitle">AstroBot Emergency Guide</h2>' +
-                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Speak, type, or tap a scenario below.</p>' +
+                '<h2 id="botTitle">TARS Emergency Guide</h2>' +
+                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Speak "TARS code red", type, or tap below.</p>' +
                 '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic">🎤 Speak</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend">Send</button><button class="btn" id="botMute" title="Mute / Unmute voice">🔊</button></div>' +
                 '<div class="waveform" style="display:flex;gap:4px;align-items:center;height:24px;margin-top:14px" id="botWave"><span></span><span></span><span></span><span></span><span></span></div>' +
-                '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>AstroBot:</b> Station systems nominal. I am standing by for emergency guidance.</p></div></div>' +
+                '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>TARS:</b> Station systems nominal. Voice code word "TARS code red" or the sidebar Code Red button alerts all crew &amp; NASA Earth Center.</p></div></div>' +
                 '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency to activate instant voice guidance and step-by-step protocols.</p><div class="stack gap8" style="margin-top:14px">' +
                 '<button class="sub row between" data-esc="dcs" style="text-align:left;background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.35)"><span class="grow"><b>Decompression Sickness (DCS)</b><br><span class="xs t3">Joint pain, skin mottling, dizziness after EVA</span></span><span class="btn sm danger">Emergency</span></button>' +
                 '<button class="sub row between" data-esc="spe" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Solar Particle Event (SPE)</b><br><span class="xs t3">Radiation dose-rate spike / storm alert</span></span><span class="btn sm warning">Shelter</span></button>' +
@@ -7259,13 +7282,17 @@
                   } catch (e) {}
                 };
 
-                speak('Hello! I am AstroBot, your station emergency voice guide. You can speak into your microphone, type your question below, or tap any emergency scenario.', '🤖');
+                speak('Hello! I am TARS, your station emergency voice guide. Say "TARS code red" or click the sidebar Code Red button in an emergency.', '🤖');
 
                 var handleQuery = function (rawQ) {
                   var q = (rawQ || '').toLowerCase().trim();
                   if (!q) return;
                   var log = $('#botLog');
                   if (log) log.innerHTML += '<p style="margin-top:8px;color:var(--text3)"><b>You:</b> ' + esc(q) + '</p>';
+                  if (q.indexOf('tars code red') >= 0 || q.indexOf('code red') >= 0) {
+                    triggerCodeRed();
+                    return;
+                  }
                   if (q.indexOf('decompression') >= 0 || q.indexOf('bends') >= 0 || q.indexOf('dcs') >= 0 || q.indexOf('joint pain') >= 0) {
                     speak('Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.', '🚨');
                   } else if (q.indexOf('solar') >= 0 || q.indexOf('radiation') >= 0 || q.indexOf('storm') >= 0 || q.indexOf('spe') >= 0) {
@@ -7372,6 +7399,9 @@
           }).join('') + '<div class="navbottom"><div class="navsec">' + NAV_BOTTOM[0] + '</div>' + NAV_BOTTOM[1].map(function (it) {
             return '<a href="#' + it[0] + '" title="' + it[1] + '">' + ICON(ICONS[it[0]]) + '<span>' + it[1] + '</span></a>';
           }).join('') + '</div>';
+
+          var codeRedBtn = $('#sidebarCodeRed');
+          if (codeRedBtn) codeRedBtn.onclick = triggerCodeRed;
 
           var col = false;
           try { col = localStorage.getItem('vitv-side') === '1'; } catch (e) {}
