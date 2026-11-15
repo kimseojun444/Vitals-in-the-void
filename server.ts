@@ -40,6 +40,7 @@ async function startServer() {
         },
       };
 
+      const audioBytes = Buffer.from(audioBase64, "base64").length;
       const response = await ai.models.generateContent({
         model: "gemini-3.5-transcribe",
         contents: {
@@ -48,6 +49,13 @@ async function startServer() {
       });
 
       const text = (response.text ?? "").trim();
+      const finishReason = response.candidates?.[0]?.finishReason;
+      console.log("[/api/tars/transcribe]", {
+        mimeType: cleanMimeType,
+        audioBytes,
+        textLen: text.length,
+        finishReason,
+      });
       res.json({ text });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Audio transcription failed.";
