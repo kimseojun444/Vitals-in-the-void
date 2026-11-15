@@ -1782,6 +1782,26 @@
       .drift-row.is-active{background:rgba(121,220,232,0.10)}
       .drift-row.is-active td:first-child{color:#79dce8}
       .drift-drivers{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text2);line-height:1.55}
+      @keyframes driftPulse{
+        0%{transform:scale(0.85);opacity:.85}
+        70%{transform:scale(1.65);opacity:0}
+        100%{transform:scale(1.65);opacity:0}
+      }
+      .drift-crit-pulse{transform-box:fill-box;transform-origin:center;animation:driftPulse 2.2s cubic-bezier(.22,.61,.36,1) infinite}
+      .drift-cross-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding:9px 11px;border-radius:12px;background:rgba(239,91,91,0.10);border:1px solid rgba(239,91,91,0.34);font-size:12px;color:#ffd8d8}
+      .drift-cross-bar.is-warn{background:rgba(245,185,65,0.09);border-color:rgba(245,185,65,0.32);color:#ffebb8}
+      .drift-cross-bar.hidden{display:none}
+      .drift-cross-chip{
+        display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:8px;
+        border:1px solid rgba(239,91,91,0.5);background:rgba(239,91,91,0.18);color:#fff;
+        font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:11.5px;font-weight:600;
+        cursor:pointer;transition:background .16s var(--ease),border-color .16s var(--ease),transform .14s var(--ease);
+      }
+      .drift-cross-chip:hover,.drift-cross-chip.is-pinned{background:rgba(239,91,91,0.34);border-color:#ffb3b3;transform:translateY(-1px)}
+      .drift-cross-bar.is-warn .drift-cross-chip{border-color:rgba(245,185,65,0.5);background:rgba(245,185,65,0.16)}
+      .drift-cross-bar.is-warn .drift-cross-chip:hover,.drift-cross-bar.is-warn .drift-cross-chip.is-pinned{background:rgba(245,185,65,0.3);border-color:#ffe39e}
+      .drift-legend-diamond{display:inline-block;width:8px;height:8px;background:#ef5b5b;border:1.4px solid #fff;transform:rotate(45deg);flex:none}
+      .drift-legend-ring{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef5b5b;border:1.5px solid #fff;box-shadow:0 0 0 2.5px rgba(239,91,91,0.35);flex:none}
       @media (prefers-reduced-motion:reduce){
         .dash-screen, .dash-screen *, .mars-loader, .mars-loading-ui{transition-duration:.01ms!important; animation-duration:.01ms!important}
         .glass-tile,.glass-tile::after{transition:none}
@@ -5912,9 +5932,11 @@
             btn.classList.toggle('is-warn', F.worstLvl === 1);
             btn.classList.toggle('is-alert', F.worstLvl === 2);
 
-            var summaryTxt = F.earliest
-              ? ('T+' + F.earliest.crossH + 'h ' + F.earliest.v.toUpperCase())
-              : (riskLabels[F.worstLvl] + ' · Idx ' + Math.round(F.predIdx));
+            var summaryTxt = F.earliestCrit
+              ? ('CRIT T+' + fmt(F.earliestCrit.critCrossH, 1) + 'h ' + F.earliestCrit.v.toUpperCase())
+              : F.earliest
+                ? ('T+' + fmt(F.earliest.crossH, 1) + 'h ' + F.earliest.v.toUpperCase())
+                : (riskLabels[F.worstLvl] + ' · Idx ' + Math.round(F.predIdx));
             var peakSign = F.peakVar.netDrift >= 0 ? '+' : '';
             var peakTxt = F.peakVar.v.toUpperCase() + ' ' + peakSign + fmt(F.peakVar.netDrift, F.peakVar.dp) + (F.peakVar.u ? ' ' + F.peakVar.u : '');
 
@@ -7896,7 +7918,13 @@
             DRIFT_VARS.forEach(function (vid) {
               var v = VM(vid);
               var dp = v.dp != null ? v.dp : 1;
-              var lims = c.lims(vid);
+              var rawLims = c.lims(vid);
+              var lims = Object.assign({}, rawLims);
+              if (vid === 'dose') {
+                var doseBase = Math.max(missionBase.rad, 0.2);
+                if (lims.wh == null) lims.wh = 2.2 * doseBase;
+                if (lims.ch == null) lims.ch = 5.0 * doseBase;
+              }
               var baseExp0 = c.expected(vid, d);
               var latest = c.latest(vid, d, null);
               var curVal = latest ? latest[3] : baseExp0;
@@ -7942,8 +7970,6 @@
                 else if (lims.cl != null && pred < lims.cl) lvl = 2;
                 else if (lims.wh != null && pred > lims.wh) lvl = 1;
                 else if (lims.wl != null && pred < lims.wl) lvl = 1;
-                else if (vid === 'dose' && pred > 5 * Math.max(missionBase.rad, 0.2)) lvl = 2;
-                else if (vid === 'dose' && pred > 2.2 * Math.max(missionBase.rad, 0.2)) lvl = 1;
                 else if (Math.abs(pred - eBase) > 2.2 * tol0) lvl = 1;
 
                 if (h > 0 && lvl > 0 && firstCrossH == null) {
@@ -7958,6 +7984,53 @@
                 pts.push({ h: h, pred: pred, base: eBase, lo: lo, hi: hi, lvl: lvl, sigma: sigma });
               }
 
+              var critCrossings = [];
+              var warnCrossings = [];
+              if (pts.length && pts[0].lvl === 2) {
+                var activeLimKey = (lims.ch != null && pts[0].pred > lims.ch) ? 'ch' : 'cl';
+                var activeLimVal = lims[activeLimKey];
+                critCrossings.push({
+                  h: 0, val: pts[0].pred, limitVal: activeLimVal, limitKey: activeLimKey,
+                  dir: 'active',
+                  label: 'Breached ' + (activeLimKey === 'ch' ? '>' : '<') + ' ' + fmt(activeLimVal, dp) + (v.u ? ' ' + v.u : '') + ' at T+0h'
+                });
+              }
+
+              function scanLimitCrossings(key, isHigh, isCrit, targetArr) {
+                var lv = lims[key];
+                if (lv == null) return;
+                for (var pi = 1; pi < pts.length; pi++) {
+                  var p0 = pts[pi - 1], p1 = pts[pi];
+                  var entering = isHigh ? (p0.pred <= lv && p1.pred > lv) : (p0.pred >= lv && p1.pred < lv);
+                  var exiting = isHigh ? (p0.pred > lv && p1.pred <= lv) : (p0.pred < lv && p1.pred >= lv);
+                  if (!entering && !exiting) continue;
+                  var denom = p1.pred - p0.pred;
+                  var frac = Math.abs(denom) > 1e-9 ? clamp((lv - p0.pred) / denom, 0, 1) : 0.5;
+                  var ch = +(p0.h + frac * (p1.h - p0.h)).toFixed(1);
+                  targetArr.push({
+                    h: ch,
+                    val: lv,
+                    limitVal: lv,
+                    limitKey: key,
+                    dir: entering ? 'entry' : 'exit',
+                    label: (entering ? 'Crossed ' : 'Recovered ') + (isHigh ? '>' : '<') + ' ' + fmt(lv, dp) + (v.u ? ' ' + v.u : '')
+                  });
+                }
+              }
+
+              scanLimitCrossings('ch', true, true, critCrossings);
+              scanLimitCrossings('cl', false, true, critCrossings);
+              scanLimitCrossings('wh', true, false, warnCrossings);
+              scanLimitCrossings('wl', false, false, warnCrossings);
+              critCrossings.sort(function (a, b) { return a.h - b.h; });
+              warnCrossings.sort(function (a, b) { return a.h - b.h; });
+
+              var critPts = pts.filter(function (p) { return p.lvl === 2; });
+              var firstCritEntry = critCrossings.find(function (cx) { return cx.dir === 'entry' || cx.dir === 'active'; }) || critCrossings[0] || null;
+              var firstCritH = firstCritEntry ? firstCritEntry.h : (critPts.length ? critPts[0].h : null);
+              var firstWarnEntry = warnCrossings.find(function (cx) { return cx.dir === 'entry'; }) || warnCrossings[0] || null;
+              var effectiveCrossH = firstCritH != null ? firstCritH : (firstWarnEntry ? firstWarnEntry.h : firstCrossH);
+
               var p24 = pts.find(function (p) { return p.h === 24; }) || pts[Math.floor(pts.length / 2)];
               var pEnd = pts[pts.length - 1];
               var netDrift = pEnd.pred - curVal;
@@ -7968,7 +8041,9 @@
                 v: vid, n: v.n, u: v.u, dp: dp, cur: curVal,
                 v24: p24.pred, vEnd: pEnd.pred, baseEnd: pEnd.base,
                 netDrift: netDrift, envOnlyDrift: envOnlyDrift,
-                crossH: firstCrossH, lvl: statusLvl, peakZ: peakZ,
+                crossH: effectiveCrossH, critCrossH: firstCritH,
+                critCrossings: critCrossings, warnCrossings: warnCrossings, critPts: critPts,
+                lvl: statusLvl, peakZ: peakZ,
                 driver: envDriversFor(vid, env, missionBase),
                 lims: lims, tol: tol0, hist: hist, pts: pts
               };
@@ -7976,10 +8051,11 @@
               summaries.push(info);
             });
 
-            var worstLvl = 0, earliest = null, peakVar = summaries[0];
+            var worstLvl = 0, earliest = null, earliestCrit = null, peakVar = summaries[0];
             summaries.forEach(function (s) {
               if (s.lvl > worstLvl) worstLvl = s.lvl;
               if (s.crossH != null && (earliest == null || s.crossH < earliest.crossH)) earliest = s;
+              if (s.critCrossH != null && (earliestCrit == null || s.critCrossH < earliestCrit.critCrossH)) earliestCrit = s;
               if (s.peakZ > peakVar.peakZ) peakVar = s;
             });
 
@@ -8012,17 +8088,62 @@
             return {
               day: d, horizonH: horizonH, env: env, missionBase: missionBase,
               summaries: summaries, seriesMap: seriesMap,
-              worstLvl: worstLvl, earliest: earliest, peakVar: peakVar,
+              worstLvl: worstLvl, earliest: earliest, earliestCrit: earliestCrit, peakVar: peakVar,
               curIdx: curIdx, predIdx: predIdx, advisories: advisories
             };
           }
 
           function driftChart(box, S, horizonH) {
             var svg = box.querySelector('svg'), tip = box.querySelector('.tip');
+            var latestGeo = null;
+            function showHoverTip(target) {
+              if (!latestGeo || !target) return;
+              var W = latestGeo.W, X = latestGeo.X, Y = latestGeo.Y;
+              var cross = svg.querySelector('#driftCross');
+              var hoverRing = svg.querySelector('#driftHoverRing');
+              var px = X(target.h), py = Y(target.val != null ? target.val : target.pred);
+              if (cross) {
+                cross.setAttribute('x1', px);
+                cross.setAttribute('x2', px);
+                cross.setAttribute('stroke', target.isCritMarker ? 'rgba(239,91,91,0.72)' : 'rgba(255,255,255,0.38)');
+                cross.style.display = 'block';
+              }
+              if (hoverRing) {
+                hoverRing.setAttribute('cx', px);
+                hoverRing.setAttribute('cy', py);
+                hoverRing.setAttribute('stroke', target.isCritMarker ? '#ef5b5b' : '#ffffff');
+                hoverRing.style.display = 'block';
+              }
+              if (target.kind === 'critCross') {
+                tip.innerHTML = '<b style="color:#ff9e9e">CRITICAL SAFETY CROSSING · T+' + fmt(target.h, 1) + 'h</b><br>' +
+                  esc(target.label) + '<br>' +
+                  'Value at crossing: <b>' + fmt(target.val, S.dp) + ' ' + esc(S.u) + '</b>';
+              } else if (target.kind === 'warnCross') {
+                tip.innerHTML = '<b style="color:#ffd982">CLINICAL LIMIT CROSSING · T+' + fmt(target.h, 1) + 'h</b><br>' +
+                  esc(target.label) + '<br>' +
+                  'Value at crossing: <b>' + fmt(target.val, S.dp) + ' ' + esc(S.u) + '</b>';
+              } else {
+                var diff = target.pred - target.base;
+                var breachLine = '';
+                if (target.lvl === 2) {
+                  var L = S.lims || {};
+                  var bVal = (L.ch != null && target.pred > L.ch) ? ('+' + fmt(target.pred - L.ch, S.dp) + ' above safety limit (' + fmt(L.ch, S.dp) + ')') :
+                    (L.cl != null && target.pred < L.cl) ? ('-' + fmt(L.cl - target.pred, S.dp) + ' below safety limit (' + fmt(L.cl, S.dp) + ')') : 'Safety threshold breached';
+                  breachLine = '<br><span style="color:#ff9e9e;font-weight:600">' + esc(bVal) + '</span>';
+                }
+                tip.innerHTML = '<b>T+' + target.h + 'h · ' + fmt(target.pred, S.dp) + ' ' + esc(S.u) + '</b><br>' +
+                  'Baseline: ' + fmt(target.base, S.dp) + ' ' + esc(S.u) + ' (' + (diff >= 0 ? '+' : '') + fmt(diff, S.dp) + ')<br>' +
+                  '95% band: ' + fmt(target.lo, S.dp) + ' – ' + fmt(target.hi, S.dp) + ' · ' + LVN[target.lvl] + breachLine;
+              }
+              tip.style.display = 'block';
+              tip.style.left = Math.min(W - 255, Math.max(8, px - 118)) + 'px';
+              tip.style.top = Math.max(4, py - 90) + 'px';
+            }
+
             function draw() {
               var W = svg.clientWidth, H = svg.clientHeight;
               if (!W || !H) return;
-              var sm = W < 520, pad = { l: sm ? 44 : 58, r: 18, t: 24, b: 32 };
+              var sm = W < 520, pad = { l: sm ? 44 : 58, r: 18, t: 26, b: 32 };
               var from = -24, to = horizonH;
               var ys = [];
               S.hist.forEach(function (p) { ys.push(p.val); });
@@ -8031,19 +8152,36 @@
               var lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
               var L = S.lims || {}, rg = (hi - lo) || 1;
               ['wl', 'wh', 'cl', 'ch'].forEach(function (k) {
-                if (L[k] != null && L[k] > lo - 0.55 * rg && L[k] < hi + 0.55 * rg) {
+                if (L[k] != null && L[k] > lo - 0.65 * rg && L[k] < hi + 0.65 * rg) {
                   lo = Math.min(lo, L[k]); hi = Math.max(hi, L[k]);
                 }
               });
-              var m = (hi - lo) * 0.10 || 0.5; lo -= m; hi += m;
+              var m = (hi - lo) * 0.12 || 0.5; lo -= m; hi += m;
               var X = function (h) { return pad.l + (h - from) / (to - from) * (W - pad.l - pad.r); };
               var Y = function (v) { return H - pad.b - (v - lo) / (hi - lo) * (H - pad.t - pad.b); };
+              latestGeo = { W: W, H: H, pad: pad, X: X, Y: Y };
 
               var strokeCol = S.lvl === 2 ? '#ef5b5b' : S.lvl === 1 ? '#f5b941' : '#79dce8';
               var coneFill = S.lvl === 2 ? 'rgba(239,91,91,0.16)' : S.lvl === 1 ? 'rgba(245,185,65,0.16)' : 'rgba(121,220,232,0.18)';
 
-              var s = '<defs><linearGradient id="driftCone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0.06"/><stop offset="1" stop-color="' + strokeCol + '" stop-opacity="0.24"/></linearGradient></defs>';
+              var s = '<defs><linearGradient id="driftCone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0.06"/><stop offset="1" stop-color="' + strokeCol + '" stop-opacity="0.24"/></linearGradient>' +
+                '<linearGradient id="driftDangerTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef5b5b" stop-opacity="0.20"/><stop offset="1" stop-color="#ef5b5b" stop-opacity="0.06"/></linearGradient>' +
+                '<linearGradient id="driftDangerBot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef5b5b" stop-opacity="0.06"/><stop offset="1" stop-color="#ef5b5b" stop-opacity="0.20"/></linearGradient></defs>';
               s += '<rect x="' + X(0) + '" y="' + pad.t + '" width="' + Math.max(0, X(to) - X(0)) + '" height="' + Math.max(0, H - pad.t - pad.b) + '" fill="rgba(255,255,255,0.025)"/>';
+
+              // Critical danger zones above ch and below cl
+              if (L.ch != null && L.ch < hi) {
+                var yTopEnd = clamp(Y(L.ch), pad.t, H - pad.b);
+                if (yTopEnd > pad.t + 1) {
+                  s += '<rect x="' + pad.l + '" y="' + pad.t + '" width="' + (W - pad.l - pad.r) + '" height="' + (yTopEnd - pad.t) + '" fill="url(#driftDangerTop)"/>';
+                }
+              }
+              if (L.cl != null && L.cl > lo) {
+                var yBotStart = clamp(Y(L.cl), pad.t, H - pad.b);
+                if (H - pad.b > yBotStart + 1) {
+                  s += '<rect x="' + pad.l + '" y="' + yBotStart + '" width="' + (W - pad.l - pad.r) + '" height="' + (H - pad.b - yBotStart) + '" fill="url(#driftDangerBot)"/>';
+                }
+              }
 
               for (var i = 0; i <= 5; i++) {
                 var v = lo + (hi - lo) * i / 5, y = Y(v);
@@ -8055,10 +8193,16 @@
                 s += '<text x="' + X(tk) + '" y="' + (H - 9) + '" font-size="11.5" font-family="IBM Plex Mono,monospace" text-anchor="' + (idx === 0 ? 'start' : idx === ticks.length - 1 ? 'end' : 'middle') + '" fill="' + (tk === 0 ? '#ffffff' : 'rgba(255,255,255,0.58)') + '">' + lbl + '</text>';
               });
 
-              [['wl', '#f5b941'], ['wh', '#f5b941'], ['cl', '#ef5b5b'], ['ch', '#ef5b5b']].forEach(function (pair) {
-                var k = pair[0], col = pair[1];
+              [['wl', '#f5b941', 'CLINICAL < '], ['wh', '#f5b941', 'CLINICAL > '], ['cl', '#ef5b5b', 'SAFETY < '], ['ch', '#ef5b5b', 'SAFETY > ']].forEach(function (pair) {
+                var k = pair[0], col = pair[1], prefix = pair[2];
                 if (L[k] != null && L[k] >= lo && L[k] <= hi) {
-                  s += '<line x1="' + pad.l + '" x2="' + (W - pad.r) + '" y1="' + Y(L[k]) + '" y2="' + Y(L[k]) + '" stroke="' + col + '" stroke-width="1.3" stroke-dasharray="4 4" opacity=".82"/>';
+                  var ly = Y(L[k]);
+                  var isCrit = k === 'cl' || k === 'ch';
+                  s += '<line x1="' + pad.l + '" x2="' + (W - pad.r) + '" y1="' + ly + '" y2="' + ly + '" stroke="' + col + '" stroke-width="' + (isCrit ? '1.6' : '1.2') + '" stroke-dasharray="' + (isCrit ? '5 3' : '4 4') + '" opacity="' + (isCrit ? '.92' : '.75') + '"/>';
+                  if (isCrit) {
+                    var tagY = (k === 'ch') ? Math.max(pad.t + 11, ly - 5) : Math.min(H - pad.b - 5, ly + 12);
+                    s += '<text x="' + (W - pad.r - 4) + '" y="' + tagY + '" font-size="9.5" font-weight="600" font-family="IBM Plex Mono,monospace" text-anchor="end" fill="#ff9e9e" opacity=".9">' + prefix + fmt(L[k], S.dp) + '</text>';
+                  }
                 }
               });
 
@@ -8070,6 +8214,27 @@
               s += '<polyline points="' + S.pts.map(function (p) { return X(p.h) + ',' + Y(p.base); }).join(' ') + '" fill="none" stroke="rgba(255,255,255,0.52)" stroke-width="1.6" stroke-dasharray="5 5"/>';
               s += '<polyline points="' + S.pts.map(function (p) { return X(p.h) + ',' + Y(p.pred); }).join(' ') + '" fill="none" stroke="' + strokeCol + '" stroke-width="2.6" stroke-linecap="round"/>';
 
+              // Highlight breached curve segments inside the critical safety zone
+              for (var si = 1; si < S.pts.length; si++) {
+                var sp0 = S.pts[si - 1], sp1 = S.pts[si];
+                if (sp0.lvl === 2 || sp1.lvl === 2) {
+                  var segPts = [];
+                  if (sp0.lvl === 2 && sp1.lvl === 2) {
+                    segPts = [[sp0.h, sp0.pred], [sp1.h, sp1.pred]];
+                  } else {
+                    var cMatch = (S.critCrossings || []).find(function (cx) { return cx.h >= sp0.h && cx.h <= sp1.h; });
+                    if (cMatch) {
+                      segPts = sp0.lvl === 2 ? [[sp0.h, sp0.pred], [cMatch.h, cMatch.val]] : [[cMatch.h, cMatch.val], [sp1.h, sp1.pred]];
+                    } else {
+                      segPts = [[sp0.h, sp0.pred], [sp1.h, sp1.pred]];
+                    }
+                  }
+                  var pStr = X(segPts[0][0]) + ',' + Y(segPts[0][1]) + ' ' + X(segPts[1][0]) + ',' + Y(segPts[1][1]);
+                  s += '<polyline points="' + pStr + '" fill="none" stroke="rgba(239,91,91,0.34)" stroke-width="8" stroke-linecap="round"/>';
+                  s += '<polyline points="' + pStr + '" fill="none" stroke="#ff5c5c" stroke-width="3.2" stroke-linecap="round"/>';
+                }
+              }
+
               if (S.hist.length > 1) {
                 s += '<polyline points="' + S.hist.map(function (p) { return X(p.h) + ',' + Y(p.val); }).join(' ') + '" fill="none" stroke="rgba(255,255,255,0.58)" stroke-width="1.6"/>';
               }
@@ -8077,43 +8242,102 @@
                 s += '<circle cx="' + X(p.h) + '" cy="' + Y(p.val) + '" r="3.4" fill="rgba(255,255,255,0.88)" stroke="#0d0e11" stroke-width="1.4"/>';
               });
 
-              S.pts.filter(function (p) { return p.h > 0 && p.h % 12 === 0; }).forEach(function (p) {
+              S.pts.filter(function (p) { return p.h > 0 && p.h % 12 === 0 && p.lvl !== 2; }).forEach(function (p) {
                 s += '<circle cx="' + X(p.h) + '" cy="' + Y(p.pred) + '" r="4.2" fill="' + COLV[p.lvl] + '" stroke="#0d0e11" stroke-width="1.5"/>';
+              });
+
+              // Highlight all forecasted data points inside critical safety breach zone
+              (S.critPts || []).forEach(function (p) {
+                var px = X(p.h), py = Y(p.pred);
+                s += '<circle cx="' + px + '" cy="' + py + '" r="8" fill="rgba(239,91,91,0.26)"/>';
+                s += '<circle cx="' + px + '" cy="' + py + '" r="4.4" fill="#ef5b5b" stroke="#ffffff" stroke-width="1.5"/>';
+              });
+
+              // Subtle clinical warning crossing diamonds
+              (S.warnCrossings || []).forEach(function (wx) {
+                var wxX = X(wx.h), wxY = Y(wx.val);
+                s += '<polygon points="' + wxX + ',' + (wxY - 4.8) + ' ' + (wxX + 4.8) + ',' + wxY + ' ' + wxX + ',' + (wxY + 4.8) + ' ' + (wxX - 4.8) + ',' + wxY + '" fill="#f5b941" stroke="#0d0e11" stroke-width="1.3"/>';
+              });
+
+              // Prominent critical safety threshold crossing markers & callout badges
+              var placedBadges = [];
+              (S.critCrossings || []).forEach(function (cx) {
+                var cxX = X(cx.h), cxY = Y(cx.val);
+                s += '<line x1="' + cxX + '" x2="' + cxX + '" y1="' + cxY + '" y2="' + (H - pad.b) + '" stroke="#ef5b5b" stroke-width="1.35" stroke-dasharray="3 3" opacity="0.78"/>';
+                s += '<circle class="drift-crit-pulse" cx="' + cxX + '" cy="' + cxY + '" r="10.5" fill="none" stroke="#ef5b5b" stroke-width="1.6"/>';
+                s += '<circle cx="' + cxX + '" cy="' + cxY + '" r="9" fill="rgba(239,91,91,0.22)"/>';
+                s += '<polygon points="' + cxX + ',' + (cxY - 6.8) + ' ' + (cxX + 6.8) + ',' + cxY + ' ' + cxX + ',' + (cxY + 6.8) + ' ' + (cxX - 6.8) + ',' + cxY + '" fill="#ef5b5b" stroke="#ffffff" stroke-width="1.7"/>';
+
+                var tagTxt = (cx.dir === 'active' ? 'BREACH T+0h' : cx.dir === 'exit' ? 'EXIT T+' + fmt(cx.h, 1) + 'h' : 'CRIT T+' + fmt(cx.h, 1) + 'h');
+                var bW = tagTxt.length * 6.4 + 14;
+                var bH = 20;
+                var bx = clamp(cxX - bW / 2, pad.l + 4, W - pad.r - bW - 4);
+                var preferAbove = cxY > pad.t + 36;
+                var by = preferAbove ? (cxY - 30) : (cxY + 12);
+                placedBadges.forEach(function (pb) {
+                  if (Math.abs(bx - pb.x) < bW && Math.abs(by - pb.y) < bH + 4) {
+                    by = preferAbove ? Math.max(pad.t + 2, pb.y - bH - 4) : Math.min(H - pad.b - bH - 2, pb.y + bH + 4);
+                  }
+                });
+                placedBadges.push({ x: bx, y: by });
+                s += '<rect x="' + bx + '" y="' + by + '" width="' + bW + '" height="' + bH + '" rx="6" fill="rgba(30,9,13,0.94)" stroke="rgba(239,91,91,0.88)" stroke-width="1"/>';
+                s += '<text x="' + (bx + bW / 2) + '" y="' + (by + 13.5) + '" font-size="10" font-weight="600" font-family="IBM Plex Mono,monospace" text-anchor="middle" fill="#ffd8d8">' + tagTxt + '</text>';
               });
 
               s += '<line x1="' + X(0) + '" x2="' + X(0) + '" y1="' + pad.t + '" y2="' + (H - pad.b) + '" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>';
               s += '<text x="' + (X(0) + 6) + '" y="' + (pad.t + 12) + '" font-size="11" font-family="IBM Plex Mono,monospace" fill="#fff">NOW (T+0h)</text>';
               s += '<line id="driftCross" x1="0" x2="0" y1="' + pad.t + '" y2="' + (H - pad.b) + '" stroke="rgba(255,255,255,0.38)" stroke-dasharray="2 3" style="display:none"/>';
+              s += '<circle id="driftHoverRing" cx="0" cy="0" r="8.5" fill="none" stroke="#fff" stroke-width="1.6" style="display:none"/>';
 
               svg.innerHTML = s;
               var cross = svg.querySelector('#driftCross');
+              var hoverRing = svg.querySelector('#driftHoverRing');
               svg.onmousemove = function (ev) {
-                var bx = svg.getBoundingClientRect(), mx = ev.clientX - bx.left;
-                var best = null, bd = 1e9;
-                S.pts.forEach(function (p) { var dd = Math.abs(X(p.h) - mx); if (dd < bd) { bd = dd; best = p; } });
-                if (!best || mx < X(0) - 8) {
+                var bx = svg.getBoundingClientRect(), mx = ev.clientX - bx.left, my = ev.clientY - bx.top;
+                if (mx < X(0) - 8) {
                   tip.style.display = 'none';
                   if (cross) cross.style.display = 'none';
+                  if (hoverRing) hoverRing.style.display = 'none';
                   return;
                 }
-                if (cross) {
-                  cross.setAttribute('x1', X(best.h));
-                  cross.setAttribute('x2', X(best.h));
-                  cross.style.display = 'block';
+                var snapCross = null, snapD = 16;
+                (S.critCrossings || []).forEach(function (cx) {
+                  var dist = Math.hypot(X(cx.h) - mx, Y(cx.val) - my);
+                  if (dist < snapD) {
+                    snapD = dist;
+                    snapCross = Object.assign({ kind: 'critCross', isCritMarker: true }, cx);
+                  }
+                });
+                if (!snapCross) {
+                  (S.warnCrossings || []).forEach(function (wx) {
+                    var dist = Math.hypot(X(wx.h) - mx, Y(wx.val) - my);
+                    if (dist < 13 && dist < snapD) {
+                      snapD = dist;
+                      snapCross = Object.assign({ kind: 'warnCross', isCritMarker: false }, wx);
+                    }
+                  });
                 }
-                var diff = best.pred - best.base;
-                tip.innerHTML = '<b>T+' + best.h + 'h · ' + fmt(best.pred, S.dp) + ' ' + esc(S.u) + '</b><br>' +
-                  'Baseline: ' + fmt(best.base, S.dp) + ' ' + esc(S.u) + ' (' + (diff >= 0 ? '+' : '') + fmt(diff, S.dp) + ')<br>' +
-                  '95% band: ' + fmt(best.lo, S.dp) + ' – ' + fmt(best.hi, S.dp) + ' · ' + LVN[best.lvl];
-                tip.style.display = 'block';
-                tip.style.left = Math.min(W - 240, Math.max(8, X(best.h) - 110)) + 'px';
-                tip.style.top = Math.max(4, Y(best.pred) - 82) + 'px';
+                if (snapCross) {
+                  showHoverTip(snapCross);
+                  return;
+                }
+
+                var best = null, bd = 1e9;
+                S.pts.forEach(function (p) { var dd = Math.abs(X(p.h) - mx); if (dd < bd) { bd = dd; best = p; } });
+                if (!best) return;
+                showHoverTip(Object.assign({ kind: 'pt', isCritMarker: best.lvl === 2 }, best));
               };
               svg.onmouseleave = function () {
                 tip.style.display = 'none';
                 if (cross) cross.style.display = 'none';
+                if (hoverRing) hoverRing.style.display = 'none';
               };
             }
+
+            box._focusCrossing = function (cx) {
+              if (!cx || !latestGeo) return;
+              showHoverTip(Object.assign({ kind: 'critCross', isCritMarker: true }, cx));
+            };
             if (box._ro) box._ro.disconnect();
             if (typeof ResizeObserver !== 'undefined') { box._ro = new ResizeObserver(draw); box._ro.observe(svg); }
             draw();
@@ -8170,6 +8394,7 @@
                     '<div class="card">' +
                       '<div class="row between"><div id="driftChartTitle"></div><div id="driftChartBadge"></div></div>' +
                       '<div class="drift-vtabs" id="driftVarTabs"></div>' +
+                      '<div class="drift-cross-bar hidden" id="driftCrossingBar"></div>' +
                       '<div id="driftChartMount" style="margin-top:12px">' + chartBox(300) + '</div>' +
                       '<div class="clegend" style="margin-top:10px">' +
                         '<span><i class="sw" style="background:rgba(121,220,232,0.28)"></i>95% prediction cone</span>' +
@@ -8177,6 +8402,8 @@
                         '<span><i class="sw" style="border-top:2px dashed rgba(255,255,255,0.58);height:0"></i>Nominal mission baseline</span>' +
                         '<span><i class="sw" style="border-top:2px dashed #f5b941;height:0"></i>Clinical limit</span>' +
                         '<span><i class="sw" style="border-top:2px dashed #ef5b5b;height:0"></i>Safety limit</span>' +
+                        '<span><i class="drift-legend-diamond"></i>Critical crossing</span>' +
+                        '<span><i class="drift-legend-ring"></i>Critical data point</span>' +
                       '</div>' +
                     '</div>' +
                   '</div>' +
@@ -8201,13 +8428,16 @@
                   U.driftVar = sel.v;
 
                   var riskLabels = ['Nominal', 'Drifting', 'Threshold Breach'];
-                  var earliestTxt = F.earliest ? ('T+' + F.earliest.crossH + 'h · ' + F.earliest.v.toUpperCase()) : ('None in ' + F.horizonH + 'h');
+                  var earliestRef = F.earliestCrit || F.earliest;
+                  var earliestVal = earliestRef
+                    ? ((F.earliestCrit ? 'CRIT T+' + fmt(earliestRef.critCrossH, 1) : 'T+' + fmt(earliestRef.crossH, 1)) + 'h · ' + earliestRef.v.toUpperCase())
+                    : ('None in ' + F.horizonH + 'h');
                   var idxDelta = F.predIdx - F.curIdx;
                   var peakSign = sel ? (F.peakVar.netDrift >= 0 ? '+' : '') : '';
 
                   $('#driftKpis').innerHTML =
                     '<div class="drift-kpi"><span class="drift-kpi-lab">Forecast Status (' + F.horizonH + 'h)</span><div style="margin-top:2px">' + st(F.worstLvl, riskLabels[F.worstLvl]) + '</div><span class="drift-kpi-sub">' + esc(F.env.envName) + '</span></div>' +
-                    '<div class="drift-kpi"><span class="drift-kpi-lab">Earliest Threshold Crossing</span><span class="drift-kpi-val">' + esc(earliestTxt) + '</span><span class="drift-kpi-sub">' + (F.earliest ? esc(F.earliest.n) : 'All limits respected') + '</span></div>' +
+                    '<div class="drift-kpi"><span class="drift-kpi-lab">' + (F.earliestCrit ? 'Earliest Safety Crossing' : 'Earliest Threshold Crossing') + '</span><span class="drift-kpi-val">' + esc(earliestVal) + '</span><span class="drift-kpi-sub">' + (earliestRef ? esc(earliestRef.n) : 'All limits respected') + '</span></div>' +
                     '<div class="drift-kpi"><span class="drift-kpi-lab">Peak Drift Magnitude</span><span class="drift-kpi-val">' + esc(F.peakVar.v.toUpperCase()) + ' ' + peakSign + fmt(F.peakVar.netDrift, F.peakVar.dp) + ' ' + esc(F.peakVar.u) + '</span><span class="drift-kpi-sub">' + fmt(F.peakVar.peakZ, 1) + ' σ deviation · ' + esc(F.peakVar.driver) + '</span></div>' +
                     '<div class="drift-kpi"><span class="drift-kpi-lab">Projected Crew Index</span><span class="drift-kpi-val">' + Math.round(F.curIdx) + ' → ' + Math.round(F.predIdx) + '</span><span class="drift-kpi-sub">' + (idxDelta === 0 ? 'Steady over ' + F.horizonH + 'h' : (idxDelta > 0 ? '+' : '') + idxDelta + ' pts by T+' + F.horizonH + 'h') + '</span></div>';
 
@@ -8221,23 +8451,62 @@
                   if (U.driftEnv.light !== 'aligned') envNotes.push('Light cycle: ' + U.driftEnv.light);
                   $('#driftEnvSummary').innerHTML = '<b>Active Surroundings Drivers:</b> ' + (envNotes.length ? envNotes.map(esc).join(' · ') : 'All cabin & ambient parameters within nominal range (' + U.driftEnv.g + ' g).');
 
-                  $('#driftChartTitle').innerHTML = '<h3>' + esc(sel.n) + ' <span class="t3 s">(' + (sel.u ? esc(sel.u) : 'index') + ')</span></h3><p class="xs t3" style="margin-top:2px">Driver: ' + esc(sel.driver) + (sel.crossH != null ? ' · Projected limit crossing at T+' + sel.crossH + 'h' : '') + '</p>';
+                  var subCrossTxt = sel.critCrossH != null
+                    ? (' · Safety limit crossed at T+' + fmt(sel.critCrossH, 1) + 'h')
+                    : (sel.crossH != null ? ' · Clinical limit crossed at T+' + fmt(sel.crossH, 1) + 'h' : '');
+                  $('#driftChartTitle').innerHTML = '<h3>' + esc(sel.n) + ' <span class="t3 s">(' + (sel.u ? esc(sel.u) : 'index') + ')</span></h3><p class="xs t3" style="margin-top:2px">Driver: ' + esc(sel.driver) + subCrossTxt + '</p>';
                   $('#driftChartBadge').innerHTML = st(sel.lvl, riskLabels[sel.lvl]);
 
                   $('#driftVarTabs').innerHTML = F.summaries.map(function (s) {
                     var dotCol = COLV[s.lvl];
-                    return '<button type="button" class="drift-vtab" data-dv="' + s.v + '" aria-pressed="' + (s.v === sel.v) + '"><span class="dot" style="background:' + dotCol + ';width:7px;height:7px"></span>' + esc(s.v.toUpperCase()) + '</button>';
+                    var critTag = s.critCrossings && s.critCrossings.length ? ' <span class="num" style="color:#ff9e9e;font-size:10.5px">◆</span>' : '';
+                    return '<button type="button" class="drift-vtab" data-dv="' + s.v + '" aria-pressed="' + (s.v === sel.v) + '"><span class="dot" style="background:' + dotCol + ';width:7px;height:7px"></span>' + esc(s.v.toUpperCase()) + critTag + '</button>';
                   }).join('');
                   $$('#driftVarTabs [data-dv]').forEach(function (b) {
                     b.onclick = function () { U.driftVar = b.dataset.dv; updateDriftUI(); };
                   });
 
-                  driftChart($('#driftChartMount'), sel, F.horizonH);
+                  var mountEl = $('#driftChartMount');
+                  driftChart(mountEl, sel, F.horizonH);
+
+                  var crossBar = $('#driftCrossingBar');
+                  if (crossBar) {
+                    if (sel.critCrossings.length || sel.critPts.length) {
+                      crossBar.classList.remove('hidden', 'is-warn');
+                      var chips = sel.critCrossings.map(function (cx, idx) {
+                        return '<button type="button" class="drift-cross-chip" data-cidx="' + idx + '" title="Highlight crossing on chart">◆ T+' + fmt(cx.h, 1) + 'h · ' + esc(cx.label) + '</button>';
+                      }).join('');
+                      var ptsMeta = sel.critPts.length
+                        ? '<span class="xs" style="color:#ffd8d8;opacity:.85">' + sel.critPts.length + ' forecast point' + (sel.critPts.length > 1 ? 's' : '') + ' in safety breach zone</span>'
+                        : '';
+                      crossBar.innerHTML = '<b>Safety Threshold Crossings:</b>' + chips + ptsMeta;
+                      $$('#driftCrossingBar [data-cidx]').forEach(function (chBtn) {
+                        chBtn.onclick = function () {
+                          $$('#driftCrossingBar [data-cidx]').forEach(function (x) { x.classList.remove('is-pinned'); });
+                          chBtn.classList.add('is-pinned');
+                          var cxObj = sel.critCrossings[Number(chBtn.dataset.cidx)];
+                          if (mountEl && mountEl._focusCrossing) mountEl._focusCrossing(cxObj);
+                        };
+                      });
+                    } else if (sel.warnCrossings.length) {
+                      crossBar.classList.remove('hidden');
+                      crossBar.classList.add('is-warn');
+                      crossBar.innerHTML = '<b>Clinical Threshold Notice:</b>' +
+                        sel.warnCrossings.map(function (wx) {
+                          return '<span class="drift-cross-chip" style="cursor:default">◇ T+' + fmt(wx.h, 1) + 'h · ' + esc(wx.label) + '</span>';
+                        }).join('') +
+                        '<span class="xs" style="opacity:.85">Critical safety limit not breached</span>';
+                    } else {
+                      crossBar.classList.add('hidden');
+                      crossBar.innerHTML = '';
+                    }
+                  }
 
                   var thEnd = $('#driftThEnd');
                   if (thEnd) thEnd.textContent = 'T+' + F.horizonH + 'h';
                   $('#driftTableBody').innerHTML = F.summaries.map(function (s) {
                     var sign = s.netDrift >= 0 ? '+' : '';
+                    var rowCrossNote = s.critCrossH != null ? '<div class="xs num" style="color:#ff9e9e;margin-top:2px">◆ Crit T+' + fmt(s.critCrossH, 1) + 'h</div>' : '';
                     return '<tr class="drift-row' + (s.v === sel.v ? ' is-active' : '') + '" data-drow="' + s.v + '">' +
                       '<td><b>' + esc(s.n) + '</b><br><span class="xs t3">' + esc(s.u) + '</span></td>' +
                       '<td class="r num" data-l="Now">' + fmt(s.cur, s.dp) + '</td>' +
@@ -8245,7 +8514,7 @@
                       '<td class="r num" data-l="T+' + F.horizonH + 'h"><b>' + fmt(s.vEnd, s.dp) + '</b></td>' +
                       '<td class="r num" data-l="Net Drift">' + sign + fmt(s.netDrift, s.dp) + '</td>' +
                       '<td class="s t2" data-l="Driver">' + esc(s.driver) + '</td>' +
-                      '<td data-l="Forecast">' + st(s.lvl, riskLabels[s.lvl]) + '</td>' +
+                      '<td data-l="Forecast">' + st(s.lvl, riskLabels[s.lvl]) + rowCrossNote + '</td>' +
                     '</tr>';
                   }).join('');
                   $$('#driftTableBody [data-drow]').forEach(function (tr) {
