@@ -1710,6 +1710,11 @@
       .tars-transcript strong{color:#fff}
       .tars-calib{width:100%;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.045);border:1px solid var(--line);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;text-align:left}
       @media(max-width:540px){.tars-calib{grid-template-columns:minmax(0,1fr)}}
+      .tars-mode-row{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.08)}
+      .tars-mode-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,0.06);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:background .16s,border-color .16s,color .16s}
+      .tars-mode-btn.is-on{background:rgba(52,194,122,0.18);border-color:rgba(52,194,122,0.55);color:#d7ffe9}
+      .tars-mode-btn:hover{border-color:rgba(121,220,232,0.55);color:#fff}
+      .tars-mode-note{font-size:11.5px;color:var(--text3)}
       .tars-calib-item{display:flex;flex-direction:column;gap:4px}
       .tars-calib-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;font-size:12px;color:var(--text2)}
       .tars-calib-head b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:#79dce8;font-size:12px}
@@ -9427,6 +9432,10 @@
                 '<p class="s t2" id="botSub" style="margin-top:6px">Spacecraft AI buddy with dry space wit, casual orbit chat, live crew awareness, and instant medical protocols.</p>' +
                 '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><button class="btn" id="botWake" type="button" title="Hands-free Hey TARS wake word listening">🎧 Hey TARS: Off</button><input id="botPrompt" placeholder="Chat, ask for a space joke, or check vitals..." style="flex:1;min-width:160px;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice replies">🔊</button></div>' +
                 '<div class="tars-calib" aria-label="TARS personality calibration">' +
+                  '<div class="tars-mode-row">' +
+                    '<button type="button" class="tars-mode-btn' + (initHumor > 0 ? ' is-on' : '') + '" id="botHumorMode" aria-pressed="' + (initHumor > 0 ? 'true' : 'false') + '">' + (initHumor >= 75 ? '😏 Humor Mode: ON · Full Dry Quips' : (initHumor >= 40 ? '😂 Humor Mode: ON · Space Banter' : (initHumor > 0 ? '🙂 Humor Mode: ON · Subtle Wit' : '🤖 Humor Mode: OFF · Clinical'))) + '</button>' +
+                    '<span class="tars-mode-note" id="botHumorHint">' + (initHumor > 0 ? 'Dry space quips &amp; orbital banter active' : 'Serious clinical responses only') + '</span>' +
+                  '</div>' +
                   '<div class="tars-calib-item"><div class="tars-calib-head"><label for="botHumor">Humor setting</label><b id="botHumorVal">' + initHumor + '%</b></div><input id="botHumor" type="range" min="0" max="100" step="5" value="' + initHumor + '"></div>' +
                   '<div class="tars-calib-item"><div class="tars-calib-head"><label for="botHonesty">Honesty setting</label><b id="botHonestyVal">' + initHonesty + '%</b></div><input id="botHonesty" type="range" min="50" max="100" step="5" value="' + initHonesty + '"></div>' +
                 '</div>' +
@@ -9438,7 +9447,7 @@
                 '</div>' +
                 '<div class="tars-meter" id="botMeter" aria-label="Microphone audio waveform and volume meter"><div class="tars-meter-top"><span class="tars-meter-status"><i class="tars-meter-dot" id="botMeterDot"></i><span id="botMeterState">Mic Idle</span></span><span class="mono" id="botMeterDb">Input: —</span></div><canvas id="botWaveCanvas" height="48"></canvas><div class="tars-vol-track"><div class="tars-vol-fill" id="botVolFill"></div><div class="tars-vol-peak" id="botVolPeak"></div></div></div>' +
                 '<div class="tars-transcript is-visible" id="botTranscriptBox" aria-live="polite"><strong>Standby:</strong> Type anything below for casual chat or jokes, or tap <b>🎤 Speak</b> / <b>🎧 Hey TARS</b>.</div>' +
-                '<div class="tars-log-wrap"><div class="tars-log-bar"><span>TARS Comms Channel · Gemini AI</span><button type="button" class="btn sm" id="botClearChat" style="padding:3px 9px;min-height:24px;font-size:11px">Clear chat</button></div><div class="tars-log-list dash-scroll" id="botLog"></div></div></div>' +
+                '<div class="tars-log-wrap"><div class="tars-log-bar"><span>TARS Comms Channel · Gemini AI (Fast Voice Mode)</span><button type="button" class="btn sm" id="botClearChat" style="padding:3px 9px;min-height:24px;font-size:11px">Clear chat</button></div><div class="tars-log-list dash-scroll" id="botLog"></div></div></div>' +
                 '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency for instant deterministic guidance, or ask TARS directly in chat.</p><div class="stack gap8" style="margin-top:14px">' +
                 '<button class="sub row between" data-esc="dcs" style="text-align:left;background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.35)"><span class="grow"><b>Decompression Sickness (DCS)</b><br><span class="xs t3">Joint pain, skin mottling, dizziness after EVA</span></span><span class="btn sm danger">Emergency</span></button>' +
                 '<button class="sub row between" data-esc="spe" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Solar Particle Event (SPE)</b><br><span class="xs t3">Radiation dose-rate spike / storm alert</span></span><span class="btn sm warning">Shelter</span></button>' +
@@ -9464,15 +9473,51 @@
                 var activeAudioEl = null;
                 var chatHistory = [];
                 var humorPct = initHumor;
+                var lastNonZeroHumor = initHumor > 0 ? initHumor : 75;
                 var honestyPct = initHonesty;
 
                 var humorSlider = $('#botHumor'), humorValEl = $('#botHumorVal');
+                var humorModeBtn = $('#botHumorMode'), humorHintEl = $('#botHumorHint');
                 var honestySlider = $('#botHonesty'), honestyValEl = $('#botHonestyVal');
+                var syncHumorUI = function () {
+                  if (humorSlider) humorSlider.value = String(humorPct);
+                  if (humorValEl) humorValEl.textContent = humorPct + '%';
+                  if (humorModeBtn) {
+                    var on = humorPct > 0;
+                    humorModeBtn.classList.toggle('is-on', on);
+                    humorModeBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    humorModeBtn.textContent = humorPct >= 75
+                      ? '😏 Humor Mode: ON · Full Dry Quips'
+                      : (humorPct >= 40
+                        ? '😂 Humor Mode: ON · Space Banter'
+                        : (humorPct > 0
+                          ? '🙂 Humor Mode: ON · Subtle Wit'
+                          : '🤖 Humor Mode: OFF · Clinical'));
+                  }
+                  if (humorHintEl) {
+                    humorHintEl.textContent = humorPct > 0
+                      ? 'Dry space quips & orbital banter active'
+                      : 'Serious clinical responses only';
+                  }
+                  try { localStorage.setItem('vitv_tars_humor', String(humorPct)); } catch (e) {}
+                };
                 if (humorSlider && humorValEl) {
                   humorSlider.oninput = function () {
                     humorPct = Number(humorSlider.value);
-                    humorValEl.textContent = humorPct + '%';
-                    try { localStorage.setItem('vitv_tars_humor', String(humorPct)); } catch (e) {}
+                    if (humorPct > 0) lastNonZeroHumor = humorPct;
+                    syncHumorUI();
+                  };
+                }
+                if (humorModeBtn) {
+                  humorModeBtn.onclick = function () {
+                    if (humorPct > 0) {
+                      lastNonZeroHumor = humorPct;
+                      humorPct = 0;
+                    } else {
+                      humorPct = lastNonZeroHumor > 0 ? lastNonZeroHumor : 75;
+                    }
+                    syncHumorUI();
+                    toast(humorPct > 0 ? ('Humor Mode ON (' + humorPct + '%)') : 'Humor Mode OFF (Clinical)');
                   };
                 }
                 if (honestySlider && honestyValEl) {
@@ -9648,48 +9693,80 @@
                   }
                 };
 
+                var unlockSpeechOnGesture = function () {
+                  if (!synth) return;
+                  try {
+                    if (synth.resume) synth.resume();
+                    if (synth.getVoices) synth.getVoices();
+                  } catch (e) {}
+                };
+
+                var pickTarsVoice = function (voices) {
+                  if (!voices || !voices.length) return null;
+                  var prefs = [/daniel/i, /alex/i, /google us english/i, /microsoft (mark|david|guy)/i, /^en[-_]us/i, /^en/i];
+                  for (var p = 0; p < prefs.length; p++) {
+                    for (var i = 0; i < voices.length; i++) {
+                      if (prefs[p].test(voices[i].name || '') || prefs[p].test(voices[i].lang || '')) return voices[i];
+                    }
+                  }
+                  return voices[0];
+                };
+
                 var playSpeechAudio = function (text, forceSpeak) {
                   if (!forceSpeak && !speaking) return;
-                  var estMs = Math.min(18000, Math.max(3500, text.length * 80));
+                  var cleanText = (text || '').trim();
+                  if (!cleanText) return;
+                  var estMs = Math.min(18000, Math.max(3000, cleanText.length * 75));
                   if (synth && !browserTtsUnavailable) {
                     try {
-                      synth.cancel();
+                      var wasBusy = !!(synth.speaking || synth.pending);
+                      if (wasBusy) synth.cancel();
                       if (synth.resume) synth.resume();
-                      var voices = synth.getVoices ? synth.getVoices() : [];
-                      var utter = new SpeechSynthesisUtterance(text);
-                      utter.rate = 1.05;
-                      utter.pitch = 0.96;
-                      window.__tarsUtter = utter;
-                      var started = false;
-                      var fallbackTimer = setTimeout(function () {
-                        if (!started && !synth.speaking) {
-                          try { synth.cancel(); } catch (e) {}
-                          playGeminiTtsFallback(text);
+                      var startBrowserUtter = function () {
+                        try {
+                          var voices = synth.getVoices ? synth.getVoices() : [];
+                          var utter = new SpeechSynthesisUtterance(cleanText);
+                          var v = pickTarsVoice(voices);
+                          if (v) utter.voice = v;
+                          utter.rate = 1.07;
+                          utter.pitch = 0.94;
+                          window.__tarsUtter = utter;
+                          var started = false;
+                          var fallbackTimer = setTimeout(function () {
+                            if (!started && !synth.speaking) {
+                              try { synth.cancel(); } catch (e) {}
+                              playGeminiTtsFallback(cleanText);
+                            }
+                          }, (voices && voices.length > 0) ? 750 : 450);
+                          utter.onstart = function () {
+                            started = true;
+                            browserTtsUnavailable = false;
+                            clearTimeout(fallbackTimer);
+                            markTtsActive(true, estMs);
+                          };
+                          utter.onend = function () {
+                            clearTimeout(fallbackTimer);
+                            if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                            markTtsActive(false);
+                          };
+                          utter.onerror = function () {
+                            clearTimeout(fallbackTimer);
+                            if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                            if (!voices || voices.length === 0) browserTtsUnavailable = true;
+                            playGeminiTtsFallback(cleanText);
+                          };
+                          markTtsActive(true, estMs);
+                          synth.speak(utter);
+                        } catch (err) {
+                          playGeminiTtsFallback(cleanText);
                         }
-                      }, 900);
-                      utter.onstart = function () {
-                        started = true;
-                        browserTtsUnavailable = false;
-                        clearTimeout(fallbackTimer);
-                        markTtsActive(true, estMs);
                       };
-                      utter.onend = function () {
-                        clearTimeout(fallbackTimer);
-                        if (window.__tarsUtter === utter) window.__tarsUtter = null;
-                        markTtsActive(false);
-                      };
-                      utter.onerror = function () {
-                        clearTimeout(fallbackTimer);
-                        if (window.__tarsUtter === utter) window.__tarsUtter = null;
-                        if (!voices || voices.length === 0) browserTtsUnavailable = true;
-                        playGeminiTtsFallback(text);
-                      };
-                      markTtsActive(true, estMs);
-                      synth.speak(utter);
+                      if (wasBusy) setTimeout(startBrowserUtter, 30);
+                      else startBrowserUtter();
                       return;
                     } catch (e) {}
                   }
-                  playGeminiTtsFallback(text);
+                  playGeminiTtsFallback(cleanText);
                 };
 
                 var appendChatBubble = function (kind, text, emoji, severity) {
@@ -9704,7 +9781,7 @@
                     div.innerHTML = '<b>⚠️ TARS Uplink:</b> ' + esc(text);
                   } else if (kind === 'thinking') {
                     div.className = 'tars-msg is-bot is-thinking';
-                    div.innerHTML = '<span>💭</span><span>TARS is thinking…</span>';
+                    div.innerHTML = '<span>⚡</span><span>TARS replying…</span>';
                   } else {
                     div.className = 'tars-msg is-bot' + (severity === 'alert' ? ' is-alert' : '');
                     var span = document.createElement('span');
@@ -9765,14 +9842,24 @@
                 var buildTarsCrewContext = function () {
                   var active = cur();
                   if (!active) return {};
+                  var dNow = active.nowDay();
                   var h = headerOf(active);
                   var vitals = {};
-                  var hrO = active.last('hr'); if (hrO) vitals['Heart rate'] = Math.round(hrO.v) + ' bpm';
-                  var spO = active.last('spo2'); if (spO) vitals['SpO2'] = Math.round(spO.v) + '%';
-                  var tpO = active.last('ctemp'); if (tpO) vitals['Core temp'] = tpO.v.toFixed(1) + ' °C';
-                  var slO = active.last('sleep'); if (slO) vitals['Sleep'] = slO.v.toFixed(1) + ' h';
-                  var stO = active.last('stress'); if (stO) vitals['Stress'] = Math.round(stO.v) + '/10';
-                  var mdO = active.last('mood'); if (mdO) vitals['Mood'] = Math.round(mdO.v) + '/10';
+                  try {
+                    var hrO = active.latest('hr', dNow, null); if (hrO) vitals['Heart rate'] = Math.round(hrO[3]) + ' bpm';
+                    var spO = active.latest('spo2', dNow, null); if (spO) vitals['SpO2'] = Math.round(spO[3]) + '%';
+                    var tpO = active.latest('ctemp', dNow, null); if (tpO) vitals['Core temp'] = Number(tpO[3]).toFixed(1) + ' °C';
+                    var slO = active.latest('sleep', dNow, null); if (slO) vitals['Sleep'] = Number(slO[3]).toFixed(1) + ' h';
+                    var stO = active.latest('stress', dNow, null); if (stO) vitals['Stress'] = Math.round(stO[3]) + '/10';
+                    var mdO = active.latest('mood', dNow, null); if (mdO) vitals['Mood'] = Math.round(mdO[3]) + '/10';
+                  } catch (e) {}
+
+                  var alertCount = 0;
+                  try {
+                    META.CONDS.forEach(function (k) {
+                      if (active.condStatus(k.id, dNow).lvl > 0) alertCount++;
+                    });
+                  } catch (e) {}
 
                   var driftNote = '';
                   try {
@@ -9790,10 +9877,10 @@
                   return {
                     crewName: active.d.name,
                     role: active.d.role || '',
-                    missionDay: Math.floor(active.day()),
+                    missionDay: Math.floor(dNow),
                     environment: h ? h.env : '',
                     gravityG: h ? h.g : 0,
-                    alerts: h ? h.al : 0,
+                    alerts: alertCount,
                     vitals: vitals,
                     driftSummary: driftNote
                   };
@@ -9815,8 +9902,10 @@
                   var trimmed = (rawQ || '').trim();
                   var q = trimmed.toLowerCase();
                   if (!q) return;
+                  unlockSpeechOnGesture();
                   appendChatBubble('user', trimmed);
-                  var voiceReply = isVoiceInput === true;
+                  var isVoiceTurn = isVoiceInput === true;
+                  var voiceReply = speaking;
                   var replyText = '';
                   var replyEmoji = '🤖';
                   var replySeverity = 'normal';
@@ -9831,7 +9920,7 @@
                     followUpUntil = 0;
                     stopAllSpeech();
                     replyText = 'Standing by.';
-                    speak(replyText, replyEmoji, voiceReply);
+                    speak(replyText, replyEmoji, false);
                   } else if (logMeta && logMeta.instantProtocol) {
                     if (q.indexOf('decompression') >= 0) {
                       replyText = 'Emergency! Decompression sickness detected or suspected. Put on your hundred percent oxygen mask immediately. Repressurise the airlock and contact the Crew Medical Officer and flight surgeon now.';
@@ -9857,7 +9946,7 @@
                   } else {
                     var thinkingEl = appendChatBubble('thinking', '');
                     var emWait = $('#botEmoji');
-                    if (emWait) emWait.textContent = '💭';
+                    if (emWait) emWait.textContent = '⚡';
                     var sb = $('#botSend');
                     if (sb) sb.disabled = true;
                     try {
@@ -9868,6 +9957,7 @@
                           message: trimmed,
                           history: chatHistory.slice(-10),
                           humor: humorPct,
+                          humorMode: humorPct > 0,
                           honesty: honestyPct,
                           context: buildTarsCrewContext()
                         })
@@ -9903,11 +9993,11 @@
                     }
                   }
 
-                  if (voiceReply && replyText) {
+                  if (isVoiceTurn && replyText) {
                     var activeCrew = cur();
                     appendVoiceLog({
                       crew: activeCrew ? activeCrew.d.name : '',
-                      day: activeCrew ? Math.floor(activeCrew.day()) : null,
+                      day: activeCrew ? Math.floor(activeCrew.nowDay()) : null,
                       mode: (logMeta && logMeta.mode) || 'Speak',
                       transcript: (logMeta && logMeta.fullTranscript) || trimmed,
                       reply: replyText,
@@ -10281,7 +10371,7 @@
                         var activeCrewWake = cur();
                         appendVoiceLog({
                           crew: activeCrewWake ? activeCrewWake.d.name : '',
-                          day: activeCrewWake ? Math.floor(activeCrewWake.day()) : null,
+                          day: activeCrewWake ? Math.floor(activeCrewWake.nowDay()) : null,
                           mode: 'Hey TARS',
                           transcript: transcript,
                           reply: wakeReply,
@@ -10535,7 +10625,7 @@
                           var activeCrewWake = cur();
                           appendVoiceLog({
                             crew: activeCrewWake ? activeCrewWake.d.name : '',
-                            day: activeCrewWake ? Math.floor(activeCrewWake.day()) : null,
+                            day: activeCrewWake ? Math.floor(activeCrewWake.nowDay()) : null,
                             mode: 'Hey TARS',
                             transcript: matchedTranscript,
                             reply: wakeReply,

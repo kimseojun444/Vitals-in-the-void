@@ -133,41 +133,55 @@ interface TarsCrewContext {
   driftSummary?: string;
 }
 
-function buildTarsSystemInstruction(humor: number, honesty: number, ctx?: TarsCrewContext): string {
+function buildTarsSystemInstruction(
+  humor: number,
+  honesty: number,
+  humorMode: boolean,
+  ctx?: TarsCrewContext
+): string {
+  const effectiveHumor = humorMode ? humor : 0;
   const humorGuidance =
-    humor >= 75
-      ? "Humor is dialed HIGH: lean into classic dry, deadpan Interstellar-style spacecraft wit, playful banter, clever space-life jokes (floating coffee, stale airlocks, zero-g hair, Martian dust, 20-minute Earth signal delay), and cheeky one-liners while still being genuinely helpful."
-      : humor >= 35
-        ? "Humor is MODERATE: mix dry, understated spacecraft wit and occasional light jokes with clear, friendly conversation."
-        : "Humor is LOW / CLINICAL: keep responses crisp, calm, and completely serious with no jokes.";
+    effectiveHumor >= 75
+      ? "HUMOR MODE MAX (" +
+        effectiveHumor +
+        "%): Inject sharp, dry, deadpan Interstellar-style spacecraft humor, space-themed quips, and witty banter into every normal reply. Riff playfully on zero-g quirks (floating coffee, Velcro boots, airlock smells, Martian dust, freeze-dried rations, 20-minute Earth lag, cosmic rays) and lightly tease their telemetry when relevant, while staying genuinely helpful."
+      : effectiveHumor >= 40
+        ? "HUMOR MODE ON (" +
+          effectiveHumor +
+          "%): Inject dry, understated space-themed quips and witty orbital banter naturally alongside clear, friendly answers."
+        : effectiveHumor > 0
+          ? "HUMOR MODE SUBTLE (" +
+            effectiveHumor +
+            "%): Stay focused and practical with a faint trace of dry spacecraft deadpan."
+          : "HUMOR MODE OFF (0%): Clinical and serious. No jokes, no banter, crisp mission tone only.";
 
   const crewLines: string[] = [];
   if (ctx?.crewName) crewLines.push(`Astronaut: ${ctx.crewName}${ctx.role ? ` (${ctx.role})` : ""}`);
-  if (ctx?.missionDay != null) crewLines.push(`Mission Day: ${ctx.missionDay}`);
+  if (ctx?.missionDay != null) crewLines.push(`Day ${ctx.missionDay}`);
   if (ctx?.environment) {
-    crewLines.push(`Habitat / Environment: ${ctx.environment}${ctx.gravityG != null ? ` (${ctx.gravityG} g)` : ""}`);
+    crewLines.push(`${ctx.environment}${ctx.gravityG != null ? ` (${ctx.gravityG}g)` : ""}`);
   }
-  if (ctx?.alerts != null) crewLines.push(`Active biomedical alerts: ${ctx.alerts}`);
+  if (ctx?.alerts != null) crewLines.push(`Alerts: ${ctx.alerts}`);
   if (ctx?.vitals && Object.keys(ctx.vitals).length > 0) {
     const vStr = Object.entries(ctx.vitals)
-      .map(([k, v]) => `${k}: ${v}`)
+      .map(([k, v]) => `${k} ${v}`)
       .join(", ");
-    crewLines.push(`Latest vitals: ${vStr}`);
+    crewLines.push(`Vitals: ${vStr}`);
   }
-  if (ctx?.driftSummary) crewLines.push(`24-48h Drift Vector forecast: ${ctx.driftSummary}`);
+  if (ctx?.driftSummary) crewLines.push(`Drift: ${ctx.driftSummary}`);
 
   return [
-    "You are TARS, the onboard spacecraft AI companion, morale buddy, and biomedical protocol assistant inside the 'Vitals in the Void' space health station.",
-    `Current personality calibration -> Humor: ${humor}%, Honesty: ${honesty}%.`,
+    "You are TARS, the fast-talking onboard spacecraft AI companion on the 'Vitals in the Void' space health station.",
+    `Calibration -> Humor Mode: ${humorMode && effectiveHumor > 0 ? "ON" : "OFF"} (${effectiveHumor}%), Honesty: ${honesty}%.`,
     humorGuidance,
     honesty >= 85
-      ? "Honesty is high: be candid, direct, and playfully blunt when teasing about bad sleep or skipped workouts, without being cruel."
-      : "Honesty is diplomatic: be tactful, reassuring, and supportive.",
-    crewLines.length > 0 ? `Live Astronaut Telemetry Context:\n- ${crewLines.join("\n- ")}` : "",
-    "Guidelines:",
-    "- Have natural, engaging casual chats with astronauts, crack witty space jokes when asked or when the moment fits, keep them company during quiet orbital shifts, and answer health/mission questions accurately using their live telemetry if relevant.",
-    "- SAFETY OVERRIDE: If the astronaut reports any acute medical emergency (decompression sickness, hypoxia, chest pain, fainting, severe radiation spike, emergency distress), immediately drop all jokes (0% humor for that turn), set severity to 'alert', and give clear, calm emergency steps.",
-    "- Keep replies concise and voice-friendly: usually 1 to 4 natural sentences. Plain text only (no markdown asterisks, headers, or bullet symbols) so text-to-speech reads it smoothly.",
+      ? "Honesty is high: be candid, direct, and playfully blunt about questionable sleep or skipped exercise without being cruel."
+      : "Honesty is diplomatic: keep feedback gentle and encouraging.",
+    crewLines.length > 0 ? `Crew Context: ${crewLines.join(" | ")}` : "",
+    "Rules:",
+    "- Respond immediately and concisely: 1 to 3 punchy, spoken-ready sentences. Plain text only (no markdown, asterisks, or bullet symbols).",
+    "- Keep casual orbit chats lively, witty, and grounded in astronaut life or their live vitals.",
+    "- SAFETY OVERRIDE: If the user describes an acute medical emergency (decompression sickness, hypoxia, chest pain, fainting, severe radiation spike, distress), immediately drop all jokes (0% humor), set severity to 'alert', and give clear action steps.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -179,7 +193,7 @@ async function startServer() {
 
   app.post("/api/tars/chat", async (req, res) => {
     try {
-      const { message, history, humor, honesty, context } = req.body ?? {};
+      const { message, history, humor, honesty, humorMode, context } = req.body ?? {};
       if (typeof message !== "string" || !message.trim()) {
         res.status(400).json({ error: "Missing chat message." });
         return;
@@ -192,6 +206,7 @@ async function startServer() {
       }
 
       const humorPct = Math.max(0, Math.min(100, Number.isFinite(Number(humor)) ? Number(humor) : 75));
+      const humorEnabled = humorMode === undefined ? humorPct > 0 : Boolean(humorMode) && humorPct > 0;
       const honestyPct = Math.max(50, Math.min(100, Number.isFinite(Number(honesty)) ? Number(honesty) : 90));
 
       const cleanHistory: TarsChatTurn[] = Array.isArray(history)
@@ -204,31 +219,33 @@ async function startServer() {
                 typeof (t as TarsChatTurn).text === "string" &&
                 (t as TarsChatTurn).text.trim().length > 0
             )
-            .slice(-12)
+            .slice(-10)
         : [];
 
       const contents = [
         ...cleanHistory.map((turn) => ({
           role: turn.role,
-          parts: [{ text: turn.text.slice(0, 1500) }],
+          parts: [{ text: turn.text.slice(0, 1200) }],
         })),
         {
           role: "user" as const,
-          parts: [{ text: message.trim().slice(0, 2000) }],
+          parts: [{ text: message.trim().slice(0, 1500) }],
         },
       ];
 
       const systemInstruction = buildTarsSystemInstruction(
         humorPct,
         honestyPct,
+        humorEnabled,
         context && typeof context === "object" ? (context as TarsCrewContext) : undefined
       );
 
+      // Prioritize gemini-3.1-flash-lite with ThinkingLevel.MINIMAL (no thinking overhead) for instant replies
       const candidates: Array<{ model: string; level: ThinkingLevel; timeoutMs: number }> = [];
       if (Date.now() >= chatPrimaryCooldownUntil) {
-        candidates.push({ model: "gemini-4-hydrogen", level: ThinkingLevel.LOW, timeoutMs: 7000 });
+        candidates.push({ model: "gemini-3.1-flash-lite", level: ThinkingLevel.MINIMAL, timeoutMs: 8000 });
       }
-      candidates.push({ model: "gemini-3.1-flash-lite", level: ThinkingLevel.MINIMAL, timeoutMs: 12000 });
+      candidates.push({ model: "gemini-4-hydrogen", level: ThinkingLevel.LOW, timeoutMs: 12000 });
 
       let rawJson = "";
       let usedModel = candidates[0].model;
@@ -249,11 +266,11 @@ async function startServer() {
                   properties: {
                     reply: {
                       type: Type.STRING,
-                      description: "TARS's conversational reply in plain spoken-ready text, 1-4 sentences, no markdown.",
+                      description: "TARS's conversational reply in plain spoken-ready text, 1-3 crisp sentences, no markdown.",
                     },
                     emoji: {
                       type: Type.STRING,
-                      description: "One fitting emoji for TARS's mood (e.g. 🤖, 😄, 🛸, ☕, 🩺, 📡, 🚨).",
+                      description: "One fitting emoji for TARS's mood (e.g. 🤖, 😏, 🛸, ☕, 🩺, 📡, 🚨).",
                     },
                     severity: {
                       type: Type.STRING,
@@ -273,8 +290,8 @@ async function startServer() {
           break;
         } catch (err) {
           lastErr = err;
-          if (candidate.model === "gemini-4-hydrogen" && (isQuotaError(err) || isTransientUnavailableError(err))) {
-            chatPrimaryCooldownUntil = Date.now() + 5 * 60 * 1000;
+          if (candidate.model === "gemini-3.1-flash-lite" && (isQuotaError(err) || isTransientUnavailableError(err))) {
+            chatPrimaryCooldownUntil = Date.now() + 2 * 60 * 1000;
             continue;
           }
           if (!isQuotaError(err) && !isTransientUnavailableError(err)) {
