@@ -1580,6 +1580,14 @@
       .g-dpad button:hover{background:var(--surface3);border-color:var(--line2)}
       .g-canvas-wrap{display:flex;justify-content:center;margin:14px 0}
       .g-canvas{border-radius:16px;border:1px solid var(--line2);background:rgba(6,10,12,0.82);max-width:100%;height:auto;display:block}
+      @keyframes spin{to{transform:rotate(360deg)}}
+      @keyframes wave-idle{0%,100%{height:6px;opacity:.45}50%{height:12px;opacity:.75}}
+      .waveform span{width:4px;height:6px;border-radius:999px;background:rgba(121,220,232,0.55);transition:height .1s ease,background .2s ease}
+      .waveform.recording span{background:var(--bad)}
+      #botMic.recording{background:var(--bad);border-color:var(--bad);color:#fff;animation:ping 1.4s infinite}
+      .tars-transcript{width:100%;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid var(--line);text-align:left;font-size:13px;color:var(--text2);display:none}
+      .tars-transcript.is-visible{display:block}
+      .tars-transcript strong{color:#fff}
       @media (prefers-reduced-motion:reduce){
         .dash-screen, .dash-screen *, .mars-loader, .mars-loading-ui{transition-duration:.01ms!important; animation-duration:.01ms!important}
         .glass-tile,.glass-tile::after{transition:none}
@@ -7247,9 +7255,10 @@
             return {
               html: '<div class="grid split"><div class="card hi" style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px"><div class="robot-avatar" id="astrobotFace" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#34c27a,#0a3b22);display:grid;place-items:center;box-shadow:0 0 30px rgba(52,194,122,0.35);position:relative;margin-bottom:16px"><div style="font-size:38px;transition:transform .2s" id="botEmoji">🤖</div><div class="robot-waves" style="position:absolute;inset:-8px;border-radius:50%;border:2px dashed rgba(52,194,122,0.5);animation:spin 12s linear infinite"></div></div>' +
                 '<h2 id="botTitle">TARS Emergency Guide</h2>' +
-                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Speak "TARS code red", type, or tap below.</p>' +
-                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic">🎤 Speak</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend">Send</button><button class="btn" id="botMute" title="Mute / Unmute voice">🔊</button></div>' +
+                '<p class="s t2" id="botSub" style="margin-top:6px">Station emergency voice assistant and medical protocol guide. Tap Speak to record audio for Gemini transcription, type, or tap below.</p>' +
+                '<div class="row center" style="gap:10px;margin-top:16px;width:100%"><button class="btn p" id="botMic" type="button">🎤 Speak</button><input id="botPrompt" placeholder="Type query or command..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:#fff;font-size:13.5px"><button class="btn p" id="botSend" type="button">Send</button><button class="btn" id="botMute" type="button" title="Mute / Unmute voice">🔊</button></div>' +
                 '<div class="waveform" style="display:flex;gap:4px;align-items:center;height:24px;margin-top:14px" id="botWave"><span></span><span></span><span></span><span></span><span></span></div>' +
+                '<div class="tars-transcript" id="botTranscriptBox" aria-live="polite"></div>' +
                 '<div class="card" style="width:100%;text-align:left;margin-top:20px;max-height:220px;overflow-y:auto;background:rgba(0,0,0,0.25)" id="botLog"><p class="t3"><b>TARS:</b> Station systems nominal. Voice code word "TARS code red" or the sidebar Code Red button alerts all crew &amp; NASA Earth Center.</p></div></div>' +
                 '<div class="stack gap16"><div class="card"><h3>Emergency Scenarios &amp; Protocols</h3><p class="s t2" style="margin-top:6px">Tap any emergency to activate instant voice guidance and step-by-step protocols.</p><div class="stack gap8" style="margin-top:14px">' +
                 '<button class="sub row between" data-esc="dcs" style="text-align:left;background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.35)"><span class="grow"><b>Decompression Sickness (DCS)</b><br><span class="xs t3">Joint pain, skin mottling, dizziness after EVA</span></span><span class="btn sm danger">Emergency</span></button>' +
@@ -7258,7 +7267,7 @@
                 '<button class="sub row between" data-esc="cardiac" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Cardiac Arrhythmia / Faint</b><br><span class="xs t3">QTc &gt; 500 ms, palpitations or syncope</span></span><span class="btn sm warning">Medical</span></button>' +
                 '<button class="sub row between" data-esc="breathe" style="text-align:left"><span class="grow"><b>Calm Down &amp; Guided Breathing</b><br><span class="xs t3">Anxiety, panic or high stress protocol</span></span><span class="btn sm">Relax</span></button>' +
                 '</div></div>' +
-                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">If speech recognition is blocked or unsupported, you can type your question above or say commands like:</p><ul class="acts t2" style="margin-top:8px"><li>“What do I do for decompression sickness?”</li><li>“Help, solar storm alert!”</li><li>“I feel dizzy and short of breath.”</li><li>“Guide me through breathing exercises.”</li></ul></div></div></div>',
+                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">Tap <b>Speak</b> to record microphone audio (tap <b>Stop</b> when finished to transcribe with Gemini), or type commands like:</p><ul class="acts t2" style="margin-top:8px"><li>“What do I do for decompression sickness?”</li><li>“Help, solar storm alert!”</li><li>“I feel dizzy and short of breath.”</li><li>“Guide me through breathing exercises.”</li></ul></div></div></div>',
               bind: function () {
                 var speaking = true;
                 var synth = window.speechSynthesis;
@@ -7269,7 +7278,7 @@
                   }
                   var log = $('#botLog');
                   if (log) {
-                    log.innerHTML += '<p style="margin-top:8px"><b>AstroBot:</b> ' + esc(text) + '</p>';
+                    log.innerHTML += '<p style="margin-top:8px"><b>TARS:</b> ' + esc(text) + '</p>';
                     log.scrollTop = log.scrollHeight;
                   }
                   if (!speaking || !synth) return;
@@ -7284,11 +7293,15 @@
 
                 speak('Hello! I am TARS, your station emergency voice guide. Say "TARS code red" or click the sidebar Code Red button in an emergency.', '🤖');
 
-                var handleQuery = function (rawQ) {
-                  var q = (rawQ || '').toLowerCase().trim();
+                var handleQuery = function (rawQ, sourceLabel) {
+                  var trimmed = (rawQ || '').trim();
+                  var q = trimmed.toLowerCase();
                   if (!q) return;
                   var log = $('#botLog');
-                  if (log) log.innerHTML += '<p style="margin-top:8px;color:var(--text3)"><b>You:</b> ' + esc(q) + '</p>';
+                  if (log) {
+                    log.innerHTML += '<p style="margin-top:8px;color:var(--text3)"><b>' + esc(sourceLabel || 'You') + ':</b> ' + esc(trimmed) + '</p>';
+                    log.scrollTop = log.scrollHeight;
+                  }
                   if (q.indexOf('tars code red') >= 0 || q.indexOf('code red') >= 0) {
                     triggerCodeRed();
                     return;
@@ -7304,7 +7317,7 @@
                   } else if (q.indexOf('breathe') >= 0 || q.indexOf('calm') >= 0 || q.indexOf('stress') >= 0 || q.indexOf('panic') >= 0 || q.indexOf('anxiety') >= 0) {
                     speak('Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.', '🧘');
                   } else {
-                    speak('I received: "' + rawQ + '". For safety, please check the emergency scenario protocol cards on the right or contact the Crew Medical Officer.', '🤖');
+                    speak('I received: "' + trimmed + '". For safety, please check the emergency scenario protocol cards on the right or contact the Crew Medical Officer.', '🤖');
                   }
                 };
 
@@ -7341,41 +7354,198 @@
                     speaking = !speaking;
                     mb.textContent = speaking ? '🔊' : '🔇';
                     if (!speaking && synth) synth.cancel();
-                    toast(speaking ? 'AstroBot voice enabled' : 'AstroBot voice muted');
+                    toast(speaking ? 'TARS voice enabled' : 'TARS voice muted');
                   };
                 }
 
                 var mic = $('#botMic');
+                var wave = $('#botWave');
+                var transcriptBox = $('#botTranscriptBox');
+                var activeRecorder = null;
+                var activeStream = null;
+                var audioChunks = [];
+                var meterRaf = 0;
+                var audioCtx = null;
+
+                var setTranscriptStatus = function (label, text) {
+                  if (!transcriptBox) return;
+                  transcriptBox.classList.add('is-visible');
+                  transcriptBox.innerHTML = '<strong>' + esc(label) + '</strong> ' + esc(text);
+                };
+
+                var stopWaveMeter = function () {
+                  if (meterRaf) {
+                    cancelAnimationFrame(meterRaf);
+                    meterRaf = 0;
+                  }
+                  if (audioCtx) {
+                    try { audioCtx.close(); } catch (e) {}
+                    audioCtx = null;
+                  }
+                  if (wave) {
+                    wave.classList.remove('recording');
+                    wave.querySelectorAll('span').forEach(function (sp) { sp.style.height = '6px'; });
+                  }
+                };
+
+                var cleanupMic = function () {
+                  stopWaveMeter();
+                  if (activeStream) {
+                    try { activeStream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+                    activeStream = null;
+                  }
+                  activeRecorder = null;
+                };
+
+                var startWaveMeter = function (stream) {
+                  if (!wave) return;
+                  wave.classList.add('recording');
+                  var bars = wave.querySelectorAll('span');
+                  var AC = window.AudioContext || window.webkitAudioContext;
+                  if (!AC) return;
+                  try {
+                    audioCtx = new AC();
+                    var src = audioCtx.createMediaStreamSource(stream);
+                    var analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 32;
+                    src.connect(analyser);
+                    var bins = new Uint8Array(analyser.frequencyBinCount);
+                    var draw = function () {
+                      if (!activeRecorder || activeRecorder.state !== 'recording') return;
+                      analyser.getByteFrequencyData(bins);
+                      for (var i = 0; i < bars.length; i++) {
+                        var v = bins[i + 1] || bins[0] || 0;
+                        bars[i].style.height = Math.round(6 + (v / 255) * 18) + 'px';
+                      }
+                      meterRaf = requestAnimationFrame(draw);
+                    };
+                    draw();
+                  } catch (e) {}
+                };
+
+                var blobToBase64 = function (blob) {
+                  return new Promise(function (resolve, reject) {
+                    var reader = new FileReader();
+                    reader.onloadend = function () {
+                      var result = typeof reader.result === 'string' ? reader.result : '';
+                      var comma = result.indexOf(',');
+                      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+                    };
+                    reader.onerror = function () { reject(new Error('Failed to read recorded audio.')); };
+                    reader.readAsDataURL(blob);
+                  });
+                };
+
+                var pickMimeType = function () {
+                  if (!window.MediaRecorder || typeof MediaRecorder.isTypeSupported !== 'function') return '';
+                  var candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg'];
+                  for (var i = 0; i < candidates.length; i++) {
+                    if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
+                  }
+                  return '';
+                };
+
                 if (mic) {
-                  mic.onclick = function () {
-                    var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    if (!Rec) {
-                      toast('Speech recognition not supported in this browser. Please type your query in the text box below.');
-                      speak('Speech recognition is not available in your browser sandbox, but you can type any emergency question in the text box below or click the scenario buttons.', '🤖');
+                  window.addEventListener('hashchange', function onLeaveEmergency() {
+                    if (location.hash !== '#emergency') {
+                      if (activeRecorder && activeRecorder.state === 'recording') {
+                        try { activeRecorder.stop(); } catch (e) {}
+                      }
+                      cleanupMic();
+                      window.removeEventListener('hashchange', onLeaveEmergency);
+                    }
+                  });
+
+                  mic.onclick = async function () {
+                    if (activeRecorder && activeRecorder.state === 'recording') {
+                      mic.disabled = true;
+                      mic.classList.remove('recording');
+                      mic.textContent = '⏳ Transcribing...';
+                      setTranscriptStatus('Status:', 'Transcribing audio with Gemini...');
+                      activeRecorder.stop();
                       return;
                     }
+
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+                      toast('Microphone audio recording is not supported in this browser.');
+                      setTranscriptStatus('Unavailable:', 'Your browser does not support MediaRecorder microphone capture. Please type your query instead.');
+                      return;
+                    }
+
                     try {
-                      var rec = new Rec();
-                      rec.lang = 'en-US';
-                      mic.textContent = '🔴 Listening...';
-                      speak('Listening for your emergency command...', '👂');
-                      rec.onresult = function (e) {
-                        var q = (e.results[0][0].transcript || '').toLowerCase();
-                        mic.textContent = '🎤 Speak';
-                        handleQuery(q);
+                      if (synth) synth.cancel();
+                      activeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                      var chosenMime = pickMimeType();
+                      activeRecorder = chosenMime
+                        ? new MediaRecorder(activeStream, { mimeType: chosenMime })
+                        : new MediaRecorder(activeStream);
+                      audioChunks = [];
+
+                      activeRecorder.ondataavailable = function (ev) {
+                        if (ev.data && ev.data.size > 0) audioChunks.push(ev.data);
                       };
-                      rec.onerror = function (err) {
-                        mic.textContent = '🎤 Speak';
-                        toast('Microphone input note: ' + (err.error || 'speech not recognized') + '. You can type your query in the text box below.');
-                        speak('I could not pick up your voice clearly. Browser microphone permissions or sandbox settings may be restricted. Please type your question in the text box or tap the emergency buttons.', '🤖');
+
+                      activeRecorder.onstop = async function () {
+                        var recordedMime = (activeRecorder && activeRecorder.mimeType) || chosenMime || 'audio/webm';
+                        var blob = new Blob(audioChunks, { type: recordedMime });
+                        cleanupMic();
+
+                        if (!blob.size) {
+                          mic.disabled = false;
+                          mic.classList.remove('recording');
+                          mic.textContent = '🎤 Speak';
+                          setTranscriptStatus('Notice:', 'No audio was captured. Please try again.');
+                          return;
+                        }
+
+                        try {
+                          var base64 = await blobToBase64(blob);
+                          var resp = await fetch('/api/tars/transcribe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              audioBase64: base64,
+                              mimeType: recordedMime.split(';')[0] || 'audio/webm'
+                            })
+                          });
+                          var data = await resp.json().catch(function () { return {}; });
+                          if (!resp.ok) {
+                            throw new Error(data.error || ('Transcription failed (' + resp.status + ')'));
+                          }
+                          var transcript = (data.text || '').trim();
+                          if (!transcript) {
+                            setTranscriptStatus('Transcript:', 'No speech detected in the recording.');
+                            toast('No speech detected. Please try speaking again.');
+                          } else {
+                            setTranscriptStatus('Transcribed:', transcript);
+                            handleQuery(transcript, 'You (transcribed)');
+                          }
+                        } catch (err) {
+                          var msg = err && err.message ? err.message : 'Unable to transcribe audio.';
+                          setTranscriptStatus('Transcription error:', msg);
+                          toast(msg);
+                        } finally {
+                          mic.disabled = false;
+                          mic.classList.remove('recording');
+                          mic.textContent = '🎤 Speak';
+                        }
                       };
-                      rec.onend = function () {
-                        mic.textContent = '🎤 Speak';
-                      };
-                      rec.start();
-                    } catch (e) {
+
+                      activeRecorder.start();
+                      mic.classList.add('recording');
+                      mic.textContent = '⏹️ Stop';
+                      setTranscriptStatus('Recording:', 'Listening from microphone… tap Stop when done.');
+                      var em = $('#botEmoji');
+                      if (em) em.textContent = '👂';
+                      startWaveMeter(activeStream);
+                    } catch (err) {
+                      cleanupMic();
+                      mic.disabled = false;
+                      mic.classList.remove('recording');
                       mic.textContent = '🎤 Speak';
-                      toast('Could not start speech recognition. Please type your query below.');
+                      var errMsg = err && err.message ? err.message : 'Microphone permission denied or unavailable.';
+                      setTranscriptStatus('Microphone error:', errMsg);
+                      toast('Microphone error: ' + errMsg);
                     }
                   };
                 }
