@@ -338,13 +338,229 @@ async function startServer() {
         });
         return;
       }
-      const message = err instanceof Error ? err.message : "TARS AI chat failed.";
+  const message = err instanceof Error ? err.message : "TARS AI chat failed.";
       const status =
         typeof (err as { status?: number })?.status === "number"
           ? (err as { status: number }).status
           : 500;
       console.error("[/api/tars/chat] Error:", err);
       res.status(status >= 400 && status < 600 ? status : 500).json({ error: message });
+    }
+  });
+
+  app.post("/api/tars/chat/stream", async (req, res) => {
+    try {
+      const { message, history, humor, honesty, humorMode, context } = req.body ?? {};
+      if (typeof message !== "string" || !message.trim()) {
+        res.status(400).json({ error: "Missing chat message." });
+        return;
+      }
+      if (!process.env.GEMINI_API_KEY) {
+        res.status(500).json({
+          error: "GEMINI_API_KEY is not configured. Please check Settings > Secrets.",
+        });
+        return;
+      }
+
+      const humorPct = Math.max(0, Math.min(100, Number.isFinite(Number(humor)) ? Number(humor) : 75));
+      const humorEnabled = humorMode === undefined ? humorPct > 0 : Boolean(humorMode) && humorPct > 0;
+      const honestyPct = Math.max(50, Math.min(100, Number.isFinite(Number(honesty)) ? Number(honesty) : 90));
+
+      const cleanHistory: TarsChatTurn[] = Array.isArray(history)
+        ? history
+            .filter(
+              (t: unknown): t is TarsChatTurn =>
+                Boolean(t) &&
+                typeof t === "object" &&
+                ((t as TarsChatTurn).role === "user" || (t as TarsChatTurn).role === "model") &&
+                typeof (t as TarsChatTurn).text === "string" &&
+                (t as TarsChatTurn).text.trim().length > 0
+            )
+            .slice(-10)
+        : [];
+
+      const contents = [
+        ...cleanHistory.map((turn) => ({
+          role: turn.role,
+          parts: [{ text: turn.text.slice(0, 1200) }],
+        })),
+        {
+          role: "user" as const,
+          parts: [{ text: message.trim().slice(0, 1500) }],
+        },
+      ];
+
+      const baseInstruction = buildTarsSystemInstruction(
+        humorPct,
+        honestyPct,
+        humorEnabled,
+        context && typeof context === "object" ? (context as TarsCrewContext) : undefined
+      );
+      const streamInstruction =
+        baseInstruction +
+        "\nStreaming Output Format:\n- Output ONLY TARS's direct spoken reply as plain text (no JSON, no braces, no markdown, no bullet points). Begin immediately with the first word so voice synthesis can speak sentence-by-sentence in real time.";
+
+      const candidates: Array<{ model: string; level: ThinkingLevel }> = [];
+      if (Date.now() >= chatPrimaryCooldownUntil) {
+        candidates.push({ model: "gemini-3.1-flash-lite", level: ThinkingLevel.MINIMAL });
+      }
+      candidates.push({ model: "gemini-4-hydrogen", level: ThinkingLevel.LOW });
+
+      let clientClosed = false;
+      res.on("close", () => {
+        if (!res.writableEnded) {
+          clientClosed = true;
+        }
+      });
+
+      let headersSent = false;
+      let fullText = "";
+      let usedModel = candidates[0].model;
+      let lastErr: unknown = null;
+
+      for (const candidate of candidates) {
+        if (clientClosed) break;
+        try {
+          const streamResponse = await ai.models.generateContentStream({
+            model: candidate.model,
+            contents,
+            config: {
+              systemInstruction: streamInstruction,
+              thinkingConfig: { thinkingLevel: candidate.level },
+            },
+          });
+
+          for await (const chunk of streamResponse) {
+            if (clientClosed) break;
+            const delta = chunk.text ?? "";
+            if (!delta) continue;
+            if (!headersSent) {
+              headersSent = true;
+              res.status(200);
+              res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+              res.setHeader("Cache-Control", "no-cache, no-transform");
+              res.setHeader("Connection", "keep-alive");
+              res.setHeader("X-Accel-Buffering", "no");
+              res.flushHeaders?.();
+            }
+            fullText += delta;
+            res.write(`data: ${JSON.stringify({ delta })}\n\n`);
+          }
+
+          usedModel = candidate.model;
+          lastErr = null;
+          break;
+        } catch (err) {
+          lastErr = err;
+          if (!headersSent && candidate.model === "gemini-3.1-flash-lite" && (isQuotaError(err) || isTransientUnavailableError(err))) {
+            chatPrimaryCooldownUntil = Date.now() + 2 * 60 * 1000;
+            continue;
+          }
+          if (headersSent) {
+            break;
+          }
+          if (!isQuotaError(err) && !isTransientUnavailableError(err)) {
+            throw err;
+          }
+        }
+      }
+
+      if (clientClosed) {
+        if (!res.writableEnded) res.end();
+        return;
+      }
+
+      if (lastErr !== null && !headersSent) {
+        if (isQuotaError(lastErr)) {
+          res.status(429).json({
+            error: "Gemini API quota reached (429). Wait a moment or check your billing/quota in Settings > Secrets.",
+          });
+          return;
+        }
+        res.status(503).json({
+          error: "TARS AI model is temporarily busy (503). Please try again in a moment.",
+        });
+        return;
+      }
+
+      if (!headersSent) {
+        headersSent = true;
+        res.status(200);
+        res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.setHeader("Connection", "keep-alive");
+        res.setHeader("X-Accel-Buffering", "no");
+        res.flushHeaders?.();
+      }
+
+      if (lastErr !== null) {
+        const errMsg = lastErr instanceof Error ? lastErr.message : "TARS stream interrupted.";
+        res.write(`data: ${JSON.stringify({ error: errMsg })}\n\n`);
+        res.end();
+        return;
+      }
+
+      const cleanReply = (fullText || "Standing by, Commander.").trim();
+      const lowerAll = `${message} ${cleanReply}`.toLowerCase();
+      const isAlert =
+        /\b(decompression|hypoxia|storm shelter|dosimeter|code red|emergency|fainting|chest pain|oxygen mask)\b/i.test(
+          lowerAll
+        );
+      const emoji = isAlert
+        ? "🚨"
+        : /\b(coffee|espresso|sleep|nap|night shift)\b/i.test(lowerAll)
+          ? "☕"
+          : /\b(heart|bpm|spo2|vitals|temp|stress|exercise)\b/i.test(lowerAll)
+            ? "🩺"
+            : humorEnabled && humorPct >= 60
+              ? "😏"
+              : "🤖";
+
+      res.write(
+        `data: ${JSON.stringify({
+          done: true,
+          reply: cleanReply,
+          emoji,
+          severity: isAlert ? "alert" : "normal",
+          model: usedModel,
+        })}\n\n`
+      );
+      res.end();
+    } catch (err: unknown) {
+      if (isAuthOrKeyError(err)) {
+        if (!res.headersSent) {
+          res.status(403).json({
+            error: "Gemini API key was rejected or lacks permission. Please verify your API key in Settings > Secrets.",
+          });
+        } else {
+          res.write(`data: ${JSON.stringify({ error: "Gemini API key was rejected or lacks permission." })}\n\n`);
+          res.end();
+        }
+        return;
+      }
+      if (isQuotaError(err)) {
+        if (!res.headersSent) {
+          res.status(429).json({
+            error: "Gemini API quota reached (429). Please wait a moment and try again.",
+          });
+        } else {
+          res.write(`data: ${JSON.stringify({ error: "Gemini API quota reached (429)." })}\n\n`);
+          res.end();
+        }
+        return;
+      }
+      const message = err instanceof Error ? err.message : "TARS AI stream failed.";
+      const status =
+        typeof (err as { status?: number })?.status === "number"
+          ? (err as { status: number }).status
+          : 500;
+      console.error("[/api/tars/chat/stream] Error:", err);
+      if (!res.headersSent) {
+        res.status(status >= 400 && status < 600 ? status : 500).json({ error: message });
+      } else {
+        res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+        res.end();
+      }
     }
   });
 

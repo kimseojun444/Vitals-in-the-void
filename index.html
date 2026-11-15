@@ -868,6 +868,13 @@
       .fmenu.on{display:block}
       .fmenu-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 8px;border-radius:10px;background:rgba(255,255,255,0.045);font-size:12.5px}
       .fmenu-row+.fmenu-row{margin-top:6px}
+      .fmenu-hazards{margin:9px 0 10px;padding:8px 9px;border-radius:10px;background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.1)}
+      .fmenu-haz-title{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+      .fmenu-haz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+      .fmenu-haz-opt{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);font-size:11.5px;color:var(--text2);cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+      .fmenu-haz-opt:hover{border-color:rgba(255,255,255,0.24);color:#fff}
+      .fmenu-haz-opt.is-on{border-color:rgba(245,185,65,0.58);background:rgba(245,185,65,0.14);color:#ffebb8}
+      .fmenu-haz-opt input{accent-color:#f5b941;margin:0;cursor:pointer;flex:none}
 
       .spill{
         display:inline-flex;
@@ -1807,6 +1814,28 @@
       .drift-row.is-active{background:rgba(121,220,232,0.10)}
       .drift-row.is-active td:first-child{color:#79dce8}
       .drift-drivers{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text2);line-height:1.55}
+      .drift-hazards{margin-top:14px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,0.035);border:1px solid var(--line)}
+      .drift-hazards-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+      .drift-hazards-head b{font-size:12.5px;color:#fff}
+      .drift-hazards-clear{padding:3px 8px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,0.06);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer}
+      .drift-hazards-clear:hover{border-color:var(--line2);color:#fff}
+      .drift-hazards-clear.hidden{display:none}
+      .drift-hazard-list{display:flex;flex-direction:column;gap:7px}
+      .drift-hazard{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,0.03);cursor:pointer;transition:background .16s var(--ease),border-color .16s var(--ease)}
+      .drift-hazard:hover{background:rgba(255,255,255,0.06);border-color:var(--line2)}
+      .drift-hazard.is-on{background:rgba(245,185,65,0.11);border-color:rgba(245,185,65,0.56)}
+      .drift-hazard.is-crit.is-on{background:rgba(239,91,91,0.12);border-color:rgba(239,91,91,0.58)}
+      .drift-hazard-chk{width:16px;height:16px;margin:2px 0 0;accent-color:#f5b941;cursor:pointer;flex:none}
+      .drift-hazard.is-crit .drift-hazard-chk{accent-color:#ef5b5b}
+      .drift-hazard-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+      .drift-hazard-top{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+      .drift-hazard-name{font-size:12.5px;font-weight:600;color:#fff;line-height:1.25}
+      .drift-hazard-state{padding:2px 6px;border-radius:6px;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.03em;background:rgba(255,255,255,0.08);color:var(--text3)}
+      .drift-hazard.is-on .drift-hazard-state{background:rgba(245,185,65,0.22);color:#ffe49e}
+      .drift-hazard.is-crit.is-on .drift-hazard-state{background:rgba(239,91,91,0.24);color:#ffd2d2}
+      .drift-hazard-sub{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--text3);line-height:1.35}
+      .drift-hazard.is-on .drift-hazard-sub{color:rgba(255,255,255,0.82)}
+      .drift-eff-tag{margin-left:6px;color:#ffd982;font-weight:600}
       @keyframes driftPulse{
         0%{transform:scale(0.85);opacity:.85}
         70%{transform:scale(1.65);opacity:0}
@@ -1827,6 +1856,32 @@
       .drift-cross-bar.is-warn .drift-cross-chip:hover,.drift-cross-bar.is-warn .drift-cross-chip.is-pinned{background:rgba(245,185,65,0.3);border-color:#ffe39e}
       .drift-legend-diamond{display:inline-block;width:8px;height:8px;background:#ef5b5b;border:1.4px solid #fff;transform:rotate(45deg);flex:none}
       .drift-legend-ring{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef5b5b;border:1.5px solid #fff;box-shadow:0 0 0 2.5px rgba(239,91,91,0.35);flex:none}
+      .fab-emergency{
+        position:fixed;right:24px;bottom:24px;z-index:18;
+        display:inline-flex;align-items:center;gap:9px;
+        padding:11px 16px;border-radius:14px;
+        border:1px solid rgba(255,172,172,0.58);
+        background:linear-gradient(155deg,rgba(224,54,54,0.92) 0%,rgba(148,22,30,0.94) 100%);
+        color:#ffffff;font-family:var(--font-sans);font-size:13.5px;font-weight:700;letter-spacing:0.02em;
+        box-shadow:0 12px 30px rgba(0,0,0,0.48),0 0 22px rgba(239,91,91,0.36);
+        backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+        cursor:pointer;
+        transition:transform .18s var(--ease),box-shadow .18s var(--ease),border-color .18s var(--ease),filter .18s var(--ease);
+      }
+      .fab-emergency:hover{
+        transform:translateY(-2px);
+        border-color:rgba(255,212,212,0.85);
+        box-shadow:0 16px 34px rgba(0,0,0,0.55),0 0 28px rgba(239,91,91,0.55);
+        filter:brightness(1.06);
+      }
+      .fab-emergency:active{transform:translateY(0) scale(0.98)}
+      .fab-emergency.hidden{display:none}
+      body:not(.dash-active) .fab-emergency{display:none}
+      .fab-emg-ico{width:17px;height:17px;flex:none}
+      .fab-emg-dot{width:7px;height:7px;border-radius:50%;background:#ffe1e1;box-shadow:0 0 8px #ffffff;flex:none}
+      @media(max-width:720px){
+        .fab-emergency{right:14px;bottom:14px;padding:10px 14px;font-size:13px}
+      }
       @media (prefers-reduced-motion:reduce){
         .dash-screen, .dash-screen *, .mars-loader, .mars-loading-ui{transition-duration:.01ms!important; animation-duration:.01ms!important}
         .glass-tile,.glass-tile::after{transition:none}
@@ -1942,6 +1997,14 @@
       <aside class="drawer dash-scroll" id="drawer" role="dialog" aria-modal="true"></aside>
       <div class="modal" id="modal"><div class="mcard dash-scroll" id="modalc"></div></div>
       <div class="toast" id="toast" role="status"></div>
+      <button class="fab-emergency" id="fabEmergency" type="button" aria-label="Open TARS AI emergency protocol screen" title="Rapid triage — Open TARS AI Emergency Protocols">
+        <span class="fab-emg-dot" aria-hidden="true"></span>
+        <svg class="fab-emg-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 9v4M12 17h.01"/>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        </svg>
+        <span>Emergency</span>
+      </button>
     </main>
 
     <script id="vitv-data" type="application/json">{"VARS":[{"id":"hr","n":"Heart rate","u":"bpm","c":["cv"],"inv":0,"f":"cont","b":65,"tol":8,"s":0,"l":0,"dir":"both","gs":1,"dp":0,"lim":{"wl":45,"wh":105,"cl":38,"ch":130},"on":5,"s2":"Heart Rate (HR) & HRV","how":"Chest strap or wrist wearable; take a resting value after 5 min seated still.","al":["heart rate","pulse","hr"]},{"id":"hrv","n":"Heart rate variability (RMSSD)","u":"ms","c":["cv"],"inv":0,"f":"cont","b":45,"tol":9,"s":"r-0.10","l":"r-0.15","dir":"lo","gs":1,"dp":0,"lim":{"wl":20,"cl":12},"on":5,"s2":"Heart Rate (HR) & HRV","how":"Wearable morning reading lying still for 2 min.","al":["hrv","heart rate variability"]},{"id":"sbp","n":"Systolic blood pressure","u":"mmHg","c":["cv"],"inv":0,"f":"daily","b":118,"tol":9,"s":0,"l":"r0.04","dir":"both","gs":1,"dp":0,"lim":{"wl":95,"wh":140,"cl":85,"ch":160},"on":5,"s2":"Blood Pressure (MAP)","how":"Upper-arm cuff, seated (strapped in), arm at heart level, after 5 min rest.","al":["systolic","blood pressure"]},{"id":"dbp","n":"Diastolic blood pressure","u":"mmHg","c":["cv"],"inv":0,"f":"daily","b":78,"tol":7,"s":0,"l":"r0.03","dir":"both","gs":1,"dp":0,"lim":{"wl":55,"wh":90,"cl":45,"ch":100},"on":5,"s2":"Blood Pressure (MAP)","how":"Recorded with systolic.","al":["diastolic"]},{"id":"spo2","n":"Oxygen saturation (SpO₂)","u":"%","c":["hypox"],"inv":0,"f":"cont","b":98,"tol":1.2,"s":0,"l":0,"dir":"lo","gs":1,"dp":0,"lim":{"wl":94,"cl":90},"on":5,"s2":"SpO2","how":"Finger pulse oximeter; warm hands, keep still 30 s.","al":["spo2","oxygen","saturation","o2"]},{"id":"ctemp","n":"Core body temperature","u":"°C","c":["sleep"],"inv":0,"f":"cont","b":37,"tol":0.3,"s":"a0.2","l":"a1.0","dir":"both","gs":1,"dp":1,"lim":{"wl":35.5,"wh":38.6,"cl":35,"ch":39.3},"on":5,"s2":"Core Body Temp","how":"Forehead heat-flux (double sensor) patch, as used in the Circadian Rhythms study.","al":["temperature","temp","core temp"]},{"id":"glu","n":"Interstitial glucose (CGM)","u":"mg/dL","c":["metab"],"inv":0,"f":"cont","b":90,"tol":10,"s":"r0.05","l":"r0.08","dir":"both","gs":1,"dp":0,"lim":{"wl":70,"wh":140,"cl":54,"ch":250},"on":5,"s2":"Fasting Insulin & HOMA-IR","how":"Continuous glucose sensor on the upper arm; fasting value before breakfast.","al":["glucose","blood sugar","sugar"]},{"id":"shift","n":"Upper-body fluid shift","u":"L","c":["fluid"],"inv":0,"f":"cont","b":0,"tol":0.3,"s":"a1.75","l":"a1.75","dir":"hi","gs":1,"dp":1,"lim":{"wh":2.5,"ch":3},"on":1,"s2":"Upper Body Fluid Shift","how":"Segmental bioimpedance belt (upper vs lower body), measured at the same time each day.","al":["fluid shift"]},{"id":"dose","n":"Absorbed dose rate","u":"mSv/day","c":["rad"],"inv":0,"f":"cont","b":0.008,"tol":0,"s":0,"l":0,"dir":"hi","gs":1,"dp":2,"lim":{},"on":5,"env":1,"s2":"Absorbed Dose Rate","how":"Personal active dosimeter worn on the torso.","al":["dose","radiation"]},{"id":"sleep","n":"Sleep duration (actigraphy)","u":"h","c":["sleep"],"inv":0,"f":"daily","b":8,"tol":0.8,"s":"a-2.0","l":"a-2.04","dir":"lo","gs":0,"dp":1,"lim":{"wl":5.5,"cl":4.5},"on":5,"s2":"Actigraphy","how":"Wrist actigraphy; or log hours on waking.","al":["sleep","slept"]},{"id":"mood","n":"Mood (self-rating 1–10)","u":"/10","c":["behav"],"inv":0,"f":"daily","b":7,"tol":1.2,"s":0,"l":"a-0.3","dir":"lo","gs":0,"dp":0,"lim":{"wl":4,"cl":2.5},"on":5,"how":"Rate overall mood now, 1 = worst, 10 = best.","al":["mood"]},{"id":"stress","n":"Perceived stress (1–10)","u":"/10","c":["behav","endo"],"inv":0,"f":"daily","b":3,"tol":1.5,"s":"a1","l":"a1","dir":"hi","gs":0,"dp":0,"lim":{"wh":7,"ch":8.5},"on":5,"how":"Rate stress now, 1 = calm, 10 = overwhelmed.","al":["stress"]},{"id":"kcal","n":"Energy intake","u":"kcal/day","c":["nutr"],"inv":0,"f":"daily","b":2800,"tol":300,"s":"r-0.15","l":"r-0.25","dir":"lo","gs":0,"dp":0,"lim":{"wl":"b*0.8","cl":"b*0.65"},"on":5,"s2":"Caloric Intake","how":"Scan food packages or log meals; baseline = your energy requirement.","al":["calories","kcal","ate"]},{"id":"exer","n":"Exercise (countermeasure)","u":"min/day","c":["muscle","bone","cv"],"inv":0,"f":"daily","b":60,"tol":30,"s":"a60","l":"a60","dir":"lo","gs":0,"dp":0,"lim":{"wl":90,"cl":45},"on":5,"how":"Total minutes on treadmill, cycle and resistance device.","al":["exercise","workout","trained"]},{"id":"usg","n":"Urine specific gravity","u":"","c":["lytes"],"inv":0,"f":"daily","b":1.015,"tol":0.006,"s":0,"l":0,"dir":"hi","gs":1,"dp":3,"lim":{"wh":1.03,"ch":1.035},"on":5,"s2":"Electrolytes & Osmolality","how":"Dipstick or refractometer on first-morning urine.","al":["urine specific gravity","specific gravity","usg"]},{"id":"iop","n":"Intraocular pressure","u":"mmHg","c":["sans"],"inv":0,"f":"d3","b":15,"tol":2.5,"s":"r0.35","l":"a1.3","dir":"both","gs":1,"dp":0,"lim":{"wh":24,"ch":30},"on":5,"s2":"Intraocular Pressure (IOP)","how":"Rebound tonometer (iCare); 3 readings per eye, report the mean of the higher eye.","al":["eye pressure","iop","intraocular"]},{"id":"onsd","n":"Optic nerve sheath diameter","u":"mm","c":["sans","fluid"],"inv":0,"f":"d3","b":5.2,"tol":0.3,"s":0,"l":"r0.38","dir":"hi","gs":1,"dp":2,"lim":{"wh":7.8,"ch":8.7},"on":5,"s2":"Optic Nerve Sheath Diameter (ONSD)","how":"Ocular ultrasound, 3 mm behind the globe, guided by ground if needed.","al":["optic nerve","onsd"]},{"id":"trt","n":"Total retinal thickness","u":"µm","c":["sans"],"inv":0,"f":"d3","b":91,"tol":8,"s":0,"l":"a33","dir":"hi","gs":1,"dp":0,"lim":{"wh":"b+55","ch":"b+75"},"on":5,"s2":"Retinal Thickness (TRT)","how":"Onboard OCT scan of the optic disc region.","al":["retinal thickness","trt"]},{"id":"vis","n":"Far-sighted (hyperopic) shift","u":"D","c":["sans"],"inv":0,"f":"daily","b":0,"tol":0.25,"s":"a0.25","l":"a0.75","dir":"hi","gs":1,"dp":2,"lim":{"wh":1,"ch":2},"on":5,"s2":"Visual Acuity","how":"Near-vision card at fixed distance; enter the lens power needed to read the 20/20 line.","al":["vision","hyperopic","diopter"]},{"id":"amsler","n":"Amsler grid distortion (1 = seen)","u":"","c":["sans"],"inv":0,"f":"daily","b":0,"tol":0.4,"s":0,"l":0,"dir":"hi","gs":1,"dp":0,"lim":{"wh":0.5,"ch":1.5},"on":5,"how":"Look at the grid centre with each eye; 1 if lines look wavy or missing.","al":["amsler"]},{"id":"pv","n":"Plasma volume (estimated)","u":"L","c":["cv","anemia"],"inv":0,"f":"d2","b":3,"tol":0.15,"s":"r-0.12","l":"r-0.12","dir":"lo","gs":1,"dp":2,"lim":{"wl":"b*0.8","cl":"b*0.75"},"on":1.5,"s2":"Total Plasma / Blood Volume","how":"Estimated from bioimpedance and hematocrit trend.","al":["plasma volume"]},{"id":"sv","n":"Stroke volume","u":"mL","c":["cv"],"inv":0,"f":"d2","b":75,"tol":8,"s":"r0.15","l":"r-0.15","dir":"both","gs":1,"dp":0,"lim":{"wl":45,"cl":35},"on":5,"s2":"Stroke Volume (SV) & Cardiac Output","how":"Cardiac ultrasound or impedance cardiography at rest.","al":["stroke volume"]},{"id":"co","n":"Cardiac output","u":"L/min","c":["cv"],"inv":0,"f":"d2","b":5.5,"tol":0.6,"s":"r0.12","l":0,"dir":"both","gs":1,"dp":1,"lim":{"wl":3.5,"cl":2.8},"on":5,"s2":"Stroke Volume (SV) & Cardiac Output","how":"Stroke volume × heart rate (calculated by the device).","al":["cardiac output"]},{"id":"qtc","n":"QTc interval (ECG)","u":"ms","c":["cv"],"inv":0,"f":"daily","b":410,"tol":15,"s":0,"l":0,"dir":"hi","gs":1,"dp":0,"lim":{"wh":460,"ch":500},"on":5,"s2":"ECG / EKG","how":"12-lead or wearable ECG at rest; device reports corrected QT.","al":["qtc","qt"]},{"id":"pvc","n":"Premature ventricular beats","u":"per h","c":["cv"],"inv":0,"f":"daily","b":1,"tol":3,"s":0,"l":"a3","dir":"hi","gs":1,"dp":0,"lim":{"wh":30,"ch":100},"on":5,"s2":"ECG / EKG","how":"From 24-h wearable ECG (Holter) summary.","al":["pvc","extra beats","ectopic"]},{"id":"cvp","n":"Central venous pressure (ultrasound est.)","u":"mmHg","c":["cv","fluid"],"inv":0,"f":"d3","b":5,"tol":1.2,"s":"a-3.5","l":"a-3.5","dir":"both","gs":1,"dp":1,"lim":{"wh":12},"on":5,"s2":"Central Venous Pressure (CVP)","how":"Estimated from jugular/IVC ultrasound by protocol.","al":["cvp","venous pressure"]},{"id":"ijv","n":"Jugular vein cross-section","u":"cm²","c":["fluid"],"inv":0,"f":"d3","b":0.45,"tol":0.12,"s":"r1.2","l":"r1.2","dir":"hi","gs":1,"dp":2,"lim":{"wh":"b*3.5"},"on":1,"s2":"Jugular Vein CSA","how":"Neck ultrasound, left internal jugular, at rest.","al":["jugular"]},{"id":"ijvf","n":"Jugular flow (1 fwd, 2 stagnant, 3 reverse)","u":"","c":["fluid"],"inv":0,"f":"d3","b":1,"tol":0.4,"s":0,"l":0,"dir":"hi","gs":1,"dp":0,"lim":{"wh":1.5,"ch":2.5},"on":5,"how":"Doppler: 1 = forward, 2 = stagnant, 3 = reverse.","al":["jugular flow"]},{"id":"mcsa","n":"Muscle cross-section (thigh/calf)","u":"% preflight","c":["muscle"],"inv":0,"f":"d3","b":100,"tol":2.5,"s":"r-0.05","l":"r-0.15","dir":"lo","gs":1,"dp":1,"lim":{"wl":85,"cl":78},"on":5,"pg":180,"s2":"Muscle Volume / CSA","how":"Ultrasound of calf (soleus) and thigh at marked sites.","al":["muscle size","muscle cross"]},{"id":"force","n":"Peak isometric force","u":"% preflight","c":["muscle"],"inv":0,"f":"d2","b":100,"tol":4,"s":"r-0.03","l":"r-0.25","dir":"lo","gs":1,"dp":1,"lim":{"wl":75,"cl":65},"on":5,"pg":180,"s2":"Peak Isometric Force","how":"Dynamometer or resistance-device max test, same posture each time.","al":["strength","force"]},{"id":"lean","n":"Lean body mass (BIA)","u":"%","c":["metab","muscle"],"inv":0,"f":"d2","b":80,"tol":1.5,"s":"a-0.5","l":"a-2","dir":"lo","gs":1,"dp":1,"lim":{"wl":"b-5","cl":"b-8"},"on":5,"pg":180,"how":"Bioimpedance body composition.","al":["lean mass"]},{"id":"mass","n":"Body mass","u":"kg","c":["nutr"],"inv":0,"f":"d2","b":75,"tol":1.2,"s":"r-0.01","l":"r-0.03","dir":"lo","gs":1,"dp":1,"lim":{"wl":"b*0.95","cl":"b*0.9"},"on":5,"how":"Space linear-acceleration mass device (SLAMMD) or scale in gravity.","al":["weight","mass"]},{"id":"pwv","n":"Pulse wave velocity","u":"m/s","c":["vasc"],"inv":0,"f":"d2","b":7,"tol":0.6,"s":0,"l":"r0.17","dir":"hi","gs":1,"dp":1,"lim":{"wh":10,"ch":12},"on":5,"pg":180,"s2":"Pulse Wave Velocity (PWV)","how":"Wearable or tonometer, carotid–femoral.","al":["pulse wave"]},{"id":"rem","n":"REM sleep share (PSG/EEG)","u":"%","c":["sleep"],"inv":0,"f":"daily","b":20,"tol":4,"s":"r-0.15","l":"r-0.15","dir":"lo","gs":0,"dp":0,"lim":{"wl":12,"cl":8},"on":5,"s2":"Polysomnography (PSG)","how":"EEG headband overnight.","al":["rem"]},{"id":"pvt","n":"Reaction time (PVT)","u":"ms","c":["sleep","behav"],"inv":0,"f":"daily","b":260,"tol":25,"s":"r0.05","l":"r0.06","dir":"hi","gs":0,"dp":0,"lim":{"wh":"b*1.35","ch":"b*1.6"},"on":5,"how":"Run the in-app reaction test.","al":["reaction time","pvt"]},{"id":"ucal","n":"Urinary calcium","u":"mg/day","c":["bone","lytes"],"inv":0,"f":"d3","b":200,"tol":40,"s":"a120","l":"a100","dir":"hi","gs":1,"dp":0,"lim":{"wh":300,"ch":400},"on":5,"s2":"Urinary Calcium & Oxalate","how":"24-h urine collection kit.","al":["urine calcium","urinary calcium"]},{"id":"uox","n":"Urinary oxalate","u":"mg/day","c":["bone"],"inv":0,"f":"d3","b":30,"tol":6,"s":"r0.1","l":"r0.15","dir":"hi","gs":1,"dp":0,"lim":{"wh":45,"ch":60},"on":5,"s2":"Urinary Calcium & Oxalate","how":"Same 24-h urine collection.","al":["oxalate"]},{"id":"scort","n":"Salivary cortisol (morning)","u":"nmol/L","c":["endo"],"inv":0,"f":"d2","b":15,"tol":4,"s":"r0.3","l":"r0.3","dir":"hi","gs":0,"dp":0,"lim":{"wh":"b*2.2","ch":"b*3"},"on":5,"s2":"Cortisol / ACTH","how":"Saliva swab 30 min after waking.","al":["cortisol"]},{"id":"viral","n":"Viral DNA in saliva","u":"log copies/mL","c":["immune"],"inv":0,"f":"d3","b":0,"tol":0.5,"s":"a0.8","l":"a1.5","dir":"hi","gs":0,"dp":1,"lim":{"wh":3,"ch":4.5},"on":5,"s2":"Viral DNA Shedding","how":"Saliva PCR cartridge (EBV/VZV/CMV/HSV); 0 = not detected.","al":["viral","virus"]},{"id":"ohdg","n":"8-OHdG (urine, DNA damage)","u":"ng/mg Cr","c":["rad"],"inv":0,"f":"d2","b":5,"tol":1,"s":"r0.2","l":"r0.4","dir":"hi","gs":0,"dp":1,"lim":{"wh":"b*2","ch":"b*3"},"on":5,"s2":"DNA Damage (8-OHdG)","how":"Urine lateral-flow assay, run 3 times and enter the mean.","al":["8-ohdg","dna damage"]},{"id":"etco","n":"End-tidal carbon monoxide","u":"ppm","c":["anemia"],"inv":0,"f":"d2","b":1.6,"tol":0.3,"s":"r0.3","l":"r0.54","dir":"hi","gs":1,"dp":2,"lim":{"wh":"b*2","ch":"b*2.6"},"on":5,"how":"Breath CO analyser after 20 s breath-hold. Rises with red-cell destruction (Trudel 2022).","al":["carbon monoxide","etco"]},{"id":"ica","n":"Serum ionized calcium","u":"mg/dL","c":["bone"],"inv":1,"f":"weekly","b":5,"tol":0.2,"s":"r0.08","l":"r0.04","dir":"both","gs":1,"dp":2,"lim":{"wl":4.4,"wh":5.6,"cl":4,"ch":6},"on":5,"s2":"Serum Ionized Calcium","how":"Blood draw, point-of-care analyser.","al":[]},{"id":"ctx","n":"CTX (bone resorption)","u":"ng/mL","c":["bone"],"inv":1,"f":"weekly","b":0.4,"tol":0.08,"s":"r0.4","l":"r0.75","dir":"hi","gs":1,"dp":2,"lim":{"wh":"b*2.2","ch":"b*3"},"on":5,"s2":"Bone Turnover (CTX, NTX)","how":"Serum, fasting morning.","al":[]},{"id":"ntx","n":"NTX (urine, bone resorption)","u":"nmol BCE/mmol Cr","c":["bone"],"inv":0,"f":"d2","b":40,"tol":8,"s":"r0.4","l":"r0.75","dir":"hi","gs":1,"dp":0,"lim":{"wh":"b*2.2","ch":"b*3"},"on":5,"s2":"Bone Turnover (CTX, NTX)","how":"Second-morning urine.","al":[]},{"id":"bmd","n":"Bone mineral density (hip)","u":"% preflight","c":["bone"],"inv":0,"f":"d3","b":100,"tol":1,"s":0,"l":0,"dir":"lo","gs":1,"dp":1,"lim":{"wl":"b*0.9","cl":"b*0.85"},"on":5,"pr":-0.0125,"s2":"Bone Mineral Density (BMD)","how":"Projected from turnover markers in flight; DXA/QCT before and after.","al":[]},{"id":"ins","n":"Fasting insulin","u":"µU/mL","c":["metab"],"inv":1,"f":"weekly","b":7,"tol":2,"s":"r0.15","l":"r0.35","dir":"hi","gs":1,"dp":1,"lim":{"wh":20,"ch":30},"on":5,"s2":"Fasting Insulin & HOMA-IR","how":"Fasting blood draw with glucose.","al":[]},{"id":"ldl","n":"LDL cholesterol","u":"mg/dL","c":["metab"],"inv":1,"f":"weekly","b":95,"tol":12,"s":0,"l":"r0.12","dir":"hi","gs":1,"dp":0,"lim":{"wh":130,"ch":160},"on":5,"s2":"Circulating Lipids (LDL)","how":"Capillary or venous lipid panel.","al":[]},{"id":"hct","n":"Hematocrit","u":"%","c":["anemia"],"inv":1,"f":"weekly","b":44,"tol":2,"s":"r0.04","l":"r-0.02","dir":"both","gs":1,"dp":1,"lim":{"wl":36,"wh":52,"cl":32,"ch":56},"on":5,"s2":"RBC, Hemoglobin, Hematocrit","how":"Blood draw, CBC.","al":[]},{"id":"hgb","n":"Hemoglobin","u":"g/dL","c":["anemia"],"inv":1,"f":"weekly","b":14.8,"tol":0.7,"s":"r0.04","l":"r-0.03","dir":"both","gs":1,"dp":1,"lim":{"wl":12.5,"wh":18,"cl":11},"on":5,"s2":"RBC, Hemoglobin, Hematocrit","how":"Blood draw, CBC.","al":[]},{"id":"rbc","n":"Red blood cell count","u":"×10⁶/µL","c":["anemia"],"inv":1,"f":"weekly","b":5,"tol":0.25,"s":"r0.03","l":"r-0.05","dir":"both","gs":1,"dp":2,"lim":{"wl":4.2,"cl":3.8},"on":5,"s2":"RBC, Hemoglobin, Hematocrit","how":"Blood draw, CBC.","al":[]},{"id":"hapto","n":"Haptoglobin","u":"mg/dL","c":["anemia"],"inv":1,"f":"weekly","b":120,"tol":25,"s":0,"l":"r-0.15","dir":"lo","gs":1,"dp":0,"lim":{"wl":30,"cl":20},"on":5,"how":"Blood draw; falls with hemolysis.","al":[]},{"id":"ldh","n":"Lactate dehydrogenase","u":"U/L","c":["anemia"],"inv":1,"f":"weekly","b":180,"tol":25,"s":0,"l":"r0.1","dir":"hi","gs":1,"dp":0,"lim":{"wh":280,"ch":400},"on":5,"how":"Blood draw; rises with hemolysis.","al":[]},{"id":"retic","n":"Reticulocytes","u":"%","c":["anemia"],"inv":1,"f":"weekly","b":1,"tol":0.3,"s":"r-0.2","l":"r0.15","dir":"both","gs":1,"dp":1,"lim":{"wl":0.3,"wh":2.5},"on":5,"how":"Blood draw, CBC.","al":[]},{"id":"alc","n":"Absolute lymphocyte count","u":"×10⁹/L","c":["rad","immune"],"inv":1,"f":"weekly","b":2,"tol":0.35,"s":"r-0.05","l":"r-0.08","dir":"lo","gs":0,"dp":2,"lim":{"wl":1,"cl":0.5},"on":5,"how":"Blood draw, CBC with differential.","al":[]},{"id":"tnk","n":"T-cell & NK activity","u":"% preflight","c":["immune"],"inv":1,"f":"weekly","b":100,"tol":10,"s":"r-0.15","l":"r-0.25","dir":"lo","gs":0,"dp":0,"lim":{"wl":60,"cl":45},"on":5,"s2":"T-Cell & NK Cell Activity","how":"Blood draw, flow cytometry (returned or on-board).","al":[]},{"id":"il6","n":"Interleukin-6","u":"pg/mL","c":["immune"],"inv":1,"f":"weekly","b":2,"tol":0.8,"s":"r0.5","l":"r0.3","dir":"hi","gs":0,"dp":1,"lim":{"wh":7,"ch":15},"on":5,"s2":"Cytokines","how":"Plasma cytokine cartridge.","al":[]},{"id":"tnf","n":"TNF-α","u":"pg/mL","c":["immune"],"inv":1,"f":"weekly","b":8,"tol":2.5,"s":"r0.3","l":"r0.3","dir":"hi","gs":0,"dp":1,"lim":{"wh":"b*2.5","ch":"b*4"},"on":5,"s2":"Cytokines","how":"Plasma cytokine cartridge.","al":[]},{"id":"h2ax","n":"γ-H2AX foci","u":"foci/cell","c":["rad"],"inv":1,"f":"weekly","b":0.2,"tol":0.1,"s":"r0.3","l":"r0.6","dir":"hi","gs":0,"dp":2,"lim":{"wh":1,"ch":2},"on":5,"how":"Lymphocytes from blood draw, imaging assay.","al":[]},{"id":"vitd","n":"25-OH vitamin D","u":"ng/mL","c":["nutr","bone"],"inv":1,"f":"weekly","b":35,"tol":5,"s":0,"l":"r-0.15","dir":"lo","gs":0,"dp":0,"lim":{"wl":30,"cl":20},"on":5,"how":"Blood draw.","al":[]},{"id":"ferr","n":"Ferritin","u":"ng/mL","c":["nutr","anemia"],"inv":1,"f":"weekly","b":100,"tol":25,"s":"r0.2","l":"r0.4","dir":"both","gs":1,"dp":0,"lim":{"wl":20,"wh":400,"ch":600},"on":5,"how":"Blood draw; iron stores rise in flight.","al":[]},{"id":"b12","n":"Vitamin B12","u":"pg/mL","c":["nutr"],"inv":1,"f":"weekly","b":500,"tol":80,"s":0,"l":0,"dir":"lo","gs":0,"dp":0,"lim":{"wl":250,"cl":200},"on":5,"how":"Blood draw.","al":[]},{"id":"vitc","n":"Vitamin C","u":"mg/dL","c":["nutr"],"inv":1,"f":"weekly","b":1,"tol":0.2,"s":0,"l":"r-0.1","dir":"lo","gs":0,"dp":2,"lim":{"wl":0.4,"cl":0.2},"on":5,"how":"Blood draw.","al":[]},{"id":"iron","n":"Serum iron","u":"µg/dL","c":["nutr"],"inv":1,"f":"weekly","b":100,"tol":20,"s":0,"l":"r0.1","dir":"both","gs":1,"dp":0,"lim":{"wl":50,"wh":180},"on":5,"how":"Blood draw.","al":[]},{"id":"na","n":"Serum sodium","u":"mmol/L","c":["lytes"],"inv":1,"f":"weekly","b":140,"tol":2,"s":0,"l":"a-2","dir":"both","gs":1,"dp":0,"lim":{"wl":135,"wh":145,"cl":130,"ch":150},"on":5,"s2":"Electrolytes & Osmolality","how":"Blood draw, point-of-care analyser.","al":[]},{"id":"k","n":"Serum potassium","u":"mmol/L","c":["lytes","cv"],"inv":1,"f":"weekly","b":4.2,"tol":0.3,"s":0,"l":0,"dir":"both","gs":1,"dp":1,"lim":{"wl":3.5,"wh":5.2,"cl":3,"ch":6},"on":5,"how":"Blood draw.","al":[]},{"id":"cl","n":"Serum chloride","u":"mmol/L","c":["lytes"],"inv":1,"f":"weekly","b":102,"tol":2.5,"s":0,"l":0,"dir":"both","gs":1,"dp":0,"lim":{"wl":96,"wh":108},"on":5,"how":"Blood draw.","al":[]},{"id":"mg","n":"Serum magnesium","u":"mg/dL","c":["lytes","cv"],"inv":1,"f":"weekly","b":2,"tol":0.15,"s":0,"l":"r-0.05","dir":"both","gs":1,"dp":1,"lim":{"wl":1.7,"cl":1.2},"on":5,"how":"Blood draw.","al":[]},{"id":"osm","n":"Serum osmolality","u":"mOsm/kg","c":["lytes"],"inv":1,"f":"weekly","b":285,"tol":4,"s":0,"l":"a-3","dir":"both","gs":1,"dp":0,"lim":{"wl":275,"wh":295,"cl":265,"ch":305},"on":5,"s2":"Electrolytes & Osmolality","how":"Blood draw.","al":[]},{"id":"cort","n":"Serum cortisol (morning)","u":"µg/dL","c":["endo"],"inv":1,"f":"weekly","b":14,"tol":3.5,"s":"r0.3","l":"r0.3","dir":"hi","gs":0,"dp":1,"lim":{"wh":25,"ch":35},"on":5,"s2":"Cortisol / ACTH","how":"Blood draw at 07:00–09:00.","al":[]},{"id":"acth","n":"ACTH","u":"pg/mL","c":["endo"],"inv":1,"f":"weekly","b":25,"tol":8,"s":"r0.2","l":"r0.2","dir":"hi","gs":0,"dp":0,"lim":{"wh":60,"ch":100},"on":5,"s2":"Cortisol / ACTH","how":"Blood draw, with cortisol.","al":[]},{"id":"prl","n":"Prolactin (measured)","u":"ng/mL","c":["endo"],"inv":1,"f":"weekly","b":10,"tol":3,"s":"r0.2","l":"r0.25","dir":"hi","gs":0,"dp":1,"lim":{"wh":25,"ch":50},"on":5,"how":"Blood draw.","al":[]},{"id":"tsh","n":"TSH","u":"mIU/L","c":["endo"],"inv":1,"f":"weekly","b":1.8,"tol":0.5,"s":"r-0.05","l":"r0.1","dir":"both","gs":1,"dp":2,"lim":{"wl":0.4,"wh":4.5,"cl":0.1,"ch":10},"on":5,"how":"Blood draw.","al":[]},{"id":"ft4","n":"Free T4","u":"ng/dL","c":["endo"],"inv":1,"f":"weekly","b":1.2,"tol":0.15,"s":0,"l":"r0.05","dir":"both","gs":1,"dp":2,"lim":{"wl":0.8,"wh":1.8},"on":5,"how":"Blood draw.","al":[]},{"id":"ft3","n":"Free T3","u":"pg/mL","c":["endo"],"inv":1,"f":"weekly","b":3.2,"tol":0.35,"s":0,"l":"r-0.05","dir":"both","gs":1,"dp":1,"lim":{"wl":2.3,"wh":4.4},"on":5,"how":"Blood draw.","al":[]},{"id":"gh","n":"Growth hormone","u":"ng/mL","c":["endo"],"inv":1,"f":"weekly","b":1,"tol":0.6,"s":"r0.2","l":0,"dir":"both","gs":1,"dp":1,"lim":{"wh":10},"on":5,"how":"Blood draw, fasting.","al":[]},{"id":"dlmo","n":"Melatonin onset shift (DLMO)","u":"h","c":["sleep"],"inv":0,"f":"d3","b":0,"tol":0.5,"s":"a0.5","l":"a0.7","dir":"both","gs":0,"dp":1,"lim":{"wl":-2,"wh":2,"cl":-3,"ch":3},"on":5,"how":"Hourly saliva samples in dim light; shift vs preflight.","al":[]},{"id":"vwf","n":"von Willebrand factor","u":"%","c":["vasc"],"inv":1,"f":"weekly","b":100,"tol":20,"s":0,"l":"r0.15","dir":"hi","gs":1,"dp":0,"lim":{"wh":200},"on":5,"how":"Plasma endothelial panel.","al":[]},{"id":"icam","n":"sICAM-1","u":"ng/mL","c":["vasc"],"inv":1,"f":"weekly","b":250,"tol":50,"s":0,"l":"r0.15","dir":"hi","gs":1,"dp":0,"lim":{"wh":"b*2"},"on":5,"how":"Plasma endothelial panel.","al":[]},{"id":"vcam","n":"sVCAM-1","u":"ng/mL","c":["vasc"],"inv":1,"f":"weekly","b":600,"tol":100,"s":0,"l":"r0.15","dir":"hi","gs":1,"dp":0,"lim":{"wh":"b*2"},"on":5,"how":"Plasma endothelial panel.","al":[]},{"id":"icp","n":"Intracranial pressure (proxy)","u":"mmHg","c":["fluid","sans"],"inv":0,"f":"calc","b":10,"tol":1.5,"s":0,"l":0,"dir":"hi","gs":1,"dp":1,"lim":{"wh":15,"ch":20},"on":5,"fx":"F1","al":[]},{"id":"pnif","n":"Peak nasal inspiratory flow","u":"L/min","c":["fluid"],"inv":0,"f":"calc","b":120,"tol":12,"s":0,"l":0,"dir":"lo","gs":1,"dp":0,"lim":{"wl":"b*0.6","cl":"b*0.4"},"on":5,"fx":"F2","al":[]},{"id":"emg","n":"EMG strength estimate","u":"% preflight","c":["muscle"],"inv":0,"f":"calc","b":100,"tol":4,"s":0,"l":0,"dir":"lo","gs":1,"dp":1,"lim":{"wl":75,"cl":65},"on":5,"fx":"F3","al":[]},{"id":"tewl","n":"Trans-epidermal water loss","u":"g/m²/h","c":["skin"],"inv":0,"f":"calc","b":10,"tol":1.2,"s":0,"l":0,"dir":"hi","gs":1,"dp":1,"lim":{"wh":"b*1.6","ch":"b*2.2"},"on":5,"fx":"F4","al":[]},{"id":"skhyd","n":"Skin hydration","u":"AU","c":["skin"],"inv":0,"f":"calc","b":45,"tol":4,"s":0,"l":0,"dir":"lo","gs":1,"dp":0,"lim":{"wl":"b-12","cl":"b-20"},"on":5,"fx":"F5","al":[]},{"id":"skph","n":"Skin surface pH","u":"pH","c":["skin"],"inv":0,"f":"calc","b":5.5,"tol":0.25,"s":0,"l":0,"dir":"both","gs":1,"dp":2,"lim":{"wl":4.5,"wh":6.5},"on":5,"fx":"F5","al":[]},{"id":"ery","n":"Erythema index","u":"% baseline","c":["skin","rad"],"inv":0,"f":"calc","b":100,"tol":8,"s":0,"l":0,"dir":"hi","gs":1,"dp":0,"lim":{"wh":"b*1.3","ch":"b*1.6"},"on":5,"fx":"F6","how":"Formula from cumulative dose, or measured from a skin photo (camera input).","al":[]},{"id":"mda","n":"Malondialdehyde (oxidative stress)","u":"µmol/L","c":["rad"],"inv":0,"f":"calc","b":2.5,"tol":0.4,"s":0,"l":0,"dir":"hi","gs":1,"dp":2,"lim":{"wh":"b*2","ch":"b*3"},"on":5,"fx":"F7","al":[]},{"id":"fmd","n":"Flow-mediated dilation","u":"%","c":["vasc"],"inv":0,"f":"calc","b":7,"tol":0.8,"s":0,"l":0,"dir":"lo","gs":1,"dp":1,"lim":{"wl":4,"cl":2.5},"on":5,"fx":"F9","al":[]},{"id":"prle","n":"Prolactin (estimated)","u":"ng/mL","c":["endo"],"inv":0,"f":"calc","b":10,"tol":2.5,"s":0,"l":0,"dir":"hi","gs":1,"dp":1,"lim":{"wh":25,"ch":50},"on":5,"fx":"F10","al":[]},{"id":"pha","n":"Phase angle (BIVA)","u":"°","c":["lytes","muscle"],"inv":0,"f":"calc","b":6.5,"tol":0.4,"s":0,"l":0,"dir":"lo","gs":1,"dp":2,"lim":{"wl":5,"cl":4},"on":5,"fx":"F11","al":[]},{"id":"mcv","n":"Mean corpuscular volume","u":"fL","c":["anemia"],"inv":1,"f":"calc","b":88,"tol":3,"s":0,"l":0,"dir":"both","gs":1,"dp":0,"lim":{"wl":80,"wh":100},"on":5,"fx":"MCV","al":[]},{"id":"mch","n":"Mean corpuscular hemoglobin","u":"pg","c":["anemia"],"inv":1,"f":"calc","b":29.6,"tol":1.2,"s":0,"l":0,"dir":"both","gs":1,"dp":1,"lim":{"wl":27,"wh":33},"on":5,"fx":"MCH","al":[]},{"id":"mchc","n":"Mean corpuscular Hb concentration","u":"g/dL","c":["anemia"],"inv":1,"f":"calc","b":33.6,"tol":1,"s":0,"l":0,"dir":"both","gs":1,"dp":1,"lim":{"wl":32,"wh":36},"on":5,"fx":"MCHC","al":[]},{"id":"homa","n":"HOMA-IR","u":"index","c":["metab"],"inv":1,"f":"calc","b":1.56,"tol":0.4,"s":0,"l":0,"dir":"hi","gs":1,"dp":2,"lim":{"wh":2.5,"ch":4},"on":5,"fx":"HOMA","s2":"Fasting Insulin & HOMA-IR","al":[]},{"id":"eva_prebreathe","n":"Prebreathe protocol completed","u":"%","c":["eva"],"inv":0,"f":"eva","b":100,"tol":2,"s":0,"l":0,"dir":"lo","gs":0,"dp":0,"lim":{"cl":99.5},"on":5,"how":"Percent of the prescribed oxygen prebreathe actually completed before depress.","al":["prebreathe"]},{"id":"eva_co2","n":"Suit inspired CO₂","u":"mmHg","c":["eva"],"inv":0,"f":"eva","b":2,"tol":3,"s":0,"l":0,"dir":"hi","gs":0,"dp":1,"lim":{"wh":7.6,"ch":23},"on":5,"how":"Peak inspired CO₂ from suit telemetry during the EVA.","al":["suit co2","co2"]},{"id":"eva_hrpct","n":"Peak EVA heart rate","u":"% of max","c":["eva"],"inv":0,"f":"eva","b":65,"tol":10,"s":0,"l":0,"dir":"hi","gs":0,"dp":0,"lim":{"wh":85,"ch":95},"on":5,"how":"Peak heart rate during the EVA divided by age-predicted maximum (220 − age).","al":["eva heart rate"]},{"id":"eva_temp","n":"Peak core temperature in suit","u":"°C","c":["eva"],"inv":0,"f":"eva","b":37.4,"tol":0.4,"s":0,"l":0,"dir":"hi","gs":0,"dp":1,"lim":{"wh":38.3,"ch":39.0},"on":5,"how":"Core temperature sensor peak during the EVA.","al":["suit temperature"]},{"id":"eva_o2end","n":"Suit oxygen left at end","u":"%","c":["eva"],"inv":0,"f":"eva","b":40,"tol":15,"s":0,"l":0,"dir":"lo","gs":0,"dp":0,"lim":{"wl":20,"cl":10},"on":5,"how":"Usable oxygen remaining at repress, from suit telemetry.","al":["oxygen remaining"]},{"id":"eva_hand","n":"Hand / finger pain after EVA","u":"/10","c":["eva"],"inv":0,"f":"eva","b":0,"tol":1.2,"s":0,"l":0,"dir":"hi","gs":0,"dp":0,"lim":{"wh":3,"ch":7},"on":5,"how":"Pain score after glove removal, 0 = none.","al":["hand pain","finger pain"]},{"id":"eva_nail","n":"Fingernail lifting (onycholysis)","u":"","c":["eva"],"inv":0,"f":"eva","b":0,"tol":0.4,"s":0,"l":0,"dir":"hi","gs":0,"dp":0,"lim":{"wh":0.5},"on":5,"how":"1 if any nail is lifting or bruised under the nail after the EVA.","al":["fingernail","nail"]},{"id":"eva_shoulder","n":"Shoulder pain after EVA","u":"/10","c":["eva"],"inv":0,"f":"eva","b":0,"tol":1.2,"s":0,"l":0,"dir":"hi","gs":0,"dp":0,"lim":{"wh":3,"ch":7},"on":5,"how":"Pain score, worse side, 0 = none.","al":["shoulder pain"]},{"id":"eva_dcs","n":"Decompression sickness signs","u":"grade","c":["eva"],"inv":0,"f":"eva","b":0,"tol":0.3,"s":0,"l":0,"dir":"hi","gs":0,"dp":0,"lim":{"ch":0.5},"on":5,"how":"0 = none; 1 = joint pain, skin itch or mottling; 2 = numbness, weakness, confusion or vision change.","al":["decompression","dcs","bends"]},{"id":"eva_hours7","n":"EVA hours in last 7 days","u":"h","c":["eva"],"inv":0,"f":"eva","b":6,"tol":12,"s":0,"l":0,"dir":"hi","gs":0,"dp":1,"lim":{"wh":24,"ch":32},"on":5,"how":"Total suited EVA time in the past week (exploration plans allow up to 24 h).","al":["eva hours"]},{"id":"eva_rest","n":"Rest days since previous EVA","u":"d","c":["eva"],"inv":0,"f":"eva","b":7,"tol":10,"s":0,"l":0,"dir":"lo","gs":0,"dp":0,"lim":{"wl":4,"cl":1},"on":5,"how":"Days since the previous EVA (ISS practice: at least 4–5).","al":["rest days"]}],"CONDS":[{"id":"sans","n":"Spaceflight-Associated Neuro-ocular Syndrome (SANS)","short":"Eyes (SANS)","reg":"eyes","haz":["Altered gravity","Hostile closed environment (CO₂)"],"info":"Without gravity about 1.5–2 L of fluid moves toward the head. Pressure around the optic nerve rises, the back of the eye flattens and the optic disc can swell, giving a far-sighted shift. It affects roughly 70% of long-duration crew and grows with mission length.","act":["Do the daily Amsler grid and near-vision card; report any new blur or distortion.","Wear the adjustable-focus (“superfocus”) glasses for a far-sighted shift.","Avoid long periods of straining, head-down positions and tight collars.","Ask the flight surgeon about thigh cuffs or lower-body negative pressure sessions if available.","Keep B-vitamin intake as planned and track cabin CO₂ (a known headache trigger)."],"esc":"Optic nerve sheath or retinal thickness above your trajectory, a far-sighted shift over 1 D, or headache with vision change: schedule OCT/ultrasound and send to the flight surgeon at the next pass.","ref":["lee2020","zwart2016","law2014"]},{"id":"cv","n":"Cardiovascular deconditioning & arrhythmias","short":"Heart","reg":"heart","haz":["Altered gravity","Space radiation","Isolation & confinement (stress)"],"info":"Blood volume falls 10–15% within days, the heart works against less load and slowly deconditions. Rhythm changes such as extra beats (PVCs) become more common on long missions. The main operational risk is fainting when gravity returns (landing, planetary surface, EVA).","act":["Complete daily aerobic exercise (cycle/treadmill) plus resistance training.","Drink to plan; fluid- and salt-load before landing or a gravity transition as briefed.","Limit caffeine and check potassium/magnesium if extra beats rise.","Wear compression garments for re-entry and the first days in gravity."],"esc":"QTc over 500 ms, resting heart rate over 130 bpm, fainting, chest pain or palpitations with dizziness: treat as urgent and contact the Crew Medical Officer (CMO) now.","ref":["hughson2018","std3001"]},{"id":"bone","n":"Rapid bone mineral density loss","short":"Bones","reg":"bones","haz":["Altered gravity"],"info":"Weight-bearing bones (hip, spine) lose about 1–1.5% of their density each month without loading. Calcium released from bone raises urine calcium and kidney-stone risk within weeks.","act":["Do high-load resistance exercise (ARED) 6 days a week; this is the most effective countermeasure.","Take vitamin D as issued (800–1000 IU/day) and keep calcium near 1000–1200 mg/day, not more.","Keep sodium moderate: high salt raises urine calcium.","Drink enough for over 2 L of urine a day to protect against stones.","Ask about potassium citrate or a bisphosphonate if turnover markers stay high."],"esc":"Flank or back pain with blood in urine (kidney stone), urine calcium over 400 mg/day, or bone loss well ahead of trajectory: contact the flight surgeon.","ref":["smith2012","leblanc2013","whitson2009"]},{"id":"sleep","n":"Sleep cycle disruption","short":"Sleep","reg":"head","haz":["Isolation & confinement","Distance from Earth (schedules)","Hostile closed environment (noise, light)"],"info":"Crews average about 6 h of sleep against the 8.5 h scheduled, with less deep and REM sleep. Without a 24-h sunlight cycle the body clock drifts, which slows reactions and raises error risk.","act":["Protect the 8.5 h sleep window and keep a fixed wake time.","Use bright, blue-rich light after waking and dim, warm light 2 h before sleep.","Use eye mask and ear plugs; keep the sleep station cool.","No caffeine within 6 h of sleep.","Ask the flight surgeon before using melatonin or a sleep medication."],"esc":"Under 5 h of sleep for 3 nights or reaction-time lapses during critical tasks: tell the commander and flight surgeon so the schedule can be adjusted.","ref":["barger2014","brainard2016","rosekind1995"]},{"id":"fluid","n":"Cephalic fluid shift & facial edema","short":"Head fluid","reg":"neck","haz":["Altered gravity"],"info":"Headward fluid gives the puffy face, stuffy nose and full-head feeling of early flight. Jugular veins swell; in some crew the flow slows or reverses, which can lead to a clot (seen in 6 of 11 crew studied; one had a thrombus).","act":["Use saline nasal spray for congestion; keep the head of the sleep bag slightly raised.","Track headache, nasal congestion and facial puffiness in your symptom log.","Use thigh cuffs or lower-body negative pressure if issued."],"esc":"Jugular flow that is stagnant or reversed, neck swelling or pain: urgent ultrasound review with the flight surgeon. Do not start blood thinners without ground direction.","ref":["mg2019","lee2020"]},{"id":"muscle","n":"Muscle atrophy & muscle loss","short":"Muscles","reg":"muscle","haz":["Altered gravity"],"info":"Postural muscles of the calf, thigh and back shrink 10–20% and lose 20–30% of strength over six months without heavy exercise. Strength falls faster than size.","act":["Follow the resistance programme (ARED squats, heel raises, deadlifts) at prescribed loads.","Eat 1.2–1.5 g protein per kg body mass per day, spread over meals.","Log every session so the trend can be checked against your trajectory."],"esc":"Strength down more than 20% from your trajectory or new back pain with numbness: tell the flight surgeon.","ref":["english2020","smith2012"]},{"id":"metab","n":"Metabolic shift & insulin resistance","short":"Metabolism","reg":"abdomen","haz":["Altered gravity","Hostile closed environment"],"info":"Inactivity and stress hormones make muscle less sensitive to insulin. Glucose spikes after meals grow, fasting insulin rises and cholesterol can drift up on long missions.","act":["Keep exercise volume up: it is the strongest insulin sensitiser.","Choose low-sugar menu items and pair carbohydrates with protein.","Check CGM traces after meals and log the food that caused spikes."],"esc":"Fasting glucose over 126 mg/dL twice, glucose under 54 mg/dL, or HOMA-IR over 4: contact the flight surgeon.","ref":["hughson2018","ada"]},{"id":"immune","n":"Immune system dysregulation","short":"Immune","reg":"immune","haz":["Space radiation","Isolation & confinement","Hostile closed environment"],"info":"T-cell and natural-killer activity drops and inflammation markers rise. Dormant viruses (EBV, VZV, CMV, HSV) reactivate and are shed in saliva in about half of long-duration crew, sometimes causing rashes or cold sores.","act":["Keep sleep, exercise and nutrition on plan; all three support immunity.","Use hand hygiene and clean shared surfaces.","Watch for cold sores, band-like rash (shingles) or persistent fever."],"esc":"Fever with positive viral shedding, a new blistering rash, or lymphocytes under 1.0: contact the flight surgeon.","ref":["crucian2018","crucian2016"]},{"id":"skin","n":"Microbial alteration, hypersensitivity & dermatitis","short":"Skin","reg":"skin","haz":["Hostile closed environment","Space radiation"],"info":"Dry cabin air, limited washing and a changed skin microbiome cause dryness, rashes and slow-healing skin. Radiation adds to redness.","act":["Moisturise daily with the issued emollient.","Use rinse-free cleansers gently; avoid scratching.","Take a weekly skin photo of the same spot for comparison."],"esc":"Spreading rash, pus, or redness with fever: flight surgeon review.","ref":["crucian2016","mehta2022","aad"]},{"id":"rad","n":"Acute radiation sickness & cellular damage","short":"Radiation","reg":"whole","haz":["Space radiation"],"info":"Galactic cosmic rays and solar particle events (SPE) damage DNA. Dose is tracked against the NASA career limit of 600 mSv and 30-day organ limits. A large SPE can give enough dose in hours to cause nausea and a drop in lymphocytes.","act":["Follow storm-shelter procedures as soon as an SPE alert or dose-rate spike occurs.","Wear your personal dosimeter at all times.","Eat the antioxidant-rich menu items (fruits, vegetables, omega-3)."],"esc":"Dose rate over 5× expected (possible SPE): shelter now and tell the CMO. Nausea or vomiting within hours of a dose spike, or lymphocytes falling by half: medical emergency.","ref":["cucinotta","std3001"]},{"id":"anemia","n":"Spaceflight-induced anemia","short":"Blood","reg":"blood","haz":["Altered gravity"],"info":"The body destroys about 54% more red blood cells in space than on Earth, throughout the mission. Red cell mass falls ~10%, which can cause fatigue and lower exercise capacity, especially after landing.","act":["Eat the full menu; do not take iron unless the flight surgeon prescribes it (iron stores rise in flight).","Pace exercise if unusually tired and log fatigue."],"esc":"Hemoglobin under 12 g/dL, breathlessness or chest pain with exertion: contact the flight surgeon.","ref":["trudel2022"]},{"id":"vasc","n":"Endothelial dysfunction","short":"Vessels","reg":"blood","haz":["Space radiation","Altered gravity"],"info":"Arteries stiffen in space at a rate similar to 10–20 years of ageing on Earth, measured as faster pulse-wave velocity and weaker flow-mediated dilation.","act":["Keep aerobic exercise on plan.","Prefer omega-3 and polyphenol-rich foods; limit salt."],"esc":"Pulse-wave velocity over 10 m/s or flow-mediated dilation under 4%: send to the flight surgeon.","ref":["hughson2018"]},{"id":"nutr","n":"Nutrition level deficiencies","short":"Nutrition","reg":"abdomen","haz":["Distance from Earth","Isolation & confinement"],"info":"Crews often eat only 70–80% of what they need. Weight, muscle and bone loss follow, and stored food loses vitamins over time on long missions.","act":["Eat to 100% of your energy target; log every meal.","Take vitamin D as issued.","Rotate menu items to avoid menu fatigue."],"esc":"Body mass down more than 5%, or vitamin D under 20 ng/mL: contact the flight surgeon.","ref":["smithzwart"]},{"id":"endo","n":"Endocrine & thyroid alterations","short":"Hormones","reg":"neck","haz":["Isolation & confinement","Space radiation","Altered gravity"],"info":"Stress hormones (cortisol, ACTH) stay raised in flight and the daily cortisol rhythm flattens. Prolactin rises with stress and lost sleep; thyroid hormones shift slightly.","act":["Use planned stress-relief: exercise, leisure, private calls home.","Protect sleep; it lowers cortisol and prolactin."],"esc":"TSH or free T4 outside range, or cortisol over 3× your baseline: flight surgeon review.","ref":["slack2016"]},{"id":"lytes","n":"Fluid & electrolyte imbalances","short":"Fluids","reg":"kidney","haz":["Altered gravity","Hostile closed environment"],"info":"Early in flight the body sheds fluid; thirst is blunted and sodium handling changes. Dehydration raises kidney-stone risk and worsens orthostatic intolerance.","act":["Drink to keep urine specific gravity under 1.020 (pale urine).","Keep salt moderate.","Re-check electrolytes after vomiting or heavy sweating."],"esc":"Sodium under 130 or over 150 mmol/L, potassium under 3.0 or over 6.0 mmol/L: urgent flight surgeon contact.","ref":["who_ors","whitson2009"]},{"id":"hypox","n":"Hypoxia","short":"Lungs / oxygen","reg":"lungs","haz":["Hostile closed environment"],"info":"Healthy crew stay at 97–99% oxygen saturation in flight. A drop points to a cabin atmosphere fault (ECLSS), a suit issue or a lung problem.","act":["Re-seat the probe and re-measure at rest.","Check cabin O₂ and CO₂ readings with the crew.","Use supplemental oxygen as per protocol if below 90%."],"esc":"SpO₂ under 90%: emergency. Put on oxygen and alert the CMO and commander.","ref":["std3001","medkit"]},{"id":"behav","n":"Behavioural health (added: NASA HRP behavioural risk)","short":"Mind","reg":"head","haz":["Isolation & confinement","Distance from Earth"],"info":"Isolation, confinement, workload and delayed contact with home can lower mood, raise stress and slow thinking. NASA lists adverse behavioural conditions as a top risk for Mars missions. Not in the original sheets: added because the challenge names mood as an indicator.","act":["Do the daily mood and stress check-in honestly.","Use private family and psychological conferences.","Schedule leisure, exercise and crew meals."],"esc":"Mood 3 or lower for 3 days, or thoughts of self-harm: talk to the CMO now and request a private psychological conference.","ref":["slack2016"]},{"id":"eva","n":"Risk of injury and compromised performance from spacewalks (EVA)","short":"Spacewalk (EVA)","reg":"limbs","haz":["Hostile closed environment (suit)","Altered gravity","Distance from Earth"],"info":"Spacewalks put the body inside a pressurised suit for 6–9 hours. The suit causes injuries: in the U.S. programme 50 of 219 in-flight injuries came from the suit, mostly hands (fingernail lifting, abrasions) and shoulders. The low suit pressure (about 4.3 psi) can cause decompression sickness (DCS) unless nitrogen is removed by an oxygen prebreathe. Carbon dioxide build-up, heat and fatigue reduce performance. Surface EVAs on the Moon or Mars add walking, falls and suit weight; NASA rates this a red risk for surface missions.","act":["Complete the full oxygen prebreathe protocol; never shorten it.","Do a glove and suit fit check about a week before the EVA; use finger tape or liners on pressure points.","Drink from the suit drink bag; report heat, headache or breathlessness early (possible CO₂ build-up).","Plan no hard exercise on EVA days and at least 4–5 rest days between ISS EVAs; stretch shoulders and hands after.","Keep up resistance training: strength protects shoulders and helps carry a suit in partial gravity.","Report any joint pain, skin itching or mottling, numbness or weakness after the EVA at once (possible DCS)."],"esc":"Any DCS symptom: stop, repressurise (in-suit or airlock) on 100 % oxygen and call the flight surgeon now. Numbness, weakness, confusion or vision change after EVA = neurological DCS: emergency. Suit CO₂ over 23 mmHg, core temperature over 39 °C or heart rate over 95 % of maximum: terminate or pause the EVA.","ref":["eva2022","scheuring2009","opperman2010","dcs","lambertsen"]}],"ENVS":{"earth":{"n":"Earth","g":1,"dose":0.008,"src":"~3 mSv/yr background"},"leo":{"n":"Low Earth orbit (ISS)","g":0,"dose":0.6,"src":"ISS crew dosimetry 0.5–1.0 mSv/day"},"cis":{"n":"Deep-space transit","g":0,"dose":1.8,"src":"MSL-RAD cruise 1.84 mSv/day (Zeitlin 2013)"},"moon":{"n":"Lunar surface","g":0.166,"dose":1.37,"src":"Chang'e-4 LND 1.37 mSv/day (Zhang 2020)"},"mars":{"n":"Mars surface","g":0.38,"dose":0.64,"src":"Curiosity RAD 0.64 mSv/day (Hassler 2014)"}},"MISSIONS":{"iss":{"n":"ISS expedition (180 d)","ph":[["leo",180],["earth",60]]},"iss1y":{"n":"ISS one-year (340 d)","ph":[["leo",340],["earth",60]]},"artemis":{"n":"Artemis lunar surface (30 d)","ph":[["cis",5],["moon",30],["cis",5],["earth",30]]},"mars":{"n":"Mars conjunction-class (~900 d)","ph":[["cis",210],["mars",500],["cis",210],["earth",60]]}},"BODY":{"head":{"n":"Brain & sleep","c":["sleep","behav"],"f":"Controls sleep–wake rhythm, mood and reaction speed."},"eyes":{"n":"Eyes","c":["sans"],"f":"Focus light on the retina; the optic nerve carries the image to the brain."},"neck":{"n":"Neck: jugular veins & thyroid","c":["fluid","endo"],"f":"Jugular veins drain blood from the head; the thyroid sets metabolic rate."},"lungs":{"n":"Lungs","c":["hypox"],"f":"Move oxygen into the blood and carbon dioxide out."},"heart":{"n":"Heart","c":["cv"],"f":"Pumps about 5 L of blood a minute through the body."},"blood":{"n":"Blood & vessels","c":["anemia","vasc"],"f":"Red cells carry oxygen; the vessel lining controls flow and clotting."},"abdomen":{"n":"Gut & metabolism","c":["metab","nutr"],"f":"Digests food, stores energy and keeps blood sugar steady."},"kidney":{"n":"Kidneys","c":["lytes","bone"],"f":"Balance water and salts; excrete calcium released from bone."},"immune":{"n":"Immune system (spleen, lymph)","c":["immune"],"f":"Detects and fights infection; keeps latent viruses dormant."},"bones":{"n":"Skeleton","c":["bone"],"f":"Supports the body and stores calcium; weight-bearing bones need load to stay dense."},"muscle":{"n":"Muscles","c":["muscle"],"f":"Postural muscles of the legs and back keep you upright in gravity."},"skin":{"n":"Skin","c":["skin"],"f":"Barrier against microbes and water loss."},"whole":{"n":"Whole body: radiation","c":["rad"],"f":"Radiation passes through all tissue and damages DNA."},"limbs":{"n":"Hands & shoulders (spacewalk)","c":["eva"],"f":"Hands do fine work inside pressurised gloves; shoulders carry most of the load when working in the suit."}},"SYMPTOMS":[["headache","Headache",["fluid","sans"]],["blur","Blurred near vision",["sans"]],["congest","Nasal congestion",["fluid"]],["chest","Chest pain or palpitations",["cv"],2],["dizzy","Dizziness or near-fainting",["cv"],1],["nausea","Nausea or vomiting",["rad"],1],["rash","Rash or skin irritation",["skin","immune"]],["fever","Fever or chills",["immune"],1],["flank","Flank pain / blood in urine",["bone","lytes"],2],["back","Back pain",["muscle"]],["fatigue","Unusual fatigue",["anemia","sleep"]],["breath","Short of breath",["hypox","anemia"],2],["neck","Neck swelling or pain",["fluid"],2],["low","Feeling low or hopeless",["behav"],1],["joint","Joint pain after EVA",["eva"],2],["mottle","Skin itch / mottling after EVA",["eva"],2],["numb","Numbness, weakness or confusion after EVA",["eva"],2],["nails","Fingernail lifting or bruising",["eva"],1],["shoulder","Shoulder pain",["eva","muscle"]]],"FX":{"F1":{"v":"icp","in":["onsd"],"t":"ICP = Baseline ICP × (ONSD / Baseline ONSD)","note":""},"F2":{"v":"pnif","in":["shift"],"t":"PNIF = Baseline PNIF × (1 − k × Fluid shift / 2.0 L), k = 0.35","note":"Your formula uses k = 1, which predicts ~88% loss of nasal airflow at the typical 1.75 L shift and would flag every crew member as critical. k = 0.35 gives a ~30% drop, closer to reported congestion. Editable in Reference."},"F3":{"v":"emg","in":["mcsa"],"t":"EMG strength = Baseline × (Muscle CSA / Baseline CSA)","note":""},"F4":{"v":"tewl","in":["osm"],"t":"TEWL = Baseline TEWL × (Osmolality / Baseline osmolality)","note":""},"F5":{"v":"skhyd","in":["shift","ctemp"],"t":"Hydration = Baseline − 4 AU per L fluid shift + 3 AU per °C temperature rise; pH = Baseline pH × (Na / Baseline Na)","note":"Penalty (4 AU/L) and bonus (3 AU/°C) coefficients were not given and are set here."},"F5b":{"v":"skph","in":["na"],"t":"pH = Baseline pH × (Serum Na / Baseline Na)","note":""},"F6":{"v":"ery","in":["@dose"],"t":"Erythema = Baseline × (1 + Cumulative dose / 1500 mSv)","note":"Safe threshold = NASA 30-day skin limit, 1500 mGy-Eq (≈ mSv here)."},"F7":{"v":"mda","in":["ohdg"],"t":"MDA = Baseline MDA × (8-OHdG / Baseline 8-OHdG)","note":""},"F8":{"v":null,"in":[],"t":"PETCO = Baseline × (RBC mass / Baseline RBC mass) — replaced","note":"End-tidal CO rises when red cells are destroyed (heme breakdown releases CO). Trudel et al. 2022 measured a 54% increase in flight, so a falling RBC mass should not lower the CO estimate. End-tidal CO is measured directly by breath analyser and its expected course uses +30% (<30 d) and +54% (>30 d)."},"F9":{"v":"fmd","in":["pwv"],"t":"FMD = Baseline FMD × (Baseline PWV / PWV)","note":""},"F10":{"v":"prle","in":["scort|cort","sleep"],"t":"Prolactin = Baseline × (Cortisol / Baseline cortisol) × (Habitual sleep / Sleep hours)","note":"Uses your own habitual sleep instead of a fixed 8 h, and caps the sleep ratio at 2."},"F11":{"v":"pha","in":["mcsa","shift"],"t":"Phase angle = Baseline × (Muscle mass / Baseline) × (1 − Fluid shift / Total body water)","note":"Total body water = 0.6 × body mass."},"MCV":{"v":"mcv","in":["hct","rbc"],"t":"MCV = Hematocrit × 10 / RBC","note":""},"MCH":{"v":"mch","in":["hgb","rbc"],"t":"MCH = Hemoglobin × 10 / RBC","note":""},"MCHC":{"v":"mchc","in":["hgb","hct"],"t":"MCHC = Hemoglobin × 100 / Hematocrit","note":""},"HOMA":{"v":"homa","in":["glu","ins"],"t":"HOMA-IR = Fasting glucose (mg/dL) × Fasting insulin / 405","note":""}},"PANELS":[{"id":"exam","n":"Eye & heart exam","v":["iop","onsd","trt","vis","qtc","pvc","sv","co","pwv"]},{"id":"bone","n":"Bone & calcium","v":["ica","ctx","ntx","bmd","ucal","uox"]},{"id":"heme","n":"Blood count & hemolysis","v":["hct","hgb","rbc","retic","hapto","ldh","etco"]},{"id":"metab","n":"Metabolic","v":["glu","ins","ldl"]},{"id":"immune","n":"Immune","v":["alc","tnk","il6","tnf","viral"]},{"id":"rad","n":"Radiation biodosimetry","v":["h2ax","ohdg"]},{"id":"nutr","n":"Nutrition","v":["vitd","ferr","iron","b12","vitc"]},{"id":"lytes","n":"Electrolytes","v":["na","k","cl","mg","osm"]},{"id":"endo","n":"Endocrine & circadian","v":["cort","acth","prl","tsh","ft4","ft3","gh","dlmo"]},{"id":"vasc","n":"Endothelial","v":["vwf","icam","vcam"]},{"id":"eva","n":"Spacewalk debrief","v":["eva_prebreathe","eva_co2","eva_hrpct","eva_temp","eva_o2end","eva_hand","eva_nail","eva_shoulder","eva_dcs","eva_hours7","eva_rest"]}],"TASKS":[{"id":"vit","n":"Morning vitals (BP, HR, temperature)","v":["sbp"],"p":1,"xp":10},{"id":"ecg","n":"30-s wearable ECG","v":["qtc"],"p":1,"xp":10},{"id":"slp","n":"Sleep log","v":["sleep"],"p":1,"xp":10},{"id":"moo","n":"Mood & stress check-in","v":["mood","stress"],"p":1,"xp":10},{"id":"eat","n":"Log meals (energy intake)","v":["kcal"],"p":1,"xp":10},{"id":"h2o","n":"Hydration: urine specific gravity","v":["usg"],"p":1,"xp":10},{"id":"ex","n":"Exercise ≥ 90 min","v":["exer"],"p":1,"xp":15,"min":90},{"id":"eye","n":"Amsler grid vision check","v":["amsler"],"p":1,"xp":10},{"id":"pvt","n":"Reaction test (PVT)","v":["pvt"],"p":1,"xp":15},{"id":"jrn","n":"Private journal entry","v":["@journal"],"p":1,"xp":10},{"id":"mass","n":"Body mass & composition","v":["mass","lean"],"p":2,"xp":20},{"id":"near","n":"Near-vision card","v":["vis"],"p":2,"xp":15},{"id":"str","n":"Strength test","v":["force"],"p":2,"xp":20},{"id":"card","n":"Heart & vessels (stroke volume, pulse-wave velocity)","v":["sv","pwv"],"p":2,"xp":20},{"id":"smp","n":"Saliva, breath & urine strip","v":["scort","etco","ohdg"],"p":2,"xp":20},{"id":"us","n":"Eye & neck ultrasound (ONSD, jugular)","v":["onsd","ijv"],"p":3,"xp":30},{"id":"iop","n":"Eye pressure (tonometry)","v":["iop"],"p":3,"xp":20},{"id":"msc","n":"Muscle ultrasound","v":["mcsa"],"p":3,"xp":20},{"id":"uri","n":"24-h urine & saliva PCR","v":["ucal","viral"],"p":3,"xp":25},{"id":"blood","n":"Blood draw: lab panel","v":["ica","hct","ctx"],"p":7,"xp":60}],"S2":[["Ocular & Neuro-Ocular","Optic Nerve Sheath Diameter (ONSD)","4.64–5.8 mm","Baseline","7.2 ± 1.5 mm","Lee et al. (2020); NASA SANS"],["Ocular & Neuro-Ocular","Retinal Thickness (TRT)","~91 ± 8 µm","Baseline","+19.4 to ≥55 µm","Macias et al. (2020)"],["Ocular & Neuro-Ocular","Visual Acuity","20/20","23–29% deficit","48–60% deficit (+0.50 to +2.00 D)","Mader et al. (2011)"],["Ocular & Neuro-Ocular","Intraocular Pressure (IOP)","10–21 mmHg","+20–50%","+~1.3 mmHg","Greenwald et al. (2021)"],["Cardiovascular","Total Plasma / Blood Volume","~5 L (plasma ~3 L)","−10 to −15%","−10 to −15%","Norsk (2020)"],["Cardiovascular","Heart Rate (HR) & HRV","60–100 bpm","HR stable / HRV ↓","HR stable / HRV ↓","Baevsky et al. (2007)"],["Cardiovascular","ECG / EKG","QTc < 440 ms","Stable","PVCs ↑","D'Aunno et al. (2003)"],["Cardiovascular","SpO2","97–99%","No change","No change","Team"],["Cardiovascular","Stroke Volume (SV) & Cardiac Output","SV 60–100 mL; CO 4–8 L/min","SV ↑; CO ↑","SV −15%; CO baseline","Norsk (2020)"],["Cardiovascular","Blood Pressure (MAP)","120/80 mmHg","Stable","Stable / elevated","Norsk (2020)"],["Cardiovascular","Central Venous Pressure (CVP)","2–8 mmHg","1–2 mmHg","< 2 mmHg","Buckey et al. (1996)"],["Bone & Mineral","Bone Mineral Density (BMD)","T-score > −1.0","−0%","−1 to −1.5% / month","Sibonga (2013)"],["Bone & Mineral","Urinary Calcium & Oxalate","100–300 mg/day","> 300 mg/day","Elevated","Smith et al. (2014)"],["Bone & Mineral","Bone Turnover (CTX, NTX)","Balanced","Elevated","+50–100%","Smith et al. (2012)"],["Bone & Mineral","Serum Ionized Calcium","4.5–5.6 mg/dL","> 5.6 mg/dL","High-normal","Smith et al. (2012)"],["Sleep","Actigraphy","~8 h","~6 h","5.96 h","Barger et al. (2014)"],["Sleep","Polysomnography (PSG)","20% REM, 20% N3","< 20% REM/N3","< 20% REM/N3","Dijk et al. (2001)"],["Sleep","Core Body Temp","Normal","Dampened","+~1 °C","Stahn et al. (2017)"],["Fluid Shifts","Upper Body Fluid Shift","Normal","+1.5 to 2.0 L","+1.5 to 2.0 L","Norsk (2020)"],["Fluid Shifts","Jugular Vein CSA","Low","High (engorged)","High","Marshall-Goebel (2019)"],["Musculoskeletal","Muscle Volume / CSA","100%","−5%","−10 to −20%","Fitts et al. (2010)"],["Musculoskeletal","Peak Isometric Force","100%","Minor ↓","−20 to −30%","Fitts et al. (2010)"],["Metabolism","Fasting Insulin & HOMA-IR","HOMA-IR < 2.0","Spikes","HOMA-IR > 2.0","Hughson et al. (2017)"],["Metabolism","Circulating Lipids (LDL)","< 100 mg/dL","Fluctuating","> 100 mg/dL","Garrett-Bakelman (2019)"],["Metabolism","Cortisol / ACTH","Diurnal","Elevated","Elevated","Crucian et al. (2014)"],["Immunology","Viral DNA Shedding","0","Elevated","~50% prevalence","Rooney et al. (2019)"],["Immunology","Cytokines","Balanced Th1/Th2","IL-6 ↑","Th2 dominant","Crucian et al. (2014)"],["Immunology","T-Cell & NK Cell Activity","100%","↓","↓","Crucian et al. (2015)"],["Radiation","Absorbed Dose Rate","~3 mSv/year","~0.5–1.0 mSv/day","~75–150 mSv / 6 mo","Cucinotta (2014)"],["Radiation","DNA Damage (8-OHdG)","Baseline","ROS ↑","Elevated","Garrett-Bakelman (2019)"],["Hematology","RBC, Hemoglobin, Hematocrit","Hct ~45%","Hct > 45%","RBC mass −10%","Trudel et al. (2022)"],["Hematology","Pulse Wave Velocity (PWV)","Normal","Stable","PWV ↑ (stiffness)","Hughson et al. (2016)"],["Nutrition","Caloric Intake","~2500–3000 kcal/day","Reduced","70–80% of requirement","Smith et al. (2012)"],["Nutrition","Electrolytes & Osmolality","~285 mOsm/kg","Urine output ↑","Serum Na⁺ ↓","Norsk (2020)"]],"REFS":{"hrp":"NASA Human Research Program, Human System Risk Board evidence reports (humanresearchroadmap.nasa.gov)","std3001":"NASA-STD-3001 Spaceflight Human-System Standard, Vol. 1 Rev B (Crew Health) and Vol. 2","medkit":"NASA ISS Medical Checklist 3.001 Medical Kit – Contents and Reference (2015)","lee2020":"Lee AG et al. Spaceflight associated neuro-ocular syndrome (SANS) and the neuro-ophthalmologic effects of microgravity. npj Microgravity 2020","zwart2016":"Zwart SR et al. Genotype, B-vitamin status and androgens affect spaceflight-induced ophthalmic changes. FASEB J 2016","law2014":"Law J et al. Relationship between carbon dioxide levels and reported headaches on the ISS. J Occup Environ Med 2014","mg2019":"Marshall-Goebel K et al. Assessment of jugular venous blood flow stasis and thrombosis during spaceflight. JAMA Netw Open 2019","hughson2018":"Hughson RL et al. Cardiovascular regulation during long-duration spaceflights to the ISS. CMAJ 2018 / J Appl Physiol 2016","smith2012":"Smith SM et al. Benefits for bone from resistance exercise and nutrition in long-duration spaceflight. J Bone Miner Res 2012","leblanc2013":"LeBlanc A et al. Bisphosphonates as a supplement to exercise to protect bone during long-duration spaceflight. Osteoporos Int 2013","whitson2009":"Whitson PA et al. Effect of potassium citrate therapy on the risk of renal stone formation during spaceflight. J Urol 2009","barger2014":"Barger LK et al. Prevalence of sleep deficiency and use of hypnotic drugs in astronauts. Lancet Neurol 2014","brainard2016":"Brainard GC et al. Solid-state lighting for the ISS: tests of visual performance and melatonin regulation. Acta Astronaut 2013/2016","rosekind1995":"Rosekind MR et al. Alertness management: strategic naps in operational settings (NASA). J Sleep Res 1995","english2020":"English KL et al. High-intensity training during spaceflight: results from the NASA SPRINT study. npj Microgravity 2020","crucian2018":"Crucian BE et al. Immune system dysregulation during spaceflight: potential countermeasures for deep space exploration. Front Immunol 2018","crucian2016":"Crucian B et al. Incidence of clinical symptoms during long-duration orbital spaceflight. Int J Gen Med 2016","mehta2022":"Mehta SK et al. Dermatitis during spaceflight associated with HSV-1 reactivation. Viruses 2022","trudel2022":"Trudel G et al. Hemolysis contributes to anemia during long-duration space flight. Nat Med 2022","smithzwart":"Smith SM, Zwart SR, et al. Nutritional Biochemistry of Spaceflight / NASA nutrition requirements (Vitamin D 800 IU/d)","ada":"American Diabetes Association Standards of Care: hypoglycaemia treatment, 15 g fast-acting carbohydrate and re-check in 15 min","aha_bp":"AHA/ACC 2017 guideline for high blood pressure: measurement technique and thresholds","who_ors":"WHO oral rehydration guidance; IOM water intake recommendations","slack2016":"Slack KJ et al. Evidence report: Risk of adverse cognitive or behavioral conditions and psychiatric disorders. NASA HRP 2016","cucinotta":"Cucinotta FA. Space radiation risks for astronauts on multiple ISS missions. PLoS One 2014; NASA SPE storm-shelter procedures","eva2022":"Dunn J, Benson E, Norcross J, Newby N. Evidence Report: Risk of Injury and Compromised Performance due to EVA Operations. NASA 2022 (NTRS 20220004017)","scheuring2009":"Scheuring RA et al. Musculoskeletal injuries and minor trauma in space: incidence and injury mechanisms in U.S. astronauts. Aviat Space Environ Med 2009","opperman2010":"Opperman RA et al. Probability of spacesuit-induced fingernail trauma is associated with hand circumference. Aviat Space Environ Med 2010","dcs":"NASA DCS severity criteria (Type I/II) and in-suit repressurization treatment; ISS 2-h prebreathe protocol design (NTRS 20000110097)","lambertsen":"Lambertsen 1971; inspired CO₂ 1–5 % mild–moderate effects; EVA CO₂ washout termination criteria (NASA EVA evidence report 2022)","aad":"American Academy of Dermatology clinical guidance (contact dermatitis, eczema, urticaria, tinea, folliculitis, herpes zoster)","cdc_zoster":"CDC Clinical Overview of Shingles: start antivirals within 72 h of rash onset","nice_cellulitis":"NICE NG141 Cellulitis and erysipelas: antimicrobial prescribing (2019)","waao":"World Allergy Organization anaphylaxis guidance 2020: intramuscular epinephrine first line"},"SUPPLY_TAGS":{"water":"Potable water","ors":"Oral rehydration salts","salt_tab":"Salt tablets (fluid loading)","acetaminophen":"Acetaminophen 325–500 mg","ibuprofen":"Ibuprofen 200–400 mg","antihistamine":"Non-sedating antihistamine (loratadine / cetirizine)","diphenhydramine":"Diphenhydramine","hydrocortisone":"Hydrocortisone 1 % cream","emollient":"Skin emollient / moisturiser","saline_nasal":"Saline nasal spray","decongestant":"Nasal decongestant (oxymetazoline / pseudoephedrine)","oxygen":"Oxygen supply & mask","glucose":"Fast carbohydrate (glucose tabs / juice)","antiemetic":"Antiemetic (ondansetron / promethazine)","melatonin":"Melatonin","hypnotic":"Hypnotic (zolpidem / zaleplon)","caffeine":"Caffeine (tablet or coffee)","vitamin_d":"Vitamin D3 supplement","k_citrate":"Potassium citrate","kcl":"Potassium chloride","magnesium":"Magnesium supplement","valacyclovir":"Valacyclovir / acyclovir","acyclovir_cream":"Acyclovir cream","antifungal":"Antifungal cream (clotrimazole / terbinafine)","topical_abx":"Topical antibiotic (mupirocin / bacitracin)","oral_abx":"Oral antibiotic (cephalexin / doxycycline)","epinephrine":"Epinephrine auto-injector","thigh_cuffs":"Thigh cuffs (Braslet)","lbnp":"Lower-body negative pressure device","compression":"Compression garment","ecg":"ECG electrodes / monitor","bandage":"Bandages & dressings","finger_tape":"Finger tape / glove liners","food":"Food rations","protein":"Protein supplement","eye_lube":"Lubricating eye drops","superfocus":"Adjustable-focus glasses","cold_pack":"Cold pack","steroid_oral":"Oral corticosteroid","abhr":"Hand sanitiser / wipes","tonometer":"Tonometer","ultrasound":"Ultrasound unit","glove":"Spare EVA glove / liner","dosimeter":"Personal dosimeter"},"CM":{"hr":{"hi":{"do":["Stop activity, sit or float still for 10 min, then re-measure.","Drink 250–500 mL of water; check temperature (fever raises heart rate).","Avoid caffeine until it settles."],"alert":["If above 130 bpm at rest, or with chest pain, palpitations or dizziness: run an ECG and call the CMO and flight surgeon."],"sup":["water","ecg"],"ref":["hughson2018","std3001"]},"lo":{"do":["Re-measure lying still; a low rate in a fit astronaut can be normal.","Note dizziness, fatigue or fainting."],"alert":["Under 40 bpm with dizziness or fainting: ECG and flight-surgeon review."],"sup":["ecg"],"ref":["hughson2018"]}},"hrv":{"lo":{"do":["Prioritise sleep tonight and a recovery day from hard exercise.","Use a 5-minute slow-breathing exercise (6 breaths/min).","Check hydration and stress rating."],"alert":["Persistently low HRV with poor sleep or high stress: discuss workload with the flight surgeon."],"sup":[],"ref":["hughson2018","slack2016"]}},"sbp":{"hi":{"do":["Re-measure after 5 min rest, arm at heart level, correct cuff size; average two readings.","Cut salty foods today; avoid caffeine 30 min before measuring."],"alert":["Two readings ≥ 160/100, or with headache, vision change or chest pain: contact the flight surgeon now."],"sup":[],"ref":["aha_bp","hughson2018"]},"lo":{"do":["Lie flat, legs raised; drink 500 mL water with salt (fluid loading).","Re-measure lying and after sitting up slowly."],"alert":["Systolic < 85 mmHg or fainting: CMO now; fluid loading or IV fluids per flight surgeon."],"sup":["water","salt_tab","compression"],"ref":["hughson2018"]}},"dbp":{"hi":{"do":["Re-measure after 5 min rest; reduce salt today."],"alert":["Diastolic ≥ 100 twice: flight-surgeon review."],"sup":[],"ref":["aha_bp"]},"lo":{"do":["Drink 500 mL fluid; rise slowly."],"alert":["With dizziness or fainting: CMO now."],"sup":["water","salt_tab"],"ref":["hughson2018"]}},"spo2":{"lo":{"do":["Warm the hand, re-seat the probe and re-measure at rest for 30 s.","Check cabin O₂ and CO₂ readings; ask a crewmate to measure too (cabin fault affects everyone)."],"alert":["Below 90 %: put on oxygen now, alert the CMO and commander, and follow the hypoxia/ECLSS emergency procedure."],"sup":["oxygen"],"ref":["std3001","medkit"]}},"ctemp":{"hi":{"do":["Re-measure in 15 min at rest, out of the exercise area.","Drink fluids; log symptoms (chills, sore throat, rash).","Acetaminophen per flight surgeon if feverish and uncomfortable."],"alert":["Above 39 °C, or fever with rash, stiff neck or confusion: contact the flight surgeon now; isolate if infection suspected."],"sup":["water","acetaminophen"],"ref":["crucian2018","std3001"]},"lo":{"do":["Re-measure; add a layer and warm drink."],"alert":["Below 35 °C: CMO now (hypothermia protocol)."],"sup":[],"ref":["std3001"]}},"glu":{"hi":{"do":["Re-check in 2 h; if after a meal this may be a normal spike.","Take a 15–20 min walk/cycle session; choose low-sugar foods at the next meal.","Drink water."],"alert":["Fasting > 126 mg/dL twice or any value > 250 mg/dL: flight-surgeon review."],"sup":["water"],"ref":["ada","hughson2018"]},"lo":{"do":["If below 70 mg/dL: take 15 g fast carbohydrate, re-check in 15 min, repeat until above 70, then eat a snack."],"alert":["Below 54 mg/dL or confusion: treat at once and call the CMO."],"sup":["glucose","food"],"ref":["ada"]}},"shift":{"hi":{"do":["Use thigh cuffs or LBNP if issued; avoid long head-down positions.","Saline nasal spray for congestion; raise the head of the sleep bag."],"alert":["With headache and vision change: schedule eye ultrasound/OCT and send to the flight surgeon."],"sup":["thigh_cuffs","lbnp","saline_nasal"],"ref":["lee2020","mg2019"]}},"dose":{"hi":{"do":["Check the space-weather alert; re-read the dosimeter in 10 min.","Move to the designated storm shelter if the rate keeps rising."],"alert":["Over 5× expected: shelter now for the event duration, log time and dose, inform CMO and ground; antiemetic per flight surgeon if nausea."],"sup":["dosimeter","antiemetic"],"ref":["cucinotta","std3001"]}},"sleep":{"lo":{"do":["Protect a full 8.5 h sleep window tonight; fixed wake time.","Bright light after waking; dim, warm light for 2 h before sleep; no caffeine 6 h before bed.","A 20–30 min nap before demanding work restores alertness."],"alert":["Under 5 h for 3 nights: tell the commander so tasks can be moved; melatonin or a hypnotic only per flight surgeon."],"sup":["melatonin","hypnotic"],"ref":["barger2014","brainard2016","rosekind1995"]}},"mood":{"lo":{"do":["Talk to a crewmate or schedule a family call.","Write a private journal entry; plan one enjoyable activity today.","Exercise and daylight-spectrum light help mood."],"alert":["Mood ≤ 3 for several days or thoughts of self-harm: talk to the CMO now and request a private psychological conference."],"sup":[],"ref":["slack2016"]}},"stress":{"hi":{"do":["Take a 10-min break: slow breathing or guided relaxation.","Review today's workload with the commander; write in your journal."],"alert":["Stress ≥ 8 most days: private psychological conference with the behavioural health team."],"sup":[],"ref":["slack2016"]}},"kcal":{"lo":{"do":["Eat to 100 % of your energy target: add a snack between meals.","Swap in preferred menu items to beat menu fatigue."],"alert":["Intake < 65 % or body mass down > 5 %: flight-surgeon and nutrition review."],"sup":["food","protein"],"ref":["smithzwart"]}},"exer":{"lo":{"do":["Complete today's aerobic and resistance sessions (about 2 h total in microgravity).","If time is short, do the high-intensity interval version."],"alert":["Repeatedly under 45 min/day: flag to the commander so exercise is protected in the schedule."],"sup":[],"ref":["english2020","smith2012"]}},"usg":{"hi":{"do":["Drink 500 mL water now and 250 mL every hour until urine is pale.","Use oral rehydration salts after heavy sweating."],"alert":["Above 1.035 with dizziness or very low urine output: CMO now."],"sup":["water","ors"],"ref":["who_ors","whitson2009"]}},"iop":{"hi":{"do":["Re-measure (3 readings per eye).","Avoid straining and head-down positions; use thigh cuffs if issued."],"alert":["Above 24 mmHg, or eye pain, halos or vision change: flight-surgeon and ophthalmology review."],"sup":["tonometer","thigh_cuffs"],"ref":["lee2020"]}},"onsd":{"hi":{"do":["Repeat the ultrasound in 1 week; do the daily Amsler and near-vision checks.","Use thigh cuffs / LBNP if issued; keep B-vitamin intake; report headaches."],"alert":["Rising beyond your trajectory with symptoms: OCT and flight-surgeon review."],"sup":["ultrasound","thigh_cuffs","lbnp"],"ref":["lee2020","zwart2016"]}},"trt":{"hi":{"do":["Repeat OCT; record any vision change."],"alert":["Optic disc swelling beyond trajectory: flight surgeon and ophthalmology."],"sup":[],"ref":["lee2020"]}},"vis":{"hi":{"do":["Use the adjustable-focus glasses for near work.","Repeat the near-vision card weekly."],"alert":["Shift over 1 D or rapid change: flight surgeon; OCT."],"sup":["superfocus"],"ref":["lee2020"]}},"amsler":{"hi":{"do":["Repeat with each eye in good light; note where lines look wavy."],"alert":["Confirmed distortion: tell the flight surgeon and schedule OCT."],"sup":[],"ref":["lee2020"]}},"qtc":{"hi":{"do":["Repeat the ECG at rest.","Check potassium and magnesium; list any medications that prolong QT (e.g. ondansetron, promethazine, some antibiotics)."],"alert":["QTc over 500 ms or palpitations/fainting: stop QT-prolonging drugs and contact the flight surgeon now."],"sup":["ecg","kcl","magnesium"],"ref":["std3001"]}},"pvc":{"hi":{"do":["Cut caffeine; sleep well; check electrolytes."],"alert":["Over 30/h, runs of beats or symptoms: flight-surgeon ECG review."],"sup":["ecg"],"ref":["hughson2018"]}},"ijv":{"hi":{"do":["Repeat the neck ultrasound with flow assessment."],"alert":["Check the flow pattern; stagnant/reverse flow needs ground review."],"sup":["ultrasound"],"ref":["mg2019"]}},"ijvf":{"hi":{"do":["Repeat Doppler within 24 h."],"alert":["Stagnant or reverse flow: urgent flight-surgeon review for clot risk; anticoagulation only under ground direction."],"sup":["ultrasound"],"ref":["mg2019"]}},"mcsa":{"lo":{"do":["Follow the full resistance programme (ARED) at prescribed loads.","Eat 1.2–1.5 g/kg protein per day, spread over meals."],"alert":["Loss well beyond trajectory: exercise physiologist and flight-surgeon review."],"sup":["protein"],"ref":["english2020"]}},"force":{"lo":{"do":["Prioritise heavy resistance and power sessions; log loads.","Check energy and protein intake."],"alert":["More than 20 % below trajectory: review programme before any EVA or landing."],"sup":["protein"],"ref":["english2020"]}},"mass":{"lo":{"do":["Increase intake to 100 % of energy target; log meals."],"alert":["Down more than 5 %: nutrition review."],"sup":["food","protein"],"ref":["smithzwart"]}},"pwv":{"hi":{"do":["Keep aerobic exercise on plan; limit salt."],"alert":["Over 10 m/s: flight-surgeon review."],"sup":[],"ref":["hughson2018"]}},"pvt":{"hi":{"do":["Take a 20–30 min nap before critical tasks; caffeine 100–200 mg if no nap is possible (not within 6 h of sleep).","Re-test after rest."],"alert":["Many lapses before EVA, robotics or docking: tell the commander; swap or delay the task."],"sup":["caffeine"],"ref":["rosekind1995","barger2014"]}},"ucal":{"hi":{"do":["Drink enough for more than 2.5 L urine per day.","Cut sodium and animal protein; keep calcium intake normal, not high."],"alert":["Above 400 mg/day or flank pain: potassium citrate per flight surgeon; review bisphosphonate plan."],"sup":["water","k_citrate"],"ref":["whitson2009","smith2012"]}},"uox":{"hi":{"do":["Increase fluids; limit high-oxalate snacks (nuts, chocolate)."],"alert":["With high urine calcium: potassium citrate per flight surgeon."],"sup":["water","k_citrate"],"ref":["whitson2009"]}},"scort":{"hi":{"do":["Plan stress-relief time today; protect sleep."],"alert":["Very high or rising: behavioural-health conference."],"sup":[],"ref":["slack2016"]}},"viral":{"hi":{"do":["Hand hygiene; don't share drink bags or towels.","Watch for cold sores, band-like rash or fever."],"alert":["With a rash or fever: flight surgeon; antivirals per prescription (start within 72 h for shingles)."],"sup":["abhr","valacyclovir","acyclovir_cream"],"ref":["crucian2018","mehta2022","cdc_zoster"]}},"ohdg":{"hi":{"do":["Repeat the assay 3 times; check recent dose and SPE alerts."],"alert":["Persistently high: review dose history with the radiation team."],"sup":[],"ref":["cucinotta"]}},"etco":{"hi":{"do":["Pace exertion; log fatigue and breathlessness."],"alert":["With falling hemoglobin: flight-surgeon review for anemia."],"sup":[],"ref":["trudel2022"]}},"ica":{"hi":{"do":["Increase fluids; keep up resistance exercise."],"alert":["Above 5.6 mg/dL: flight surgeon (hypercalcaemia)."],"sup":["water"],"ref":["smith2012"]},"lo":{"do":["Re-check; review calcium and vitamin D intake."],"alert":["Below 4.4 or tingling/cramps: flight surgeon."],"sup":["vitamin_d"],"ref":["smithzwart"]}},"ctx":{"hi":{"do":["Keep high-load resistance exercise 6 days a week; vitamin D as issued.","Reduce sodium."],"alert":["Above 2× baseline: discuss bisphosphonate with flight surgeon."],"sup":["vitamin_d"],"ref":["smith2012","leblanc2013"]}},"ntx":{"hi":{"do":["As for CTX: resistance exercise, vitamin D, moderate sodium."],"alert":["Above 2× baseline: bone-protection review."],"sup":["vitamin_d"],"ref":["smith2012","leblanc2013"]}},"bmd":{"lo":{"do":["Maximise ARED loading; check vitamin D and energy intake."],"alert":["Loss ahead of trajectory: bisphosphonate review; plan post-flight rehab."],"sup":["vitamin_d"],"ref":["leblanc2013","smith2012"]}},"ins":{"hi":{"do":["Add exercise volume; limit simple sugars."],"alert":["Persistently high: metabolic review."],"sup":[],"ref":["hughson2018"]}},"homa":{"hi":{"do":["Exercise is the strongest insulin sensitiser; keep sessions daily."],"alert":["HOMA-IR over 4: flight-surgeon review."],"sup":[],"ref":["hughson2018"]}},"ldl":{"hi":{"do":["Prefer omega-3 rich items; limit saturated-fat snacks."],"alert":["Above 160 mg/dL: review with flight surgeon."],"sup":[],"ref":["smithzwart"]}},"hct":{"lo":{"do":["Pace exertion; eat full rations."],"alert":["Hct < 32 %: flight surgeon."],"sup":["food"],"ref":["trudel2022"]},"hi":{"do":["Drink fluids (dehydration concentrates blood)."],"alert":["Above 56 %: flight surgeon."],"sup":["water"],"ref":["trudel2022"]}},"hgb":{"lo":{"do":["Pace exertion; log fatigue; do not take iron unless prescribed (stores rise in flight)."],"alert":["Below 11 g/dL or breathlessness: flight surgeon."],"sup":[],"ref":["trudel2022"]}},"rbc":{"lo":{"do":["Pace exertion; re-test at next draw."],"alert":["Below 3.8: flight surgeon."],"sup":[],"ref":["trudel2022"]}},"alc":{"lo":{"do":["Hand hygiene; avoid sick contacts; check recent dose."],"alert":["Below 1.0 (or halved after a dose spike): flight surgeon; consider ARS protocol."],"sup":["abhr"],"ref":["crucian2018","cucinotta"]}},"tnk":{"lo":{"do":["Sleep, exercise and nutrition support immunity; hand hygiene."],"alert":["Very low with infection signs: flight surgeon."],"sup":["abhr"],"ref":["crucian2018"]}},"il6":{"hi":{"do":["Check for infection signs and temperature."],"alert":["With fever: flight surgeon."],"sup":[],"ref":["crucian2018"]}},"vitd":{"lo":{"do":["Take vitamin D3 as issued (800–1000 IU/day)."],"alert":["Below 20 ng/mL: higher-dose supplementation per flight surgeon."],"sup":["vitamin_d"],"ref":["smithzwart"]}},"na":{"lo":{"do":["Avoid drinking far beyond thirst; eat salted foods."],"alert":["Below 130 or confusion/headache: CMO now."],"sup":["salt_tab"],"ref":["who_ors"]},"hi":{"do":["Drink water."],"alert":["Above 150: CMO now."],"sup":["water"],"ref":["who_ors"]}},"k":{"lo":{"do":["Eat potassium-rich foods; re-check."],"alert":["Below 3.0 or palpitations: potassium per flight surgeon; ECG."],"sup":["kcl","ecg"],"ref":["std3001"]},"hi":{"do":["Re-check (a haemolysed sample reads high)."],"alert":["Above 6.0: ECG and CMO now."],"sup":["ecg"],"ref":["std3001"]}},"mg":{"lo":{"do":["Magnesium-rich foods; re-check."],"alert":["Below 1.2 or cramps/arrhythmia: magnesium per flight surgeon."],"sup":["magnesium"],"ref":["std3001"]}},"osm":{"hi":{"do":["Drink water; re-check."],"alert":["Above 305: CMO."],"sup":["water"],"ref":["who_ors"]}},"tsh":{"hi":{"do":["Re-test at next draw."],"alert":["Out of range twice: flight-surgeon thyroid review."],"sup":[],"ref":["std3001"]},"lo":{"do":["Re-test at next draw."],"alert":["Out of range twice: thyroid review."],"sup":[],"ref":["std3001"]}},"cort":{"hi":{"do":["Stress-relief and sleep protection."],"alert":["Very high: behavioural and endocrine review."],"sup":[],"ref":["slack2016"]}},"prle":{"hi":{"do":["Protect sleep and reduce stress (prolactin rises with both)."],"alert":["Sustained high: measured prolactin at next blood draw."],"sup":[],"ref":["slack2016"]}},"icp":{"hi":{"do":["Use thigh cuffs/LBNP if issued; report headache or vision change."],"alert":["With visual symptoms: flight surgeon; OCT and ultrasound."],"sup":["thigh_cuffs","lbnp"],"ref":["lee2020"]}},"pnif":{"lo":{"do":["Saline nasal spray; head-up sleeping."],"alert":["Severe congestion: decongestant per flight surgeon."],"sup":["saline_nasal","decongestant"],"ref":["lee2020"]}},"tewl":{"hi":{"do":["Apply emollient twice daily; gentle rinse-free cleanser."],"alert":["Cracked or infected skin: use the Rash check and contact the flight surgeon."],"sup":["emollient"],"ref":["aad"]}},"skhyd":{"lo":{"do":["Apply emollient twice daily; drink to plan."],"alert":["Cracks or bleeding: flight surgeon."],"sup":["emollient","water"],"ref":["aad"]}},"ery":{"hi":{"do":["Run the Rash check with a photo; avoid scratching; emollient.","Hydrocortisone 1 % if itchy and non-infected."],"alert":["Spreading redness, blisters, pain or fever: flight surgeon."],"sup":["emollient","hydrocortisone"],"ref":["aad","crucian2016"]}},"fmd":{"lo":{"do":["Keep aerobic exercise on plan."],"alert":["Below 4 %: flight-surgeon review."],"sup":[],"ref":["hughson2018"]}},"pha":{"lo":{"do":["Resistance training and protein; hydration."],"alert":["Below 4°: nutrition and fluid review."],"sup":["protein","water"],"ref":["english2020"]}},"eva_prebreathe":{"lo":{"do":["Do not depress: complete the full prebreathe or restart per protocol."],"alert":["Prebreathe incomplete: EVA is no-go until the protocol is met (DCS risk)."],"sup":["oxygen"],"ref":["dcs","eva2022"]}},"eva_co2":{"hi":{"do":["Slow the work rate; increase suit fan/flow; report headache or breathlessness."],"alert":["Above 23 mmHg (or 30 at any moment): terminate the EVA and return to the airlock."],"sup":[],"ref":["lambertsen","eva2022"]}},"eva_hrpct":{"hi":{"do":["Pause and rest; lower the cooling-water temperature; drink from the drink bag."],"alert":["Above 95 % of maximum: stop work until it recovers; flight surgeon on the loop."],"sup":["water"],"ref":["eva2022"]}},"eva_temp":{"hi":{"do":["Increase liquid-cooling (lower inlet temperature); slow down; drink."],"alert":["Above 39 °C: stop work, maximum cooling; consider terminating the EVA."],"sup":["water"],"ref":["eva2022"]}},"eva_o2end":{"lo":{"do":["Debrief consumables; plan shorter EVA timelines."],"alert":["Under 10 % at end: review EVA planning margins with ground."],"sup":[],"ref":["eva2022"]}},"eva_hand":{"hi":{"do":["Cold pack 15 min; ibuprofen per flight surgeon; check nails and skin for abrasions.","Review glove sizing; use finger tape or liners next time."],"alert":["Severe pain, numbness or swelling: flight surgeon before the next EVA."],"sup":["cold_pack","ibuprofen","finger_tape","glove"],"ref":["opperman2010","eva2022"]}},"eva_nail":{"hi":{"do":["Keep nails short; protect with tape; keep the area clean and dry.","Glove fit check before the next EVA (larger hand circumference raises risk)."],"alert":["Signs of infection under the nail: topical antibiotic per flight surgeon."],"sup":["finger_tape","topical_abx","bandage"],"ref":["opperman2010","eva2022"]}},"eva_shoulder":{"hi":{"do":["Ice, gentle range-of-motion stretches; ibuprofen per flight surgeon.","Check suit sizing and shoulder-bearing settings."],"alert":["Pain ≥ 7 or loss of strength: flight surgeon; no EVA until cleared."],"sup":["cold_pack","ibuprofen"],"ref":["eva2022","scheuring2009"]}},"eva_dcs":{"hi":{"do":["Report to the EVA officer and flight surgeon immediately."],"alert":["Treat as decompression sickness: repressurise (in-suit or airlock) on 100 % oxygen now; flight surgeon on the loop. Neurological signs = emergency."],"sup":["oxygen"],"ref":["dcs","eva2022"]}},"eva_hours7":{"hi":{"do":["Add rest days; stretch hands and shoulders; protect sleep."],"alert":["Above 32 h/week: replan the EVA schedule with ground."],"sup":[],"ref":["eva2022"]}},"eva_rest":{"lo":{"do":["Schedule at least 4–5 recovery days between EVAs where possible."],"alert":["Back-to-back EVAs: check fatigue, hands and shoulders before go."],"sup":[],"ref":["eva2022"]}}},"RASH_Q":[{"id":"where","q":"Where is the rash?","multi":true,"opts":[["face","Face"],["scalp","Scalp / hairline"],["lips","Lips or mouth"],["hands","Hands / fingers"],["nails","Around or under nails"],["arms","Arms"],["trunk","Chest, back or belly"],["folds","Skin folds (armpit, groin)"],["feet","Feet / between toes"],["legs","Legs"],["adhesive","Where sensors, tape or electrodes sit"],["band","A band on one side of the body"],["wide","Widespread"]]},{"id":"look","q":"What does it look like?","multi":true,"opts":[["red","Red patches"],["dry","Dry, scaly or flaky"],["cracks","Cracked skin"],["papules","Small raised red bumps"],["vesicles","Tiny blisters / weeping"],["grouped","Clusters of blisters on red skin"],["crust","Yellow / honey-coloured crusts"],["pustules","Pus spots around hairs"],["wheals","Raised welts that move within hours"],["ring","Ring shape with clearer centre"],["pinpoint","Pinpoint clear or red bumps after sweating"],["shape","Sharp edges matching what touched the skin"],["swollen","Swollen, hot, spreading redness"],["purple","Purple dots or bruise-like, does not fade when pressed"],["greasy","Greasy yellowish scale"],["nail","Nail lifting or dark under nail"],["abrasion","Rubbed raw / abrasion"],["mottled","Blotchy, marbled skin"]]},{"id":"feel","q":"How does it feel?","multi":true,"opts":[["itch","Itchy"],["burn","Burning or painful"],["prodrome","Pain or tingling came before the rash"],["tender","Tender and warm"],["none","No symptoms"]]},{"id":"onset","q":"How quickly did it appear?","multi":false,"opts":[["minutes","Minutes to hours"],["days","Over 1–3 days"],["weeks","Weeks, or it keeps coming back"]]},{"id":"general","q":"Anything else?","multi":true,"opts":[["fever","Fever or chills"],["spreading","Spreading quickly"],["swelling_face","Swelling of lips, eyes or face"],["breathing","Trouble breathing or swallowing"],["unwell","Feeling generally unwell"],["eye","Rash near the eye or eye pain"],["neuro","Numbness or weakness"]]},{"id":"exposure","q":"Recent exposures (last 2 weeks)","multi":true,"opts":[["product","New soap, wipe, lotion or detergent"],["sensor","Adhesive sensors, tape or electrodes"],["med","Started a new medicine"],["sweat","Heavy sweating (exercise, suit)"],["eva","Spacewalk / glove use"],["dose","Radiation dose spike"],["coldsores","History of cold sores"],["chickenpox","Had chickenpox before"],["shared","Shared equipment or towels"],["allergy","Known allergies / eczema"],["dryair","Very dry cabin air"]]}],"DX":{"acd":{"n":"Allergic contact dermatitis","w":{"red":2,"vesicles":2,"shape":3,"itch":3,"adhesive":2,"hands":1,"face":1,"days":2,"product":3,"sensor":3,"allergy":1},"what":"An immune reaction to something that touched the skin (adhesive, nickel, fragrance, preservative in wipes).","cause":"Electrode/tape adhesives, rinse-free soaps and wipes, gloves and new materials on board.","care":["Identify and stop the trigger; swap to hypoallergenic tape or move sensor sites.","Hydrocortisone 1 % twice daily for up to 7 days on non-facial skin.","Non-sedating antihistamine for itch; emollient after washing."],"sup":["hydrocortisone","antihistamine","emollient"],"ref":["aad","crucian2016"],"esc":"Spreading beyond the contact area, face/eyelids involved, or no better in 7 days: flight surgeon (oral steroid may be needed)."},"icd":{"n":"Irritant contact dermatitis","w":{"red":2,"dry":2,"cracks":2,"burn":2,"hands":2,"adhesive":2,"shape":1,"product":2,"sensor":2,"sweat":1,"dryair":1},"what":"Direct damage to the skin barrier from friction, moisture, cleansers or adhesive removal.","cause":"Repeated wipes and rinse-free soap, occlusion under tape or gloves, dry cabin air.","care":["Stop or reduce the irritant; pat dry, do not rub.","Thick emollient several times a day; barrier film before re-taping.","Hydrocortisone 1 % for a few days if inflamed."],"sup":["emollient","hydrocortisone"],"ref":["aad"],"esc":"Broken skin with pus or spreading redness: flight surgeon."},"xer":{"n":"Dry-skin (xerotic) eczema","w":{"dry":3,"cracks":2,"itch":2,"legs":1,"arms":1,"hands":1,"weeks":2,"dryair":3,"allergy":1},"what":"Dry, itchy, scaly skin from a damaged moisture barrier.","cause":"Low cabin humidity, limited washing, skin thinning and immune changes in flight.","care":["Emollient twice daily, especially after washing.","Lukewarm, brief cleansing; gentle soap substitute.","Hydrocortisone 1 % on inflamed patches for up to 7 days."],"sup":["emollient","hydrocortisone"],"ref":["aad","crucian2016"],"esc":"Cracks that bleed or get infected: flight surgeon."},"urt":{"n":"Hives (urticaria) / hypersensitivity","w":{"wheals":4,"itch":3,"minutes":3,"wide":1,"red":1,"med":2,"allergy":2,"product":1},"what":"Itchy raised welts from histamine release; each welt fades within 24 h.","cause":"Allergic or non-allergic triggers; hypersensitivity events are among the most reported on the ISS.","care":["Non-sedating antihistamine (loratadine or cetirizine); may repeat daily.","Stop any new medicine or product and tell the flight surgeon.","Cool compress for itch."],"sup":["antihistamine","diphenhydramine"],"ref":["aad","waao","crucian2016"],"esc":"Lip, tongue or throat swelling, wheeze or faintness = anaphylaxis: epinephrine now and CMO."},"zos":{"n":"Shingles (herpes zoster, VZV reactivation)","w":{"band":5,"grouped":3,"vesicles":2,"prodrome":4,"burn":2,"days":1,"chickenpox":2,"trunk":1,"face":1},"what":"Reactivated chickenpox virus causing a painful band of blisters on one side.","cause":"Spaceflight stress weakens T-cell control; VZV is shed by many crew and risk rises with mission length.","care":["Start antiviral (valacyclovir) per flight surgeon — best within 72 h of rash onset.","Keep the rash covered; avoid sharing towels.","Pain relief per flight surgeon."],"sup":["valacyclovir","acetaminophen","bandage"],"ref":["cdc_zoster","crucian2018","mehta2022"],"esc":"Contact the flight surgeon today. Near the eye or tip of the nose: urgent (eye involvement)."},"hsv":{"n":"Herpes simplex (cold sore / herpetic dermatitis)","w":{"grouped":3,"vesicles":2,"lips":4,"face":2,"prodrome":2,"burn":1,"coldsores":4,"crust":1},"what":"Reactivated HSV-1: tingling, then small grouped blisters that crust.","cause":"Stress-related immune changes; HSV-1 dermatitis has been confirmed during long-duration flight.","care":["Antiviral cream or tablets per flight surgeon at the first tingle.","Do not touch eyes after touching sores; wash hands.","Avoid sharing drink bags."],"sup":["acyclovir_cream","valacyclovir","abhr"],"ref":["mehta2022","crucian2018"],"esc":"Eye pain or redness, or widespread blisters: flight surgeon now."},"fol":{"n":"Folliculitis","w":{"pustules":4,"papules":2,"trunk":1,"legs":1,"folds":1,"sweat":2,"itch":1,"days":1,"shared":1},"what":"Inflamed hair follicles, usually from bacteria under occlusion and sweat.","cause":"Sweating during exercise and in the suit, tight garments, shaving.","care":["Keep the area clean and dry; change garments after exercise.","Antiseptic wash; topical antibiotic on a few spots per flight surgeon.","Avoid shaving the area for a week."],"sup":["topical_abx","abhr"],"ref":["aad"],"esc":"Boils, spreading redness or fever: flight surgeon."},"tin":{"n":"Fungal infection (tinea)","w":{"ring":5,"dry":1,"itch":2,"folds":2,"feet":3,"weeks":1,"days":1,"sweat":2,"shared":1},"what":"A skin fungus giving itchy, ring-shaped scaly patches.","cause":"Warm, moist skin in socks, folds and garments; shared equipment.","care":["Antifungal cream twice daily for 2 weeks, continuing 1 week after it clears.","Keep skin dry; separate towels."],"sup":["antifungal"],"ref":["aad"],"esc":"No improvement in 2 weeks or on scalp/nails: flight surgeon."},"cel":{"n":"Skin infection (cellulitis / impetigo)","w":{"swollen":5,"tender":3,"crust":3,"fever":3,"spreading":3,"unwell":2,"abrasion":1,"cracks":1},"what":"Bacterial infection of the skin; honey crusts suggest impetigo, hot spreading redness suggests cellulitis.","cause":"Bacteria entering through cracks, abrasions or insect-free but altered cabin microbiome; immune changes.","care":["Mark the edge of the redness with a pen to track spread.","Topical antibiotic for small impetigo; oral antibiotic per flight surgeon for cellulitis.","Rest, raise the area, fluids."],"sup":["topical_abx","oral_abx","bandage"],"ref":["nice_cellulitis","aad"],"esc":"Spreading redness, fever or feeling unwell: flight surgeon today."},"mil":{"n":"Heat rash (miliaria)","w":{"pinpoint":5,"sweat":3,"trunk":1,"folds":1,"itch":1,"minutes":1,"days":1},"what":"Blocked sweat ducts giving tiny clear or red bumps.","cause":"Sweat trapped under garments during exercise or in the suit's cooling garment.","care":["Cool the skin; loose dry clothing.","Avoid heavy creams on the area; it usually settles in days."],"sup":[],"ref":["aad"],"esc":"Pus spots or fever: flight surgeon."},"drug":{"n":"Drug eruption","w":{"wide":3,"red":2,"papules":2,"trunk":1,"itch":1,"days":2,"med":5},"what":"A widespread rash appearing 4–14 days after starting a medicine.","cause":"Antibiotics, anticonvulsants, NSAIDs and others.","care":["Tell the flight surgeon which medicine you started; do not stop prescribed drugs without advice.","Antihistamine for itch."],"sup":["antihistamine"],"ref":["aad"],"esc":"Blisters, peeling, mouth sores or fever: emergency (severe drug reaction)."},"seb":{"n":"Seborrhoeic dermatitis","w":{"greasy":4,"scalp":3,"face":2,"dry":1,"red":1,"weeks":2,"itch":1},"what":"Flaky, greasy, red skin on the scalp, eyebrows and sides of the nose.","cause":"Yeast overgrowth with limited hair washing and stress.","care":["Antifungal cream to face; medicated shampoo if available.","Mild hydrocortisone for short flares."],"sup":["antifungal","hydrocortisone"],"ref":["aad"],"esc":"Not settling in 2–3 weeks: flight surgeon."},"eva":{"n":"Suit pressure / friction injury","w":{"abrasion":4,"nail":4,"hands":2,"nails":3,"red":1,"burn":1,"eva":5},"what":"Rubbing and pressure from the glove or suit: abrasions, bruising, fingernail lifting.","cause":"Glove fit, hand size and long suited time (NASA EVA evidence report).","care":["Clean and cover abrasions; keep nails short and taped.","Cold pack for pain; glove-fit check before the next EVA."],"sup":["bandage","finger_tape","cold_pack"],"ref":["eva2022","opperman2010"],"esc":"Signs of infection under a nail, or numbness: flight surgeon."},"rad":{"n":"Radiation skin reaction","w":{"red":2,"burn":2,"dose":6,"wide":1,"days":1},"what":"Redness and burning after a very large dose (only after a major solar particle event).","cause":"High skin dose during a solar particle event outside shelter.","care":["Gentle emollient; avoid friction.","Record dose history for the radiation team."],"sup":["emollient"],"ref":["cucinotta"],"esc":"Any skin reaction after a dose spike: flight surgeon and radiation team now."}},"TEXT_MAP":[["face","face"],["cheek","face"],["forehead","face"],["scalp","scalp"],["hairline","scalp"],["lip","lips"],["mouth","lips"],["hand","hands"],["finger","hands"],["nail","nails"],["arm","arms"],["elbow","arms"],["chest","trunk"],["back","trunk"],["belly","trunk"],["stomach","trunk"],["armpit","folds"],["groin","folds"],["fold","folds"],["foot","feet"],["feet","feet"],["toe","feet"],["leg","legs"],["thigh","legs"],["electrode","adhesive"],["sensor","adhesive"],["tape","adhesive"],["one side","band"],["band","band"],["stripe","band"],["all over","wide"],["everywhere","wide"],["widespread","wide"],["red","red"],["dry","dry"],["flak","dry"],["scal","dry"],["peel","dry"],["crack","cracks"],["bump","papules"],["pimple","papules"],["blister","vesicles"],["weep","vesicles"],["ooz","vesicles"],["cluster","grouped"],["crust","crust"],["honey","crust"],["pus","pustules"],["whitehead","pustules"],["welt","wheals"],["hive","wheals"],["ring","ring"],["circle","ring"],["tiny bumps","pinpoint"],["prickly","pinpoint"],["sharp edge","shape"],["outline","shape"],["swell","swollen"],["hot","swollen"],["spreading","spreading"],["purple","purple"],["bruise","purple"],["greasy","greasy"],["oily","greasy"],["raw","abrasion"],["rub","abrasion"],["blotch","mottled"],["marbl","mottled"],["itch","itch"],["burn","burn"],["sting","burn"],["pain","burn"],["sore","burn"],["tingl","prodrome"],["tender","tender"],["warm","tender"],["minute","minutes"],["suddenly","minutes"],["hour","minutes"],["few days","days"],["yesterday","days"],["week","weeks"],["keeps coming back","weeks"],["fever","fever"],["chill","fever"],["unwell","unwell"],["sick","unwell"],["breath","breathing"],["swallow","breathing"],["eye","eye"],["numb","neuro"],["weak","neuro"],["soap","product"],["wipe","product"],["lotion","product"],["detergent","product"],["new medicine","med"],["new medication","med"],["started taking","med"],["sweat","sweat"],["workout","sweat"],["exercise","sweat"],["spacewalk","eva"],["eva","eva"],["glove","eva"],["radiation","dose"],["flare","dose"],["cold sore","coldsores"],["chickenpox","chickenpox"],["towel","shared"],["shared","shared"],["allerg","allergy"],["eczema","allergy"],["dry air","dryair"]],"PROMPTS":["What went well today, even something small?","What is weighing on you right now, and what would help?","Describe something you saw or felt today that you want to remember.","Who would you like to talk to, and what would you tell them?","What are you looking forward to this week?","Write freely for 15 minutes about your thoughts and feelings about the mission."],"CATS":["Medical kit","Emergency kit","Medication","Support equipment","Food","Water & hygiene","Other"],"FOOD_TYPES":["Rehydratable","Thermostabilized","Irradiated","Intermediate moisture","Natural form","Beverage","Fresh","Extended shelf-life bread"],"LEAD_DEFAULT":{"iss":60,"iss1y":60,"artemis":null,"mars":null},"MARGIN_DEFAULT":14,"TAG_WORDS":{"acetaminophen":["acetaminophen","paracetamol","tylenol"],"ibuprofen":["ibuprofen","advil"],"antihistamine":["loratadine","cetirizine","fexofenadine","claritin","zyrtec"],"diphenhydramine":["diphenhydramine","benadryl"],"hydrocortisone":["hydrocortisone"],"emollient":["emollient","moisturi","lotion"],"saline_nasal":["saline nasal","nasal saline"],"decongestant":["oxymetazoline","pseudoephedrine","afrin","sudafed"],"oxygen":["oxygen","o2 "],"glucose":["glucose","dextrose"],"antiemetic":["ondansetron","promethazine","zofran","meclizine","scopolamine"],"melatonin":["melatonin"],"hypnotic":["zolpidem","zaleplon","ambien","sonata"],"caffeine":["caffeine","coffee"],"vitamin_d":["vitamin d"],"k_citrate":["potassium citrate"],"kcl":["potassium chloride"],"magnesium":["magnesium"],"valacyclovir":["valacyclovir","acyclovir tab"],"acyclovir_cream":["acyclovir cream"],"antifungal":["clotrimazole","terbinafine","miconazole","antifungal"],"topical_abx":["mupirocin","bacitracin","neosporin"],"oral_abx":["cephalexin","doxycycline","amoxicillin","ciprofloxacin","azithromycin"],"epinephrine":["epinephrine","epipen","adrenaline"],"ors":["rehydration salt","ors"],"salt_tab":["salt tablet","sodium chloride tab"],"bandage":["bandage","gauze","dressing","band-aid","bandaid"],"cold_pack":["cold pack","ice pack"],"ecg":["ecg","electrode"],"finger_tape":["tape","liner"],"steroid_oral":["prednisone","dexamethasone"],"abhr":["sanitiz","wipe"],"compression":["compression"],"thigh_cuffs":["thigh cuff","braslet"],"eye_lube":["eye drop","artificial tear"],"protein":["protein"],"water":["water"],"food":["meal","ration","food","rehydrat","thermostab","irradiat"]},"DEVICES":{"leo":{"res":"ARED (resistance device)","run":"T2 treadmill with harness","bike":"CEVIS cycle"},"cis":{"res":"flywheel resistance device","run":"flywheel rowing mode","bike":"flywheel rowing mode"},"moon":{"res":"compact resistance device","run":"surface walking / treadmill","bike":"compact cycle"},"mars":{"res":"compact resistance device","run":"surface walking / treadmill","bike":"compact cycle"},"earth":{"res":"gym resistance equipment","run":"treadmill or walking","bike":"stationary bike"}},"WEEK":[["Resistance A + 4×4-min intervals","resA","i4"],["Continuous aerobic + mobility",null,"cont"],["Resistance B + 6×2-min intervals","resB","i2"],["Continuous aerobic + balance",null,"cont"],["Resistance A + 8×30-s sprints","resA","i30"],["Longer continuous aerobic",null,"cont45"],["Recovery day",null,"rest"]],"FOODS":{"eggs":["Scrambled eggs","Rehydratable",180,12,["bvit"]],"oat":["Oatmeal with raisins","Rehydratable",200,6,["sugar"]],"tort":["Tortilla","Extended shelf-life bread",110,3,[]],"pb":["Peanut butter (2 tbsp)","Natural form",190,7,[]],"ibd":["Instant breakfast drink (milk-based)","Beverage",220,12,["calcium"]],"coffee":["Coffee or tea","Beverage",5,0,["caffeine"]],"tea":["Herbal tea or water","Beverage",2,0,[]],"juice":["Orange-mango drink","Beverage",100,0,["sugar"]],"tuna":["Tuna (pouch)","Thermostabilized",150,22,["bvit"]],"broc":["Broccoli au gratin","Rehydratable",130,6,["bvit","calcium"]],"fruit":["Fruit cocktail","Thermostabilized",120,1,["k"]],"chick":["Chicken with rice","Rehydratable",300,20,[]],"spin":["Creamed spinach","Rehydratable",90,4,["bvit","calcium","k"]],"lent":["Lentils or beans","Thermostabilized",180,12,["bvit","k"]],"turkey":["Smoked turkey","Irradiated",120,18,[]],"brisket":["Beef brisket","Thermostabilized",260,24,["salty"]],"mac":["Macaroni and cheese","Rehydratable",330,14,["calcium","salty"]],"pud":["Vanilla pudding","Thermostabilized",180,3,["calcium","sugar"]],"almond":["Almonds","Natural form",170,6,["k"]],"apricot":["Dried apricots","Intermediate moisture",100,1,["k"]],"granola":["Granola bar","Natural form",190,4,["sugar"]],"shake":["Protein shake (whey)","Natural form",120,24,[]],"veg":["Green beans with mushrooms","Thermostabilized",70,3,["bvit","k"]]},"SUPPLIES":[{"name":"Acetaminophen 325 mg tablets","kind":"Medication","sub":"","qty":100,"unit":"tablets","rate":0.4,"expiry":"2028-10-15","tags":["acetaminophen"],"shelf_name":"Medical locker A","cat_name":"Pain & fever","sample":true},{"name":"Ibuprofen 400 mg tablets","kind":"Medication","sub":"","qty":60,"unit":"tablets","rate":0.5,"expiry":"2028-10-15","tags":["ibuprofen"],"shelf_name":"Medical locker A","cat_name":"Pain & fever","sample":true},{"name":"Loratadine 10 mg tablets","kind":"Medication","sub":"","qty":30,"unit":"tablets","rate":0.3,"expiry":"2028-07-07","tags":["antihistamine"],"shelf_name":"Medical locker A","cat_name":"Allergy & skin","sample":true},{"name":"Diphenhydramine 25 mg capsules","kind":"Medication","sub":"","qty":20,"unit":"capsules","rate":0.05,"expiry":"2028-07-07","tags":["diphenhydramine"],"shelf_name":"Medical locker A","cat_name":"Allergy & skin","sample":true},{"name":"Hydrocortisone 1 % cream","kind":"Medication","sub":"","qty":4,"unit":"tubes","rate":0.02,"expiry":"2028-03-29","tags":["hydrocortisone"],"shelf_name":"Medical locker A","cat_name":"Allergy & skin","sample":true},{"name":"Clotrimazole 1 % cream","kind":"Medication","sub":"","qty":3,"unit":"tubes","rate":0.01,"expiry":"2028-03-29","tags":["antifungal"],"shelf_name":"Medical locker A","cat_name":"Allergy & skin","sample":true},{"name":"Mupirocin 2 % ointment","kind":"Medication","sub":"","qty":3,"unit":"tubes","rate":0.01,"expiry":"2028-03-29","tags":["topical_abx"],"shelf_name":"Medical locker A","cat_name":"Infection","sample":true},{"name":"Valacyclovir 500 mg tablets","kind":"Medication","sub":"","qty":30,"unit":"tablets","rate":0,"expiry":"2028-07-07","tags":["valacyclovir"],"shelf_name":"Medical locker A","cat_name":"Infection","sample":true},{"name":"Acyclovir 5 % cream","kind":"Medication","sub":"","qty":2,"unit":"tubes","rate":0,"expiry":"2028-03-29","tags":["acyclovir_cream"],"shelf_name":"Medical locker A","cat_name":"Infection","sample":true},{"name":"Cephalexin 500 mg capsules","kind":"Medication","sub":"","qty":28,"unit":"capsules","rate":0,"expiry":"2028-07-07","tags":["oral_abx"],"shelf_name":"Medical locker A","cat_name":"Infection","sample":true},{"name":"Ondansetron 4 mg ODT","kind":"Medication","sub":"","qty":20,"unit":"tablets","rate":0.02,"expiry":"2028-07-07","tags":["antiemetic"],"shelf_name":"Medical locker A","cat_name":"Stomach","sample":true},{"name":"Zolpidem 5 mg tablets","kind":"Medication","sub":"","qty":30,"unit":"tablets","rate":0.25,"expiry":"2028-07-07","tags":["hypnotic"],"shelf_name":"Medical locker A","cat_name":"Sleep & alertness","sample":true},{"name":"Melatonin 3 mg tablets","kind":"Medication","sub":"","qty":60,"unit":"tablets","rate":0.5,"expiry":"2028-07-07","tags":["melatonin"],"shelf_name":"Medical locker A","cat_name":"Sleep & alertness","sample":true},{"name":"Vitamin D3 800 IU tablets","kind":"Medication","sub":"","qty":400,"unit":"tablets","rate":3,"expiry":"2028-10-15","tags":["vitamin_d"],"shelf_name":"Medical locker A","cat_name":"Vitamins & minerals","sample":true},{"name":"Potassium citrate 20 mEq tablets","kind":"Medication","sub":"","qty":60,"unit":"tablets","rate":0,"expiry":"2028-10-15","tags":["k_citrate"],"shelf_name":"Medical locker A","cat_name":"Vitamins & minerals","sample":true},{"name":"Magnesium 250 mg tablets","kind":"Medication","sub":"","qty":60,"unit":"tablets","rate":0,"expiry":"2028-10-15","tags":["magnesium"],"shelf_name":"Medical locker A","cat_name":"Vitamins & minerals","sample":true},{"name":"Potassium chloride 20 mEq","kind":"Medication","sub":"","qty":40,"unit":"tablets","rate":0,"expiry":"2028-10-15","tags":["kcl"],"shelf_name":"Medical locker A","cat_name":"Vitamins & minerals","sample":true},{"name":"Saline nasal spray","kind":"Medication","sub":"","qty":6,"unit":"bottles","rate":0.05,"expiry":"2028-03-29","tags":["saline_nasal"],"shelf_name":"Medical locker A","cat_name":"Nose & eyes","sample":true},{"name":"Oxymetazoline nasal spray","kind":"Medication","sub":"","qty":4,"unit":"bottles","rate":0.02,"expiry":"2028-03-29","tags":["decongestant"],"shelf_name":"Medical locker A","cat_name":"Nose & eyes","sample":true},{"name":"Eye lubricant drops","kind":"Medication","sub":"","qty":6,"unit":"bottles","rate":0.03,"expiry":"2028-03-29","tags":["eye_lube"],"shelf_name":"Medical locker A","cat_name":"Nose & eyes","sample":true},{"name":"Glucose tablets 4 g","kind":"Medication","sub":"","qty":40,"unit":"tablets","rate":0.05,"expiry":"2028-10-15","tags":["glucose"],"shelf_name":"Medical locker A","cat_name":"Fluids & sugar","sample":true},{"name":"Oral rehydration salts","kind":"Medication","sub":"","qty":30,"unit":"sachets","rate":0.1,"expiry":"2028-10-15","tags":["ors"],"shelf_name":"Medical locker A","cat_name":"Fluids & sugar","sample":true},{"name":"Salt tablets 1 g","kind":"Medication","sub":"","qty":60,"unit":"tablets","rate":0,"expiry":"2028-10-15","tags":["salt_tab"],"shelf_name":"Medical locker A","cat_name":"Fluids & sugar","sample":true},{"name":"Bandages & gauze","kind":"Medical kit","sub":"","qty":80,"unit":"pieces","rate":0.2,"expiry":null,"tags":["bandage"],"shelf_name":"Medical locker A","cat_name":"First aid","sample":true},{"name":"Cold packs (instant)","kind":"Medical kit","sub":"","qty":10,"unit":"packs","rate":0.05,"expiry":null,"tags":["cold_pack"],"shelf_name":"Medical locker A","cat_name":"First aid","sample":true},{"name":"Epinephrine auto-injector 0.3 mg","kind":"Emergency kit","sub":"","qty":4,"unit":"injectors","rate":0,"expiry":"2027-12-20","tags":["epinephrine"],"shelf_name":"Emergency rack","cat_name":"Anaphylaxis","sample":true},{"name":"Prednisone 10 mg tablets","kind":"Medication","sub":"","qty":30,"unit":"tablets","rate":0,"expiry":"2028-07-07","tags":["steroid_oral"],"shelf_name":"Emergency rack","cat_name":"Anaphylaxis","sample":true},{"name":"Oxygen mask & supply","kind":"Emergency kit","sub":"","qty":4,"unit":"kits","rate":0,"expiry":null,"tags":["oxygen"],"shelf_name":"Emergency rack","cat_name":"Breathing","sample":true},{"name":"ECG electrodes","kind":"Support equipment","sub":"","qty":120,"unit":"electrodes","rate":1.5,"expiry":"2028-03-29","tags":["ecg"],"shelf_name":"Equipment bay","cat_name":"Diagnostics","sample":true},{"name":"Ultrasound unit & gel","kind":"Support equipment","sub":"","qty":1,"unit":"unit","rate":0,"expiry":null,"tags":["ultrasound"],"shelf_name":"Equipment bay","cat_name":"Diagnostics","sample":true},{"name":"Rebound tonometer probes","kind":"Support equipment","sub":"","qty":60,"unit":"probes","rate":0.3,"expiry":"2028-10-15","tags":["tonometer"],"shelf_name":"Equipment bay","cat_name":"Diagnostics","sample":true},{"name":"Personal dosimeters","kind":"Support equipment","sub":"","qty":4,"unit":"units","rate":0,"expiry":null,"tags":["dosimeter"],"shelf_name":"Equipment bay","cat_name":"Diagnostics","sample":true},{"name":"Thigh cuffs (Braslet)","kind":"Support equipment","sub":"","qty":3,"unit":"pairs","rate":0,"expiry":null,"tags":["thigh_cuffs"],"shelf_name":"Equipment bay","cat_name":"Countermeasure devices","sample":true},{"name":"Compression garments","kind":"Support equipment","sub":"","qty":3,"unit":"sets","rate":0,"expiry":null,"tags":["compression"],"shelf_name":"Equipment bay","cat_name":"Countermeasure devices","sample":true},{"name":"Adjustable-focus glasses","kind":"Support equipment","sub":"","qty":3,"unit":"pairs","rate":0,"expiry":null,"tags":["superfocus"],"shelf_name":"Equipment bay","cat_name":"Countermeasure devices","sample":true},{"name":"Finger tape / glove liners","kind":"Support equipment","sub":"","qty":40,"unit":"sets","rate":0.1,"expiry":null,"tags":["finger_tape","glove"],"shelf_name":"Equipment bay","cat_name":"Spacewalk support","sample":true},{"name":"Rehydratable meals","kind":"Food","sub":"Rehydratable","qty":700,"unit":"packages","rate":10.8,"expiry":"2029-05-03","tags":["food"],"shelf_name":"Galley pantry","cat_name":"Rehydratable","sample":true},{"name":"Thermostabilized entrées","kind":"Food","sub":"Thermostabilized","qty":900,"unit":"pouches","rate":7.2,"expiry":"2029-05-03","tags":["food"],"shelf_name":"Galley pantry","cat_name":"Thermostabilized","sample":true},{"name":"Irradiated meats","kind":"Food","sub":"Irradiated","qty":160,"unit":"pouches","rate":1.8,"expiry":"2029-05-03","tags":["food"],"shelf_name":"Galley pantry","cat_name":"Irradiated","sample":true},{"name":"Natural-form snacks","kind":"Food","sub":"Natural form","qty":900,"unit":"packages","rate":9.0,"expiry":"2029-05-03","tags":["food"],"shelf_name":"Galley pantry","cat_name":"Natural form","sample":true},{"name":"Protein supplement","kind":"Food","sub":"Natural form","qty":120,"unit":"servings","rate":1,"expiry":"2028-07-07","tags":["protein"],"shelf_name":"Galley pantry","cat_name":"Natural form","sample":true},{"name":"Beverage packets (coffee, tea, juice)","kind":"Food","sub":"Beverage","qty":1200,"unit":"packets","rate":12.0,"expiry":"2029-05-03","tags":["caffeine"],"shelf_name":"Galley pantry","cat_name":"Beverages","sample":true},{"name":"Potable water reserve (drink bags)","kind":"Water & hygiene","sub":"","qty":400,"unit":"L","rate":3,"expiry":null,"tags":["water"],"shelf_name":"Hygiene station","cat_name":"Water","sample":true},{"name":"Skin emollient","kind":"Water & hygiene","sub":"","qty":8,"unit":"tubes","rate":0.08,"expiry":"2028-10-15","tags":["emollient"],"shelf_name":"Hygiene station","cat_name":"Skin care","sample":true},{"name":"Hand sanitiser wipes","kind":"Water & hygiene","sub":"","qty":600,"unit":"wipes","rate":6,"expiry":"2028-10-15","tags":["abhr"],"shelf_name":"Hygiene station","cat_name":"Skin care","sample":true}],"LIVEV":["hr","hrv","spo2","ctemp","glu","shift","dose"],"NOISE":{"hr":3,"hrv":4,"spo2":0.6,"ctemp":0.08,"glu":4,"shift":0.05,"dose":0.05},"SYMW":[["headache","headache"],["blur","blur"],["congest","congest"],["stuffy","congest"],["chest pain","chest"],["palpitation","chest"],["dizz","dizzy"],["faint","dizzy"],["nause","nausea"],["vomit","nausea"],["rash","rash"],["itch","rash"],["fever","fever"],["chill","fever"],["flank","flank"],["blood in urine","flank"],["back pain","back"],["back hurts","back"],["backache","back"],["back ache","back"],["sore back","back"],["headache","headache"],["head hurts","headache"],["can't see","blur"],["blurry","blur"],["throw up","nausea"],["sick to my stomach","nausea"],["exhausted","fatigue"],["out of breath","breath"],["hard to breathe","breath"],["pins and needles","numb"],["tingl","numb"],["tired","fatigue"],["fatigue","fatigue"],["short of breath","breath"],["breathless","breath"],["neck","neck"],["hopeless","low"],["feeling low","low"],["sad","low"],["joint pain","joint"],["mottl","mottle"],["numb","numb"],["nail","nails"],["shoulder","shoulder"]],"EXTRA_ALIAS":[["oxygen left","eva_o2end"],["o2 left","eva_o2end"],["suit oxygen","eva_o2end"],["oxygen remaining","eva_o2end"],["suit co2","eva_co2"],["inspired co2","eva_co2"],["peak heart rate","eva_hrpct"],["suit temperature","eva_temp"],["peak temperature","eva_temp"],["hand pain","eva_hand"],["finger pain","eva_hand"],["shoulder pain","eva_shoulder"],["nail lifting","eva_nail"],["prebreathe","eva_prebreathe"],["eva hours","eva_hours7"],["rest days","eva_rest"],["decompression","eva_dcs"],["dcs","eva_dcs"]]}</script>
@@ -5186,7 +5249,8 @@
             inject: 'none', logTab: 'checkin', hv: 'onsd', range: { kind: 'last', n: 30 },
             sym: {}, assessSel: { bone: true, heme: true, metab: true, lytes: true },
             jtok: {}, supView: 'shelf', supQ: '', rtab: 'today', reftab: 'how', gtab: 'ttt', gameKeyFn: null,
-            driftHorizon: 48, driftVar: 'hr', driftEnvPreset: 'mission', driftEnv: null, driftCrewId: null
+            driftHorizon: 48, driftVar: 'hr', driftEnvPreset: 'mission', driftEnv: null, driftCrewId: null,
+            driftHazards: { co2_scrubber: false, rad_spike: false, thermal_fault: false, o2_leak: false }
           };
 
           function st(l, t) {
@@ -5683,7 +5747,7 @@
             if (!resp.ok) {
               var apiErr = null;
               if (resp.status === 405 && !data.error) {
-                apiErr = new Error('Transcription API unavailable on this static host (405). Open the live Development App URL or run npm start.');
+                apiErr = new Error('Voice upload API is unavailable on this static host (405). Use the live Development App URL or type your message below.');
               } else if (resp.status === 429) {
                 apiErr = new Error('Transcription rate limit reached — please wait a few seconds and try again.');
               } else {
@@ -5951,12 +6015,14 @@
               U.driftEnvPreset = 'mission';
               U.driftEnv = missionEnvBaseline(c);
             }
-            var F = precomputed || computeDriftForecast(c, U.driftEnv, U.driftHorizon);
+            var F = precomputed || computeDriftForecast(c, U.driftEnv, U.driftHorizon, U.driftHazards);
             var riskLabels = ['Nominal', 'Drifting', 'Alert'];
             var lvlCol = COLV[F.worstLvl] || COLV[0];
             btn.classList.toggle('is-warn', F.worstLvl === 1);
             btn.classList.toggle('is-alert', F.worstLvl === 2);
 
+            var activeHaz = F.env && F.env.activeHazards ? F.env.activeHazards : [];
+            var hazCountTag = activeHaz.length ? (' · ' + activeHaz.length + ' sim') : '';
             var summaryTxt = F.earliestCrit
               ? ('CRIT T+' + fmt(F.earliestCrit.critCrossH, 1) + 'h ' + F.earliestCrit.v.toUpperCase())
               : F.earliest
@@ -5969,7 +6035,7 @@
               '<span class="dot" style="background:' + lvlCol + '"></span>' +
               '<span><b>' + F.horizonH + 'h</b> <span class="hide-s">Forecast</span></span>' +
               '<span class="hide-s t3">·</span>' +
-              '<span class="hide-s num">' + esc(summaryTxt) + '</span>' +
+              '<span class="hide-s num">' + esc(summaryTxt) + esc(hazCountTag) + '</span>' +
               '<span class="hide-s t3">· ' + esc(peakTxt) + '</span>' +
               CHEVD;
 
@@ -5978,9 +6044,10 @@
             }).slice(0, 3);
             var activePreset = DRIFT_PRESETS.find(function (p) { return p.id === U.driftEnvPreset; });
             var envTitle = activePreset ? activePreset.name : 'Custom surroundings';
+            var quickHazards = DRIFT_HAZARDS.slice(0, 2);
 
             menu.innerHTML =
-              '<div class="row between" style="margin-bottom:8px"><div><b style="font-size:13.5px">Drift Vector (' + F.horizonH + 'h)</b><div class="xs t3">' + esc(envTitle) + ' · ' + U.driftEnv.g + ' g</div></div>' + st(F.worstLvl, riskLabels[F.worstLvl]) + '</div>' +
+              '<div class="row between" style="margin-bottom:8px"><div><b style="font-size:13.5px">Drift Vector (' + F.horizonH + 'h)</b><div class="xs t3">' + esc(envTitle) + ' · ' + U.driftEnv.g + ' g' + (activeHaz.length ? ' · ' + activeHaz.length + ' hazard sim' : '') + '</div></div>' + st(F.worstLvl, riskLabels[F.worstLvl]) + '</div>' +
               '<div class="seg" style="width:100%;margin-bottom:10px">' +
                 [24, 36, 48].map(function (h) {
                   return '<button type="button" data-fh="' + h + '" aria-pressed="' + (U.driftHorizon === h) + '" style="flex:1;padding:5px 6px">' + h + 'h</button>';
@@ -5991,6 +6058,15 @@
                   var sgn = r.netDrift >= 0 ? '+' : '';
                   return '<div class="fmenu-row"><span class="grow"><b>' + esc(r.n) + '</b><div class="xs t3">' + esc(r.driver) + '</div></span><span class="num" style="text-align:right"><b>' + fmt(r.vEnd, r.dp) + '</b> ' + esc(r.u) + '<div class="xs" style="color:' + COLV[r.lvl] + '">' + sgn + fmt(r.netDrift, r.dp) + '</div></span></div>';
                 }).join('') +
+              '</div>' +
+              '<div class="fmenu-hazards">' +
+                '<div class="fmenu-haz-title"><span>Simulate habitat hazards</span>' + (activeHaz.length ? '<span style="color:#ffd982">' + activeHaz.length + ' active</span>' : '') + '</div>' +
+                '<div class="fmenu-haz-grid">' +
+                  quickHazards.map(function (hz) {
+                    var on = !!(U.driftHazards && U.driftHazards[hz.id]);
+                    return '<label class="fmenu-haz-opt' + (on ? ' is-on' : '') + '"><input type="checkbox" data-fhaz="' + hz.id + '"' + (on ? ' checked' : '') + '><span>' + esc(hz.shortTag) + '</span></label>';
+                  }).join('') +
+                '</div>' +
               '</div>' +
               '<div class="row between" style="gap:8px">' +
                 '<select id="fPresetSel" aria-label="Quick surroundings preset" style="min-height:34px;padding:4px 8px;font-size:12.5px;flex:1">' +
@@ -6006,6 +6082,14 @@
             $$('#fmenu [data-fh]').forEach(function (b) {
               b.onclick = function () {
                 U.driftHorizon = Number(b.dataset.fh);
+                if (U.route === 'drift') render();
+                else renderForecastWidget(c);
+              };
+            });
+            $$('#fmenu [data-fhaz]').forEach(function (chk) {
+              chk.onchange = function () {
+                if (!U.driftHazards) U.driftHazards = {};
+                U.driftHazards[chk.dataset.fhaz] = !!chk.checked;
                 if (U.route === 'drift') render();
                 else renderForecastWidget(c);
               };
@@ -6050,6 +6134,8 @@
               U.route = 'crew';
             }
             renderHeader();
+            var fabEmgEl = $('#fabEmergency');
+            if (fabEmgEl) fabEmgEl.classList.toggle('hidden', U.route === 'emergency');
             var my = ++rendering, m = $('#main');
             try {
               var v = await VIEWS[U.route]();
@@ -7770,6 +7856,70 @@
             { id: 'surface_dust', name: 'Surface dust hab', sub: 'Regolith PM · 23% RH · 17.5 °C' },
             { id: 'sleep_quarters', name: 'Sleep quarters', sub: '19.5 °C · 42 dBA · dim red-shifted' }
           ];
+          var DRIFT_HAZARDS = [
+            {
+              id: 'co2_scrubber',
+              name: 'Failed CO₂ scrubber',
+              shortTag: 'CO₂ scrubber fault',
+              crit: true,
+              sub: 'CDRA bed bypass · +2.7 mmHg CO₂ · +1.5 °C · +5 dBA',
+              deltas: { co2: 2.7, temp: 1.5, o2: -0.3, rh: 6, rad: 0, noise: 5, dust: 0.02 }
+            },
+            {
+              id: 'rad_spike',
+              name: 'Mild radiation spike',
+              shortTag: 'Radiation spike',
+              crit: true,
+              sub: 'Solar particle flux · +3.2 mSv/d ambient dose',
+              deltas: { co2: 0, temp: 0, o2: 0, rh: 0, rad: 3.2, noise: 0, dust: 0 }
+            },
+            {
+              id: 'thermal_fault',
+              name: 'Cabin thermal loop fault',
+              shortTag: 'Thermal loop fault',
+              crit: false,
+              sub: 'Heat exchanger derate · +3.8 °C · +8% RH · +3 dBA',
+              deltas: { co2: 0.2, temp: 3.8, o2: -0.1, rh: 8, rad: 0, noise: 3, dust: 0 }
+            },
+            {
+              id: 'o2_leak',
+              name: 'Minor O₂ valve drift',
+              shortTag: 'O₂ valve drift',
+              crit: false,
+              sub: 'Make-up regulator lag · -1.3% O₂ · -6% RH · +4 dBA',
+              deltas: { co2: 0.3, temp: 0, o2: -1.3, rh: -6, rad: 0, noise: 4, dust: 0.03 }
+            }
+          ];
+
+          function activeDriftHazardList(hazards) {
+            var map = hazards || {};
+            return DRIFT_HAZARDS.filter(function (hz) { return !!map[hz.id]; });
+          }
+
+          function resolveDriftEnv(baseEnv, hazards) {
+            var active = activeDriftHazardList(hazards);
+            var eff = Object.assign({}, baseEnv, { activeHazards: active, _hazardResolved: true });
+            if (!active.length) return eff;
+            var dCo2 = 0, dTemp = 0, dO2 = 0, dRh = 0, dRad = 0, dNoise = 0, dDust = 0;
+            active.forEach(function (hz) {
+              var dt = hz.deltas || {};
+              dCo2 += dt.co2 || 0;
+              dTemp += dt.temp || 0;
+              dO2 += dt.o2 || 0;
+              dRh += dt.rh || 0;
+              dRad += dt.rad || 0;
+              dNoise += dt.noise || 0;
+              dDust += dt.dust || 0;
+            });
+            eff.co2 = clamp(+(baseEnv.co2 + dCo2).toFixed(2), 0.4, 8.0);
+            eff.temp = clamp(+(baseEnv.temp + dTemp).toFixed(1), 16.0, 32.0);
+            eff.o2 = clamp(+(baseEnv.o2 + dO2).toFixed(2), 17.5, 22.5);
+            eff.rh = clamp(Math.round(baseEnv.rh + dRh), 15, 85);
+            eff.rad = clamp(+(baseEnv.rad + dRad).toFixed(2), 0.01, 13.0);
+            eff.noise = clamp(Math.round(baseEnv.noise + dNoise), 40, 82);
+            eff.dust = clamp(+(baseEnv.dust + dDust).toFixed(2), 0, 2.5);
+            return eff;
+          }
 
           function missionEnvBaseline(c) {
             var d = c.nowDay();
@@ -7819,24 +7969,33 @@
             var o2Def = Math.max(0, 20.8 - env.o2);
             var noiseEx = Math.max(0, env.noise - 56);
             var dg = Math.abs(env.g - missionBase.g);
+            var hazList = env.activeHazards || [];
+            var hasHaz = function (id) { return hazList.some(function (hz) { return hz.id === id; }); };
             if (vid === 'onsd') {
-              if (co2Ex > 0.5) drivers.push('Cabin ppCO₂ (' + fmt(env.co2, 1) + ' mmHg)');
+              if (hasHaz('co2_scrubber')) drivers.push('CO₂ scrubber fault (' + fmt(env.co2, 1) + ' mmHg)');
+              else if (co2Ex > 0.5) drivers.push('Cabin ppCO₂ (' + fmt(env.co2, 1) + ' mmHg)');
               if (env.g < 0.2) drivers.push('Cephalic fluid shift (' + env.g + ' g)');
             } else if (vid === 'hr') {
-              if (co2Ex > 0.6) drivers.push('Hypercapnic drive (' + fmt(env.co2, 1) + ' mmHg CO₂)');
-              if (tempEx > 1.5) drivers.push('Cabin thermal load (' + fmt(env.temp, 1) + ' °C)');
+              if (hasHaz('co2_scrubber')) drivers.push('CO₂ scrubber fault (' + fmt(env.co2, 1) + ' mmHg)');
+              else if (co2Ex > 0.6) drivers.push('Hypercapnic drive (' + fmt(env.co2, 1) + ' mmHg CO₂)');
+              if (hasHaz('thermal_fault')) drivers.push('Thermal loop fault (' + fmt(env.temp, 1) + ' °C)');
+              else if (tempEx > 1.5) drivers.push('Cabin thermal load (' + fmt(env.temp, 1) + ' °C)');
               if (o2Def > 0.4) drivers.push('Reduced O₂ (' + fmt(env.o2, 1) + '%)');
               if (env.light === 'dim' && env.noise < 48) drivers.push('Quiet sleep recovery (' + Math.round(env.noise) + ' dBA)');
             } else if (vid === 'hrv') {
-              if (co2Ex > 0.6) drivers.push('Elevated CO₂ (' + fmt(env.co2, 1) + ' mmHg)');
+              if (hasHaz('co2_scrubber')) drivers.push('CO₂ scrubber fault (' + fmt(env.co2, 1) + ' mmHg)');
+              else if (co2Ex > 0.6) drivers.push('Elevated CO₂ (' + fmt(env.co2, 1) + ' mmHg)');
+              if (hasHaz('rad_spike')) drivers.push('Radiation spike sim (' + fmt(env.rad, 1) + ' mSv/d)');
+              else if (env.rad > 2.5) drivers.push('Radiation stress (' + fmt(env.rad, 1) + ' mSv/d)');
               if (noiseEx > 4) drivers.push('Acoustic load (' + Math.round(env.noise) + ' dBA)');
-              if (env.rad > 2.5) drivers.push('Radiation stress (' + fmt(env.rad, 1) + ' mSv/d)');
               if (env.light === 'dim' && env.noise < 48) drivers.push('Parasympathetic recovery');
             } else if (vid === 'spo2') {
-              if (o2Def > 0.3) drivers.push('Ambient O₂ (' + fmt(env.o2, 1) + '%)');
+              if (hasHaz('o2_leak')) drivers.push('O₂ valve drift (' + fmt(env.o2, 1) + '%)');
+              else if (o2Def > 0.3) drivers.push('Ambient O₂ (' + fmt(env.o2, 1) + '%)');
               if (env.dust > 0.3) drivers.push('Regolith dust load (' + fmt(env.dust, 2) + ' mg/m³)');
             } else if (vid === 'ctemp') {
-              if (Math.abs(tempEx) > 1.5) drivers.push('Cabin temp (' + fmt(env.temp, 1) + ' °C)');
+              if (hasHaz('thermal_fault')) drivers.push('Thermal loop fault (' + fmt(env.temp, 1) + ' °C)');
+              else if (Math.abs(tempEx) > 1.5) drivers.push('Cabin temp (' + fmt(env.temp, 1) + ' °C)');
               if (env.light === 'shifted') drivers.push('Circadian phase shift');
             } else if (vid === 'shift') {
               if (dg > 0.05) drivers.push('Gravity shift (' + env.g + ' g)');
@@ -7848,16 +8007,19 @@
               if (env.light === 'dim' && env.noise < 48) drivers.push('Dark quiet sleep bay');
               if (co2Ex > 0.8) drivers.push('Cabin CO₂ (' + fmt(env.co2, 1) + ' mmHg)');
             } else if (vid === 'pvt') {
-              if (co2Ex > 0.6) drivers.push('CO₂ cognitive drag (' + fmt(env.co2, 1) + ' mmHg)');
+              if (hasHaz('co2_scrubber')) drivers.push('CO₂ scrubber fault (' + fmt(env.co2, 1) + ' mmHg)');
+              else if (co2Ex > 0.6) drivers.push('CO₂ cognitive drag (' + fmt(env.co2, 1) + ' mmHg)');
               if (env.light === 'shifted' || noiseEx > 6) drivers.push('Sleep/circadian fatigue');
               if (o2Def > 0.5) drivers.push('Mild hypoxia (' + fmt(env.o2, 1) + '% O₂)');
             } else if (vid === 'stress') {
-              if (env.rad > 2.5) drivers.push('SPE radiation (' + fmt(env.rad, 1) + ' mSv/d)');
+              if (hasHaz('rad_spike')) drivers.push('Radiation spike sim (' + fmt(env.rad, 1) + ' mSv/d)');
+              else if (env.rad > 2.5) drivers.push('SPE radiation (' + fmt(env.rad, 1) + ' mSv/d)');
+              if (hasHaz('co2_scrubber')) drivers.push('CO₂ scrubber fault (' + fmt(env.co2, 1) + ' mmHg)');
+              else if (co2Ex > 0.8) drivers.push('Elevated CO₂ (' + fmt(env.co2, 1) + ' mmHg)');
               if (noiseEx > 4) drivers.push('Acoustic load (' + Math.round(env.noise) + ' dBA)');
-              if (co2Ex > 0.8) drivers.push('Elevated CO₂ (' + fmt(env.co2, 1) + ' mmHg)');
               if (env.rh < 30) drivers.push('Dry cabin air (' + Math.round(env.rh) + '% RH)');
             } else if (vid === 'dose') {
-              drivers.push('Ambient shielding (' + fmt(env.rad, 2) + ' mSv/d)');
+              drivers.push((hasHaz('rad_spike') ? 'Radiation spike sim (' : 'Ambient shielding (') + fmt(env.rad, 2) + ' mSv/d)');
             } else if (vid === 'sbp') {
               if (dg > 0.05) drivers.push('Gravity shift (' + env.g + ' g)');
               if (co2Ex > 0.8) drivers.push('Sympathetic CO₂ drive');
@@ -7931,9 +8093,11 @@
             return 0;
           }
 
-          function computeDriftForecast(c, env, horizonH) {
+          function computeDriftForecast(c, rawEnvInput, horizonH, hazards) {
             var d = c.nowDay();
             var missionBase = missionEnvBaseline(c);
+            var rawEnv = rawEnvInput || missionBase;
+            var env = rawEnv._hazardResolved ? rawEnv : resolveDriftEnv(rawEnv, hazards !== undefined ? hazards : U.driftHazards);
             var dtObj = c.dateOf(d);
             var hour0 = dtObj.getUTCHours() + dtObj.getUTCMinutes() / 60;
             var stepH = 3;
@@ -8091,13 +8255,23 @@
             var predIdx = Math.max(0, Math.min(100, Math.round(curIdx - alertCount * 11 - warnCount * 4 + (env.light === 'dim' && env.noise < 48 && env.co2 <= 2.3 ? 3 : 0))));
 
             var advisories = [];
-            if (env.co2 > 3.2) {
+            var activeHazIds = (env.activeHazards || []).map(function (hz) { return hz.id; });
+            if (activeHazIds.indexOf('co2_scrubber') !== -1) {
+              advisories.push({ lvl: 2, t: 'Simulated Hazard: Engage backup LiOH / CDRA CO₂ scrubber', d: 'Failed CO₂ scrubber drives effective ppCO₂ to ' + fmt(env.co2, 1) + ' mmHg (+' + fmt(envDeltaAt('onsd', horizonH, env, missionBase), 2) + ' mm ONSD, +' + fmt(envDeltaAt('pvt', horizonH, env, missionBase), 0) + ' ms PVT over ' + horizonH + ' h). Deploy portable backup cartridges.' });
+            } else if (env.co2 > 3.2) {
               advisories.push({ lvl: env.co2 >= 4.5 ? 2 : 1, t: 'Scrub cabin CO₂ below 2.5 mmHg', d: 'Current ppCO₂ (' + fmt(env.co2, 1) + ' mmHg) drives hypercapnic cerebral vasodilation (+' + fmt(envDeltaAt('onsd', horizonH, env, missionBase), 2) + ' mm ONSD) and cognitive drag (+' + fmt(envDeltaAt('pvt', horizonH, env, missionBase), 0) + ' ms PVT) within ' + horizonH + ' h.' });
             }
-            if (env.rad > 2.5) {
+            if (activeHazIds.indexOf('rad_spike') !== -1) {
+              advisories.push({ lvl: 2, t: 'Simulated Hazard: Activate solar radiation shelter protocol', d: 'Mild radiation spike raises ambient exposure to ' + fmt(env.rad, 2) + ' mSv/d, triggering dose safety crossing and autonomic HRV drift. Relocate crew to water-wall shelter.' });
+            } else if (env.rad > 2.5) {
               advisories.push({ lvl: 2, t: 'Maintain solar particle storm shielding', d: 'Ambient dose rate (' + fmt(env.rad, 2) + ' mSv/d) elevates cumulative dose and autonomic stress. Restrict unshielded module transit.' });
             }
-            if (env.o2 < 20.2 || env.dust > 0.5) {
+            if (activeHazIds.indexOf('thermal_fault') !== -1) {
+              advisories.push({ lvl: 1, t: 'Simulated Hazard: Switch coolant loop to redundant radiator', d: 'Thermal loop derate brings cabin to ' + fmt(env.temp, 1) + ' °C (' + Math.round(env.rh) + '% RH), driving HR and core temperature upward.' });
+            }
+            if (activeHazIds.indexOf('o2_leak') !== -1) {
+              advisories.push({ lvl: 2, t: 'Simulated Hazard: Isolate O₂ supply manifold & inspect seals', d: 'O₂ valve drift drops cabin O₂ to ' + fmt(env.o2, 1) + '%, pulling SpO₂ toward ' + fmt(seriesMap.spo2.vEnd, 1) + '% and impairing PVT alertness.' });
+            } else if (env.o2 < 20.2 || env.dust > 0.5) {
               advisories.push({ lvl: 1, t: 'Engage airlock HEPA filtration & O₂ trim', d: 'Reduced O₂ (' + fmt(env.o2, 1) + '%) or airborne particulate (' + fmt(env.dust, 2) + ' mg/m³) projects an SpO₂ downward drift toward ' + fmt(seriesMap.spo2.vEnd, 1) + '%.' });
             }
             if (env.temp > 23.5 || env.rh < 30) {
@@ -8111,7 +8285,7 @@
             }
 
             return {
-              day: d, horizonH: horizonH, env: env, missionBase: missionBase,
+              day: d, horizonH: horizonH, env: env, baseEnv: rawEnv, missionBase: missionBase,
               summaries: summaries, seriesMap: seriesMap,
               worstLvl: worstLvl, earliest: earliest, earliestCrit: earliestCrit, peakVar: peakVar,
               curIdx: curIdx, predIdx: predIdx, advisories: advisories
@@ -8376,6 +8550,8 @@
               U.driftEnvPreset = 'mission';
               U.driftEnv = missionEnvBaseline(c);
             }
+            if (!U.driftHazards) U.driftHazards = { co2_scrubber: false, rad_spike: false, thermal_fault: false, o2_leak: false };
+            var hasActiveHazInit = activeDriftHazardList(U.driftHazards).length > 0;
             return {
               html: '<div class="stack gap16">' +
                 '<div class="card flat"><div class="row between"><div><div class="xs t3">Active Crew & Mission Context</div><div class="s" style="margin-top:2px"><b>' + esc(c.d.name) + '</b> · Mission Day <span class="num">' + fmt(c.nowDay(), 1) + '</span> · ' + esc(META.ENVS[c.envAt(c.nowDay())].n) + '</div></div>' +
@@ -8390,6 +8566,21 @@
                     DRIFT_PRESETS.map(function (p) {
                       return '<button type="button" class="drift-preset" data-preset="' + p.id + '" aria-pressed="' + (U.driftEnvPreset === p.id) + '"><b>' + esc(p.name) + '</b><span>' + esc(p.sub) + '</span></button>';
                     }).join('') +
+                    '</div>' +
+                    '<div class="drift-hazards" id="driftHazardsBox">' +
+                      '<div class="drift-hazards-head"><b>Simulate habitat hazards</b><button type="button" class="drift-hazards-clear' + (hasActiveHazInit ? '' : ' hidden') + '" id="driftHazardsClear">Clear all</button></div>' +
+                      '<div class="drift-hazard-list">' +
+                        DRIFT_HAZARDS.map(function (hz) {
+                          var isOn = !!(U.driftHazards && U.driftHazards[hz.id]);
+                          return '<label class="drift-hazard' + (hz.crit ? ' is-crit' : '') + (isOn ? ' is-on' : '') + '" data-hwrap="' + hz.id + '">' +
+                            '<input type="checkbox" class="drift-hazard-chk" id="dh_' + hz.id + '" data-haz="' + hz.id + '"' + (isOn ? ' checked' : '') + '>' +
+                            '<span class="drift-hazard-body">' +
+                              '<span class="drift-hazard-top"><span class="drift-hazard-name">' + esc(hz.name) + '</span><span class="drift-hazard-state" data-hstate="' + hz.id + '">' + (isOn ? 'SIM ACTIVE' : 'OFF') + '</span></span>' +
+                              '<span class="drift-hazard-sub">' + esc(hz.sub) + '</span>' +
+                            '</span>' +
+                          '</label>';
+                        }).join('') +
+                      '</div>' +
                     '</div>' +
                     '<div class="drift-sliders">' +
                       '<div class="drift-ctrl"><div class="drift-ctrl-head"><label>Gravity regime</label><span class="drift-ctrl-val" id="dv_g">' + U.driftEnv.g + ' <small>g</small></span></div>' +
@@ -8448,7 +8639,8 @@
               '</div>',
               bind: function () {
                 function updateDriftUI() {
-                  var F = computeDriftForecast(c, U.driftEnv, U.driftHorizon);
+                  var F = computeDriftForecast(c, U.driftEnv, U.driftHorizon, U.driftHazards);
+                  var effEnv = F.env;
                   var sel = F.seriesMap[U.driftVar] || F.summaries[0];
                   U.driftVar = sel.v;
 
@@ -8459,22 +8651,27 @@
                     : ('None in ' + F.horizonH + 'h');
                   var idxDelta = F.predIdx - F.curIdx;
                   var peakSign = sel ? (F.peakVar.netDrift >= 0 ? '+' : '') : '';
+                  var activeHaz = effEnv.activeHazards || [];
+                  var hazSubTxt = activeHaz.length ? (F.env.envName + ' + ' + activeHaz.length + ' sim hazard' + (activeHaz.length > 1 ? 's' : '')) : F.env.envName;
 
                   $('#driftKpis').innerHTML =
-                    '<div class="drift-kpi"><span class="drift-kpi-lab">Forecast Status (' + F.horizonH + 'h)</span><div style="margin-top:2px">' + st(F.worstLvl, riskLabels[F.worstLvl]) + '</div><span class="drift-kpi-sub">' + esc(F.env.envName) + '</span></div>' +
+                    '<div class="drift-kpi"><span class="drift-kpi-lab">Forecast Status (' + F.horizonH + 'h)</span><div style="margin-top:2px">' + st(F.worstLvl, riskLabels[F.worstLvl]) + '</div><span class="drift-kpi-sub">' + esc(hazSubTxt) + '</span></div>' +
                     '<div class="drift-kpi"><span class="drift-kpi-lab">' + (F.earliestCrit ? 'Earliest Safety Crossing' : 'Earliest Threshold Crossing') + '</span><span class="drift-kpi-val">' + esc(earliestVal) + '</span><span class="drift-kpi-sub">' + (earliestRef ? esc(earliestRef.n) : 'All limits respected') + '</span></div>' +
                     '<div class="drift-kpi"><span class="drift-kpi-lab">Peak Drift Magnitude</span><span class="drift-kpi-val">' + esc(F.peakVar.v.toUpperCase()) + ' ' + peakSign + fmt(F.peakVar.netDrift, F.peakVar.dp) + ' ' + esc(F.peakVar.u) + '</span><span class="drift-kpi-sub">' + fmt(F.peakVar.peakZ, 1) + ' σ deviation · ' + esc(F.peakVar.driver) + '</span></div>' +
                     '<div class="drift-kpi"><span class="drift-kpi-lab">Projected Crew Index</span><span class="drift-kpi-val">' + Math.round(F.curIdx) + ' → ' + Math.round(F.predIdx) + '</span><span class="drift-kpi-sub">' + (idxDelta === 0 ? 'Steady over ' + F.horizonH + 'h' : (idxDelta > 0 ? '+' : '') + idxDelta + ' pts by T+' + F.horizonH + 'h') + '</span></div>';
 
                   var envNotes = [];
-                  if (U.driftEnv.co2 > 3.0) envNotes.push('Hypercapnic CO₂ load (' + fmt(U.driftEnv.co2, 1) + ' mmHg)');
-                  if (Math.abs(U.driftEnv.temp - 21.5) > 2.0) envNotes.push('Thermal offset (' + fmt(U.driftEnv.temp, 1) + ' °C)');
-                  if (U.driftEnv.o2 < 20.3) envNotes.push('Reduced O₂ (' + fmt(U.driftEnv.o2, 1) + '%)');
-                  if (U.driftEnv.rad > 2.0) envNotes.push('Elevated radiation (' + fmt(U.driftEnv.rad, 2) + ' mSv/d)');
-                  if (U.driftEnv.noise > 60) envNotes.push('Acoustic load (' + Math.round(U.driftEnv.noise) + ' dBA)');
-                  if (U.driftEnv.dust > 0.3) envNotes.push('Particulate dust (' + fmt(U.driftEnv.dust, 2) + ' mg/m³)');
-                  if (U.driftEnv.light !== 'aligned') envNotes.push('Light cycle: ' + U.driftEnv.light);
-                  $('#driftEnvSummary').innerHTML = '<b>Active Surroundings Drivers:</b> ' + (envNotes.length ? envNotes.map(esc).join(' · ') : 'All cabin & ambient parameters within nominal range (' + U.driftEnv.g + ' g).');
+                  if (activeHaz.length) {
+                    envNotes.push('Simulated faults: ' + activeHaz.map(function (hz) { return hz.name; }).join(', '));
+                  }
+                  if (effEnv.co2 > 3.0) envNotes.push('Hypercapnic CO₂ load (' + fmt(effEnv.co2, 1) + ' mmHg)');
+                  if (Math.abs(effEnv.temp - 21.5) > 2.0) envNotes.push('Thermal offset (' + fmt(effEnv.temp, 1) + ' °C)');
+                  if (effEnv.o2 < 20.3) envNotes.push('Reduced O₂ (' + fmt(effEnv.o2, 1) + '%)');
+                  if (effEnv.rad > 2.0) envNotes.push('Elevated radiation (' + fmt(effEnv.rad, 2) + ' mSv/d)');
+                  if (effEnv.noise > 60) envNotes.push('Acoustic load (' + Math.round(effEnv.noise) + ' dBA)');
+                  if (effEnv.dust > 0.3) envNotes.push('Particulate dust (' + fmt(effEnv.dust, 2) + ' mg/m³)');
+                  if (effEnv.light !== 'aligned') envNotes.push('Light cycle: ' + effEnv.light);
+                  $('#driftEnvSummary').innerHTML = '<b>Active Surroundings Drivers:</b> ' + (envNotes.length ? envNotes.map(esc).join(' · ') : 'All cabin & ambient parameters within nominal range (' + effEnv.g + ' g).');
 
                   var subCrossTxt = sel.critCrossH != null
                     ? (' · Safety limit crossed at T+' + fmt(sel.critCrossH, 1) + 'h')
@@ -8550,18 +8747,29 @@
                     return '<div class="banner l' + a.lvl + '"><div><b>' + esc(a.t) + '</b><div class="s t2" style="margin-top:3px">' + esc(a.d) + '</div></div></div>';
                   }).join('');
 
+                  syncSliderLabels();
                   renderForecastWidget(c, F);
                 }
 
+                function fmtParamVal(baseVal, effVal, dp, unit, isInt) {
+                  var bTxt = isInt ? String(Math.round(baseVal)) : fmt(baseVal, dp);
+                  var eTxt = isInt ? String(Math.round(effVal)) : fmt(effVal, dp);
+                  if (Math.abs(effVal - baseVal) > (dp >= 2 ? 0.005 : 0.05)) {
+                    return bTxt + '<span class="drift-eff-tag">→ ' + eTxt + '</span><small>' + unit + '</small>';
+                  }
+                  return bTxt + '<small>' + unit + '</small>';
+                }
+
                 function syncSliderLabels() {
+                  var eff = resolveDriftEnv(U.driftEnv, U.driftHazards);
                   $('#dv_g').innerHTML = U.driftEnv.g + ' <small>g</small>';
-                  $('#dv_co2').innerHTML = fmt(U.driftEnv.co2, 1) + '<small>mmHg</small>';
-                  $('#dv_temp').innerHTML = fmt(U.driftEnv.temp, 1) + '<small>°C</small>';
-                  $('#dv_o2').innerHTML = fmt(U.driftEnv.o2, 1) + '<small>%</small>';
-                  $('#dv_rh').innerHTML = Math.round(U.driftEnv.rh) + '<small>%</small>';
-                  $('#dv_rad').innerHTML = fmt(U.driftEnv.rad, 2) + '<small>mSv/d</small>';
-                  $('#dv_noise').innerHTML = Math.round(U.driftEnv.noise) + '<small>dBA</small>';
-                  $('#dv_dust').innerHTML = fmt(U.driftEnv.dust, 2) + '<small>mg/m³</small>';
+                  $('#dv_co2').innerHTML = fmtParamVal(U.driftEnv.co2, eff.co2, 1, 'mmHg');
+                  $('#dv_temp').innerHTML = fmtParamVal(U.driftEnv.temp, eff.temp, 1, '°C');
+                  $('#dv_o2').innerHTML = fmtParamVal(U.driftEnv.o2, eff.o2, 1, '%');
+                  $('#dv_rh').innerHTML = fmtParamVal(U.driftEnv.rh, eff.rh, 0, '%', true);
+                  $('#dv_rad').innerHTML = fmtParamVal(U.driftEnv.rad, eff.rad, 2, 'mSv/d');
+                  $('#dv_noise').innerHTML = fmtParamVal(U.driftEnv.noise, eff.noise, 0, 'dBA', true);
+                  $('#dv_dust').innerHTML = fmtParamVal(U.driftEnv.dust, eff.dust, 2, 'mg/m³');
                   $('#dv_light').textContent = U.driftEnv.light;
                   $('#ds_co2').value = U.driftEnv.co2;
                   $('#ds_temp').value = U.driftEnv.temp;
@@ -8573,6 +8781,18 @@
                   $$('#driftPresets [data-preset]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.preset === U.driftEnvPreset); });
                   $$('#driftGravSeg [data-dg]').forEach(function (b) { b.setAttribute('aria-pressed', Math.abs(U.driftEnv.g - Number(b.dataset.dg)) < 0.02); });
                   $$('#driftLightSeg [data-dl]').forEach(function (b) { b.setAttribute('aria-pressed', U.driftEnv.light === b.dataset.dl); });
+                  var hazCount = eff.activeHazards ? eff.activeHazards.length : 0;
+                  var clrBtn = $('#driftHazardsClear');
+                  if (clrBtn) clrBtn.classList.toggle('hidden', !hazCount);
+                  $$('#driftHazardsBox [data-haz]').forEach(function (chk) {
+                    var hid = chk.dataset.haz;
+                    var on = !!(U.driftHazards && U.driftHazards[hid]);
+                    chk.checked = on;
+                    var wrap = $('#driftHazardsBox [data-hwrap="' + hid + '"]');
+                    var stEl = $('#driftHazardsBox [data-hstate="' + hid + '"]');
+                    if (wrap) wrap.classList.toggle('is-on', on);
+                    if (stEl) stEl.textContent = on ? 'SIM ACTIVE' : 'OFF';
+                  });
                 }
 
                 $$('[data-dh]').forEach(function (b) {
@@ -8586,16 +8806,32 @@
                 $('#driftSyncBtn').onclick = function () {
                   U.driftEnvPreset = 'mission';
                   U.driftEnv = missionEnvBaseline(c);
-                  syncSliderLabels();
+                  U.driftHazards = { co2_scrubber: false, rad_spike: false, thermal_fault: false, o2_leak: false };
                   updateDriftUI();
                   toast('Synced surroundings to ' + META.ENVS[c.envAt(c.nowDay())].n);
                 };
+
+                var clrHazBtn = $('#driftHazardsClear');
+                if (clrHazBtn) {
+                  clrHazBtn.onclick = function () {
+                    U.driftHazards = { co2_scrubber: false, rad_spike: false, thermal_fault: false, o2_leak: false };
+                    updateDriftUI();
+                    toast('Cleared simulated habitat hazards');
+                  };
+                }
+
+                $$('#driftHazardsBox [data-haz]').forEach(function (chk) {
+                  chk.onchange = function () {
+                    if (!U.driftHazards) U.driftHazards = {};
+                    U.driftHazards[chk.dataset.haz] = !!chk.checked;
+                    updateDriftUI();
+                  };
+                });
 
                 $$('#driftPresets [data-preset]').forEach(function (b) {
                   b.onclick = function () {
                     U.driftEnvPreset = b.dataset.preset;
                     U.driftEnv = applyDriftPreset(c, U.driftEnvPreset);
-                    syncSliderLabels();
                     updateDriftUI();
                   };
                 });
@@ -8604,7 +8840,6 @@
                   b.onclick = function () {
                     U.driftEnvPreset = 'custom';
                     U.driftEnv.g = Number(b.dataset.dg);
-                    syncSliderLabels();
                     updateDriftUI();
                   };
                 });
@@ -8613,7 +8848,6 @@
                   b.onclick = function () {
                     U.driftEnvPreset = 'custom';
                     U.driftEnv.light = b.dataset.dl;
-                    syncSliderLabels();
                     updateDriftUI();
                   };
                 });
@@ -8632,7 +8866,6 @@
                     el.oninput = function () {
                       U.driftEnvPreset = 'custom';
                       U.driftEnv[key] = Number(el.value);
-                      syncSliderLabels();
                       updateDriftUI();
                     };
                   }
@@ -9635,7 +9868,14 @@
                   }
                 };
 
+                var speechGenId = 0;
+                var speechQueue = [];
+                var isQueueSpeaking = false;
+
                 var stopAllSpeech = function () {
+                  speechGenId++;
+                  speechQueue = [];
+                  isQueueSpeaking = false;
                   if (synth) {
                     try { synth.cancel(); } catch (e) {}
                   }
@@ -9659,8 +9899,10 @@
                   }
                 } catch (e) {}
 
-                var playGeminiTtsFallback = async function (text) {
+                var playGeminiTtsFallback = async function (text, genId) {
                   var key = (text || '').trim().slice(0, 600);
+                  if (!key) return;
+                  if (genId != null && genId !== speechGenId) return;
                   try {
                     var data = ttsAudioCache[key];
                     if (!data) {
@@ -9669,28 +9911,31 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text: key })
                       });
-                      if (!resp.ok) { markTtsActive(false); return; }
+                      if (!resp.ok) return;
                       data = await resp.json().catch(function () { return {}; });
                       if (data && data.audioBase64) {
                         ttsAudioCache[key] = data;
                       }
                     }
-                    if (!data || !data.audioBase64) { markTtsActive(false); return; }
-                    var audio = new Audio('data:' + (data.mimeType || 'audio/wav') + ';base64,' + data.audioBase64);
-                    activeAudioEl = audio;
-                    audio.onended = function () {
-                      if (activeAudioEl === audio) activeAudioEl = null;
-                      markTtsActive(false);
-                    };
-                    audio.onerror = function () {
-                      if (activeAudioEl === audio) activeAudioEl = null;
-                      markTtsActive(false);
-                    };
-                    markTtsActive(true, 18000);
-                    await audio.play();
-                  } catch (e) {
-                    markTtsActive(false);
-                  }
+                    if (genId != null && genId !== speechGenId) return;
+                    if (!data || !data.audioBase64) return;
+                    await new Promise(function (resolve) {
+                      var audio = new Audio('data:' + (data.mimeType || 'audio/wav') + ';base64,' + data.audioBase64);
+                      activeAudioEl = audio;
+                      var finished = false;
+                      var done = function () {
+                        if (finished) return;
+                        finished = true;
+                        if (activeAudioEl === audio) activeAudioEl = null;
+                        resolve();
+                      };
+                      audio.onended = done;
+                      audio.onerror = done;
+                      markTtsActive(true, 18000);
+                      audio.play().catch(done);
+                      setTimeout(done, 19000);
+                    });
+                  } catch (e) {}
                 };
 
                 var unlockSpeechOnGesture = function () {
@@ -9712,61 +9957,118 @@
                   return voices[0];
                 };
 
+                var speakSingleSegment = function (cleanText, genId) {
+                  if (!cleanText || genId !== speechGenId) return Promise.resolve();
+                  var estMs = Math.min(18000, Math.max(2500, cleanText.length * 75));
+                  if (synth && !browserTtsUnavailable) {
+                    return new Promise(function (resolve) {
+                      var settled = false;
+                      var done = function () {
+                        if (settled) return;
+                        settled = true;
+                        resolve();
+                      };
+                      try {
+                        if (synth.resume) synth.resume();
+                        var voices = synth.getVoices ? synth.getVoices() : [];
+                        var utter = new SpeechSynthesisUtterance(cleanText);
+                        var v = pickTarsVoice(voices);
+                        if (v) utter.voice = v;
+                        utter.rate = 1.07;
+                        utter.pitch = 0.94;
+                        window.__tarsUtter = utter;
+                        var started = false;
+                        var safetyTimer = setTimeout(function () {
+                          if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                          done();
+                        }, estMs + 1500);
+                        var fallbackTimer = setTimeout(function () {
+                          if (!started && !synth.speaking && genId === speechGenId) {
+                            clearTimeout(safetyTimer);
+                            try { synth.cancel(); } catch (e) {}
+                            playGeminiTtsFallback(cleanText, genId).then(done);
+                          }
+                        }, (voices && voices.length > 0) ? 700 : 420);
+                        utter.onstart = function () {
+                          started = true;
+                          browserTtsUnavailable = false;
+                          clearTimeout(fallbackTimer);
+                          if (genId === speechGenId) markTtsActive(true, estMs);
+                        };
+                        utter.onend = function () {
+                          clearTimeout(fallbackTimer);
+                          clearTimeout(safetyTimer);
+                          if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                          done();
+                        };
+                        utter.onerror = function () {
+                          clearTimeout(fallbackTimer);
+                          clearTimeout(safetyTimer);
+                          if (window.__tarsUtter === utter) window.__tarsUtter = null;
+                          if (!voices || voices.length === 0) browserTtsUnavailable = true;
+                          if (genId === speechGenId) playGeminiTtsFallback(cleanText, genId).then(done);
+                          else done();
+                        };
+                        markTtsActive(true, estMs);
+                        synth.speak(utter);
+                      } catch (err) {
+                        playGeminiTtsFallback(cleanText, genId).then(done);
+                      }
+                    });
+                  }
+                  return playGeminiTtsFallback(cleanText, genId);
+                };
+
+                var drainSpeechQueue = async function (genId) {
+                  try {
+                    while (speechQueue.length > 0 && genId === speechGenId) {
+                      var seg = speechQueue.shift();
+                      if (seg) await speakSingleSegment(seg, genId);
+                    }
+                  } finally {
+                    if (genId === speechGenId) {
+                      isQueueSpeaking = false;
+                      markTtsActive(false);
+                    }
+                  }
+                };
+
+                var enqueueSpeechSegment = function (text, forceSpeak) {
+                  if (!forceSpeak && !speaking) return;
+                  var cleanText = (text || '').trim();
+                  if (!cleanText) return;
+                  speechQueue.push(cleanText);
+                  if (!isQueueSpeaking) {
+                    isQueueSpeaking = true;
+                    drainSpeechQueue(speechGenId);
+                  }
+                };
+
                 var playSpeechAudio = function (text, forceSpeak) {
                   if (!forceSpeak && !speaking) return;
                   var cleanText = (text || '').trim();
                   if (!cleanText) return;
-                  var estMs = Math.min(18000, Math.max(3000, cleanText.length * 75));
-                  if (synth && !browserTtsUnavailable) {
-                    try {
-                      var wasBusy = !!(synth.speaking || synth.pending);
-                      if (wasBusy) synth.cancel();
-                      if (synth.resume) synth.resume();
-                      var startBrowserUtter = function () {
-                        try {
-                          var voices = synth.getVoices ? synth.getVoices() : [];
-                          var utter = new SpeechSynthesisUtterance(cleanText);
-                          var v = pickTarsVoice(voices);
-                          if (v) utter.voice = v;
-                          utter.rate = 1.07;
-                          utter.pitch = 0.94;
-                          window.__tarsUtter = utter;
-                          var started = false;
-                          var fallbackTimer = setTimeout(function () {
-                            if (!started && !synth.speaking) {
-                              try { synth.cancel(); } catch (e) {}
-                              playGeminiTtsFallback(cleanText);
-                            }
-                          }, (voices && voices.length > 0) ? 750 : 450);
-                          utter.onstart = function () {
-                            started = true;
-                            browserTtsUnavailable = false;
-                            clearTimeout(fallbackTimer);
-                            markTtsActive(true, estMs);
-                          };
-                          utter.onend = function () {
-                            clearTimeout(fallbackTimer);
-                            if (window.__tarsUtter === utter) window.__tarsUtter = null;
-                            markTtsActive(false);
-                          };
-                          utter.onerror = function () {
-                            clearTimeout(fallbackTimer);
-                            if (window.__tarsUtter === utter) window.__tarsUtter = null;
-                            if (!voices || voices.length === 0) browserTtsUnavailable = true;
-                            playGeminiTtsFallback(cleanText);
-                          };
-                          markTtsActive(true, estMs);
-                          synth.speak(utter);
-                        } catch (err) {
-                          playGeminiTtsFallback(cleanText);
-                        }
-                      };
-                      if (wasBusy) setTimeout(startBrowserUtter, 30);
-                      else startBrowserUtter();
-                      return;
-                    } catch (e) {}
+                  stopAllSpeech();
+                  enqueueSpeechSegment(cleanText, forceSpeak);
+                };
+
+                var findSentenceBoundary = function (slice) {
+                  if (!slice) return -1;
+                  var re = /(?:^|[^0-9])([.!?]+)(?=\s|$)/g;
+                  var m;
+                  while ((m = re.exec(slice)) !== null) {
+                    var endIdx = m.index + m[0].length;
+                    if (endIdx >= 10) return endIdx;
                   }
-                  playGeminiTtsFallback(cleanText);
+                  if (slice.length >= 140) {
+                    var commaRe = /([,;:])(?=\s)/g;
+                    var cm;
+                    while ((cm = commaRe.exec(slice)) !== null) {
+                      var cEnd = cm.index + cm[0].length;
+                      if (cEnd >= 55) return cEnd;
+                    }
+                  }
+                  return -1;
                 };
 
                 var appendChatBubble = function (kind, text, emoji, severity) {
@@ -9864,13 +10166,16 @@
                   var driftNote = '';
                   try {
                     var dfEnv = U.driftEnv || missionEnvBaseline(active);
-                    var df = computeDriftForecast(active, dfEnv, U.driftHorizon || 48);
+                    var df = computeDriftForecast(active, dfEnv, U.driftHorizon || 48, U.driftHazards);
+                    var hazTxt = (df && df.env && df.env.activeHazards && df.env.activeHazards.length)
+                      ? (' [Simulated hazards: ' + df.env.activeHazards.map(function (hz) { return hz.name; }).join(', ') + ']')
+                      : '';
                     if (df && df.earliestCrit) {
-                      driftNote = 'Critical safety threshold projected on ' + df.earliestCrit.n + ' at T+' + fmt(df.earliestCrit.critCrossH, 1) + 'h.';
+                      driftNote = 'Critical safety threshold projected on ' + df.earliestCrit.n + ' at T+' + fmt(df.earliestCrit.critCrossH, 1) + 'h.' + hazTxt;
                     } else if (df && df.earliest) {
-                      driftNote = 'Clinical drift projected on ' + df.earliest.n + ' at T+' + fmt(df.earliest.crossH, 1) + 'h.';
+                      driftNote = 'Clinical drift projected on ' + df.earliest.n + ' at T+' + fmt(df.earliest.crossH, 1) + 'h.' + hazTxt;
                     } else if (df) {
-                      driftNote = 'All 24-48h Drift Vector biomarkers nominal.';
+                      driftNote = 'All 24-48h Drift Vector biomarkers nominal.' + hazTxt;
                     }
                   } catch (e) {}
 
@@ -9903,6 +10208,7 @@
                   var q = trimmed.toLowerCase();
                   if (!q) return;
                   unlockSpeechOnGesture();
+                  stopAllSpeech();
                   appendChatBubble('user', trimmed);
                   var isVoiceTurn = isVoiceInput === true;
                   var voiceReply = speaking;
@@ -9949,39 +10255,158 @@
                     if (emWait) emWait.textContent = '⚡';
                     var sb = $('#botSend');
                     if (sb) sb.disabled = true;
+
+                    var streamBubble = null;
+                    var streamSpan = null;
+                    var streamSayBtn = null;
+                    var streamedText = '';
+                    var spokenOffset = 0;
+
+                    var ensureStreamBubble = function (emojiChar) {
+                      if (streamBubble) return;
+                      var log = $('#botLog');
+                      if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+                      thinkingEl = null;
+                      streamBubble = document.createElement('div');
+                      streamBubble.className = 'tars-msg is-bot';
+                      streamSpan = document.createElement('span');
+                      streamSpan.className = 'grow';
+                      streamSpan.innerHTML = '<b>' + esc(emojiChar || '🤖') + ' TARS:</b> ';
+                      streamSayBtn = document.createElement('button');
+                      streamSayBtn.type = 'button';
+                      streamSayBtn.className = 'tars-msg-say';
+                      streamSayBtn.title = 'Read reply aloud';
+                      streamSayBtn.textContent = '🔊';
+                      streamBubble.appendChild(streamSpan);
+                      streamBubble.appendChild(streamSayBtn);
+                      if (log) {
+                        log.appendChild(streamBubble);
+                        log.scrollTop = log.scrollHeight;
+                      }
+                    };
+
+                    var flushReadySentences = function (flushAll) {
+                      if (!voiceReply) return;
+                      var guard = 0;
+                      while (guard++ < 12) {
+                        var rem = streamedText.slice(spokenOffset);
+                        if (!rem) break;
+                        var cut = findSentenceBoundary(rem);
+                        if (cut > 0) {
+                          var seg = rem.slice(0, cut).trim();
+                          spokenOffset += cut;
+                          if (seg) enqueueSpeechSegment(seg, false);
+                        } else {
+                          break;
+                        }
+                      }
+                      if (flushAll) {
+                        var tail = streamedText.slice(spokenOffset).trim();
+                        spokenOffset = streamedText.length;
+                        if (tail) enqueueSpeechSegment(tail, false);
+                      }
+                    };
+
                     try {
-                      var resp = await fetch('/api/tars/chat', {
+                      var payloadBody = JSON.stringify({
+                        message: trimmed,
+                        history: chatHistory.slice(-10),
+                        humor: humorPct,
+                        humorMode: humorPct > 0,
+                        honesty: honestyPct,
+                        context: buildTarsCrewContext()
+                      });
+
+                      var resp = await fetch('/api/tars/chat/stream', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          message: trimmed,
-                          history: chatHistory.slice(-10),
-                          humor: humorPct,
-                          humorMode: humorPct > 0,
-                          honesty: honestyPct,
-                          context: buildTarsCrewContext()
-                        })
+                        body: payloadBody
                       });
-                      var data = await resp.json().catch(function () { return {}; });
-                      if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
-                      if (!resp.ok || !data.reply) {
-                        var errText = (data && data.error) ? data.error : ('Server error (' + resp.status + ')');
+
+                      if (!resp.ok) {
+                        var errData = await resp.json().catch(function () { return {}; });
+                        if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+                        var errText = (errData && errData.error) ? errData.error : ('Server error (' + resp.status + ')');
                         appendChatBubble('error', errText);
                         setTranscriptStatus('TARS AI error:', errText);
                         if (emWait) emWait.textContent = '⚠️';
                         toast(errText);
                         return;
                       }
-                      replyText = data.reply;
-                      replyEmoji = data.emoji || '🤖';
-                      replySeverity = data.severity === 'alert' ? 'alert' : 'normal';
+
+                      var ctype = (resp.headers.get('content-type') || '').toLowerCase();
+                      if (ctype.indexOf('text/event-stream') >= 0 && resp.body && resp.body.getReader) {
+                        var reader = resp.body.getReader();
+                        var decoder = new TextDecoder();
+                        var sseBuffer = '';
+                        var streamEmoji = humorPct >= 60 ? '😏' : '🤖';
+                        if (emWait) emWait.textContent = streamEmoji;
+
+                        while (true) {
+                          var step = await reader.read();
+                          if (step.done) break;
+                          sseBuffer += decoder.decode(step.value, { stream: true });
+                          var lines = sseBuffer.split(/\r?\n\r?\n/);
+                          sseBuffer = lines.pop() || '';
+                          for (var li = 0; li < lines.length; li++) {
+                            var block = lines[li].trim();
+                            if (!block) continue;
+                            var dataLines = block.split(/\r?\n/).filter(function (l) { return l.indexOf('data:') === 0; });
+                            for (var di = 0; di < dataLines.length; di++) {
+                              var rawEvt = dataLines[di].slice(5).trim();
+                              if (!rawEvt) continue;
+                              var evt = null;
+                              try { evt = JSON.parse(rawEvt); } catch (e) {}
+                              if (!evt) continue;
+                              if (evt.error) {
+                                throw new Error(evt.error);
+                              }
+                              if (evt.delta) {
+                                ensureStreamBubble(streamEmoji);
+                                streamedText += evt.delta;
+                                streamSpan.innerHTML = '<b>' + esc(streamEmoji) + ' TARS:</b> ' + esc(streamedText);
+                                var logEl = $('#botLog');
+                                if (logEl) logEl.scrollTop = logEl.scrollHeight;
+                                flushReadySentences(false);
+                              }
+                              if (evt.done) {
+                                replyText = (evt.reply || streamedText || 'Standing by, Commander.').trim();
+                                replyEmoji = evt.emoji || streamEmoji;
+                                replySeverity = evt.severity === 'alert' ? 'alert' : 'normal';
+                              }
+                            }
+                          }
+                        }
+
+                        if (!replyText && streamedText) replyText = streamedText.trim();
+                        if (!replyText) throw new Error('Empty response from TARS.');
+
+                        ensureStreamBubble(replyEmoji);
+                        streamedText = replyText;
+                        if (emWait) emWait.textContent = replyEmoji;
+                        if (replySeverity === 'alert') streamBubble.classList.add('is-alert');
+                        streamSpan.innerHTML = '<b>' + esc(replyEmoji) + ' TARS:</b> ' + esc(replyText);
+                        streamSayBtn.onclick = function () { playSpeechAudio(replyText, true); };
+                        flushReadySentences(true);
+                      } else {
+                        var data = await resp.json().catch(function () { return {}; });
+                        if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+                        if (!data.reply) {
+                          throw new Error((data && data.error) ? data.error : 'Empty response from TARS.');
+                        }
+                        replyText = data.reply;
+                        replyEmoji = data.emoji || '🤖';
+                        replySeverity = data.severity === 'alert' ? 'alert' : 'normal';
+                        speak(replyText, replyEmoji, voiceReply, replySeverity);
+                      }
+
                       chatHistory.push({ role: 'user', text: trimmed });
                       chatHistory.push({ role: 'model', text: replyText });
                       if (chatHistory.length > 24) chatHistory = chatHistory.slice(-24);
-                      speak(replyText, replyEmoji, voiceReply, replySeverity);
                       setTranscriptStatus('TARS:', replyText);
                     } catch (err) {
                       if (thinkingEl && thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
+                      if (streamBubble && !streamedText && streamBubble.parentNode) streamBubble.parentNode.removeChild(streamBubble);
                       var netMsg = (err && err.message) ? err.message : 'Unable to reach TARS AI server.';
                       appendChatBubble('error', netMsg);
                       setTranscriptStatus('Connection error:', netMsg);
@@ -10428,10 +10853,17 @@
                       handleTranscriptResult(transcript);
                     } catch (err) {
                       if (alive) {
+                        var msg = err && err.message ? err.message : 'Unable to transcribe audio.';
+                        if (err && err.status === 405) {
+                          stopWakeListener();
+                          try { localStorage.setItem('vitv_tars_wake', '0'); } catch (e) {}
+                          setTranscriptStatus('Voice standby:', 'Hands-free upload requires the live Development App URL. Use 🎤 Speak (browser voice) or type below.');
+                          toast('Hey TARS hands-free upload unavailable on static preview (405).');
+                          return;
+                        }
                         if (err && err.status === 429) {
                           rateLimitUntil = Date.now() + 20000;
                         }
-                        var msg = err && err.message ? err.message : 'Unable to transcribe audio.';
                         setTranscriptStatus('Transcription error:', msg);
                       }
                     } finally {
@@ -10858,7 +11290,35 @@
                     if (session) clearTimeout(session.settleTimer);
 
                     var fastText = session ? (session.finalText + ' ' + session.interimText).trim() : '';
-                    if (session && session.rec) {
+                    if (!fastText && session && session.rec) {
+                      await new Promise(function (resolve) {
+                        var settled = false;
+                        var done = function () {
+                          if (settled) return;
+                          settled = true;
+                          resolve();
+                        };
+                        var origOnResult = session.rec.onresult;
+                        session.rec.onresult = function (ev) {
+                          if (origOnResult) {
+                            try { origOnResult(ev); } catch (e) {}
+                          }
+                          var txt = (session.finalText + ' ' + session.interimText).trim();
+                          if (txt) {
+                            fastText = txt;
+                            done();
+                          }
+                        };
+                        session.rec.onend = function () {
+                          var txt = (session.finalText + ' ' + session.interimText).trim();
+                          if (txt) fastText = txt;
+                          done();
+                        };
+                        try { session.rec.stop(); } catch (e) { done(); }
+                        setTimeout(done, 450);
+                      });
+                      fastText = (session.finalText + ' ' + session.interimText).trim();
+                    } else if (session && session.rec) {
                       try { session.rec.stop(); } catch (e) {}
                     }
 
@@ -10877,7 +11337,7 @@
                       wakeState.paused = false;
                       resetWave();
                       try {
-                        if (session && session.resumeWake && localStorage.getItem('vitv_tars_wake') !== '0') {
+                        if (session && session.resumeWake && localStorage.getItem('vitv_tars_wake') === '1') {
                           startWakeListener().catch(function () {});
                         }
                       } catch (e) {}
@@ -10913,7 +11373,7 @@
                       wakeState.paused = false;
                       resetWave();
                       try {
-                        if (!wakeState.enabled && ((session && session.resumeWake) || localStorage.getItem('vitv_tars_wake') !== '0')) {
+                        if (!wakeState.enabled && session && session.resumeWake && localStorage.getItem('vitv_tars_wake') === '1') {
                           startWakeListener().catch(function () {});
                         }
                       } catch (e) {}
@@ -11048,6 +11508,16 @@
 
           var codeRedBtn = $('#sidebarCodeRed');
           if (codeRedBtn) codeRedBtn.onclick = triggerCodeRed;
+          var fabEmgBtn = $('#fabEmergency');
+          if (fabEmgBtn) {
+            fabEmgBtn.onclick = function () {
+              closeTopMenus();
+              closeDrawer();
+              closeModal();
+              if (location.hash === '#emergency') render();
+              else location.hash = 'emergency';
+            };
+          }
 
           var col = false;
           try { col = localStorage.getItem('vitv-side') === '1'; } catch (e) {}
