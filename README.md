@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo image.png" alt="Vitals in the Void Logo" width="220" />
+  <img src="logo image.png" alt="Vitals in the Void Logo" width="250" />
 </p>
 
 # Vitals in the Void
