@@ -1363,7 +1363,65 @@
       .bat-fill{
         height:100%;
         border-radius:999px;
-        transition:width .6s var(--ease), background .35s;
+        transition:width .24s linear, background .35s;
+      }
+      @keyframes batStripe{
+        0%{background-position:0 0}
+        100%{background-position:28px 0}
+      }
+      .bat-fill.is-charging{
+        background-image:repeating-linear-gradient(-45deg,rgba(255,255,255,0.28) 0 7px,transparent 7px 14px);
+        background-size:28px 28px;
+        animation:batStripe .9s linear infinite;
+      }
+      .bat-fill.is-fast{
+        animation-duration:.35s;
+        box-shadow:0 0 12px rgba(245,185,65,0.45);
+      }
+      .bat-toggle{
+        display:inline-flex;
+        align-items:center;
+        gap:7px;
+        padding:5px 10px;
+        border-radius:999px;
+        border:1px solid var(--line);
+        background:rgba(255,255,255,0.06);
+        color:var(--text2);
+        font-size:12px;
+        font-weight:600;
+        cursor:pointer;
+        transition:background .2s,border-color .2s,color .2s;
+      }
+      .bat-toggle:hover{border-color:var(--line2);color:#fff}
+      .bat-toggle-track{
+        width:28px;
+        height:16px;
+        border-radius:999px;
+        background:rgba(255,255,255,0.18);
+        position:relative;
+        transition:background .2s;
+      }
+      .bat-toggle-track::after{
+        content:"";
+        position:absolute;
+        top:2px;
+        left:2px;
+        width:12px;
+        height:12px;
+        border-radius:50%;
+        background:#fff;
+        transition:transform .2s var(--ease);
+      }
+      .bat-toggle[aria-pressed="true"]{
+        border-color:rgba(245,185,65,0.62);
+        background:rgba(245,185,65,0.16);
+        color:#ffe29a;
+      }
+      .bat-toggle[aria-pressed="true"] .bat-toggle-track{
+        background:var(--warn);
+      }
+      .bat-toggle[aria-pressed="true"] .bat-toggle-track::after{
+        transform:translateX(12px);
       }
 
       .mlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:10px}
@@ -1618,6 +1676,23 @@
       .vl-badge.wake{border-color:rgba(121,220,232,0.5);background:rgba(121,220,232,0.14);color:#d8f8ff}
       .vl-badge.ptt{border-color:rgba(52,194,122,0.5);background:rgba(52,194,122,0.14);color:#d7ffe9}
       .vl-badge.followup{border-color:rgba(245,185,65,0.5);background:rgba(245,185,65,0.14);color:#ffeab8}
+      .uplink-card{border:1px solid rgba(121,220,232,0.22);background:linear-gradient(155deg,rgba(121,220,232,0.06) 0%,rgba(10,14,20,0.72) 70%);transition:border-color .25s,box-shadow .25s}
+      .uplink-card.is-flagged{border-color:rgba(245,185,65,0.58);background:linear-gradient(155deg,rgba(245,185,65,0.12) 0%,rgba(14,13,10,0.78) 72%);box-shadow:0 0 24px rgba(245,185,65,0.14)}
+      .uplink-card.is-active{border-color:rgba(121,220,232,0.62);box-shadow:0 0 24px rgba(121,220,232,0.16)}
+      .uplink-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--ok);box-shadow:0 0 10px rgba(52,194,122,0.7)}
+      .uplink-card.is-flagged .uplink-dot{background:var(--warn);box-shadow:0 0 12px rgba(245,185,65,0.95);animation:ping 1.5s infinite}
+      .uplink-card.is-active .uplink-dot{background:#79dce8;box-shadow:0 0 12px rgba(121,220,232,0.95);animation:ping 1.3s infinite}
+      .uplink-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:var(--text2);cursor:pointer;transition:transform .16s var(--ease),background .2s,border-color .2s,box-shadow .2s}
+      .uplink-badge:hover{transform:translateY(-1px);border-color:var(--line2);color:#fff}
+      .uplink-badge.is-amber{border-color:rgba(245,185,65,0.75);background:rgba(245,185,65,0.2);color:#ffe49e;box-shadow:0 0 16px rgba(245,185,65,0.32)}
+      .uplink-badge.is-cyan{border-color:rgba(121,220,232,0.7);background:rgba(121,220,232,0.18);color:#d8f8ff;box-shadow:0 0 16px rgba(121,220,232,0.28)}
+      .uplink-alert-btn{width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(245,185,65,0.48);background:rgba(245,185,65,0.11);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:background .2s,border-color .2s,transform .15s var(--ease)}
+      .uplink-alert-btn:hover{background:rgba(245,185,65,0.19);border-color:rgba(245,185,65,0.82);transform:translateY(-1px)}
+      .uplink-card.is-active .uplink-alert-btn{border-color:rgba(121,220,232,0.48);background:rgba(121,220,232,0.1)}
+      .uplink-card.is-active .uplink-alert-btn:hover{background:rgba(121,220,232,0.18);border-color:rgba(121,220,232,0.8)}
+      .uplink-packet{background:rgba(4,8,14,0.85);border:1px solid rgba(121,220,232,0.24);border-radius:12px;padding:12px 14px;font-family:var(--font-mono);font-size:11.8px;line-height:1.5;color:#cdefff;white-space:pre-wrap;overflow:auto;max-height:190px}
+      .uplink-tars{border:1px solid rgba(52,194,122,0.4);background:linear-gradient(155deg,rgba(52,194,122,0.11) 0%,rgba(10,16,14,0.75) 75%);border-radius:14px;padding:14px}
+      .uplink-chart{width:100%;height:110px;display:block;border-radius:10px;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.08)}
       @media (prefers-reduced-motion:reduce){
         .dash-screen, .dash-screen *, .mars-loader, .mars-loading-ui{transition-duration:.01ms!important; animation-duration:.01ms!important}
         .glass-tile,.glass-tile::after{transition:none}
@@ -2897,7 +2972,7 @@
           /* ---------- Store (localStorage) ---------- */
           var STORE_KEY = 'vitv_v3_state';
           var DB = {
-            settings: { avatar: 'F', clock: null, k2: 0.35, lead: null, margin: 14, onboarded: true, sel: null, streams: {}, battery: {}, streamMeta: {} },
+            settings: { avatar: 'F', clock: null, k2: 0.35, lead: null, margin: 14, onboarded: true, sel: null, streams: {}, battery: {}, batteryMeta: {}, uplinkMeta: {}, streamMeta: {} },
             crew: [],
             recs: {},
             recSeq: 1,
@@ -2916,9 +2991,11 @@
               if (s) {
                 var parsed = JSON.parse(s);
                 if (parsed && typeof parsed === 'object') {
-                  DB.settings = Object.assign({ avatar: 'F', clock: null, k2: 0.35, lead: null, margin: 14, onboarded: true, sel: null, streams: {}, battery: {}, streamMeta: {} }, parsed.settings || {});
+                  DB.settings = Object.assign({ avatar: 'F', clock: null, k2: 0.35, lead: null, margin: 14, onboarded: true, sel: null, streams: {}, battery: {}, batteryMeta: {}, uplinkMeta: {}, streamMeta: {} }, parsed.settings || {});
                   if (!DB.settings.streams) DB.settings.streams = {};
                   if (!DB.settings.battery) DB.settings.battery = {};
+                  if (!DB.settings.batteryMeta) DB.settings.batteryMeta = {};
+                  if (!DB.settings.uplinkMeta) DB.settings.uplinkMeta = {};
                   if (!DB.settings.streamMeta) DB.settings.streamMeta = {};
                   DB.crew = parsed.crew || [];
                   DB.recs = parsed.recs || {};
@@ -4370,6 +4447,8 @@
                 if (!DB.settings.streamMeta[cid]) DB.settings.streamMeta[cid] = { samples: 0, alert15: false, alert10: false };
                 DB.settings.streamMeta[cid].samples = (DB.settings.streamMeta[cid].samples || 0) + 1;
                 var curBat = DB.settings.battery[cid] != null ? Number(DB.settings.battery[cid]) : 88;
+                var bMeta = (DB.settings.batteryMeta || {})[cid];
+                if (bMeta && bMeta.charging) return;
                 var nextBat = Math.max(0, Math.round((curBat - 0.35) * 100) / 100);
                 DB.settings.battery[cid] = nextBat;
                 var cName = c.d.name;
@@ -4406,6 +4485,8 @@
               DB.crew.forEach(function (cd) {
                 var cid = cd.id;
                 if (DB.settings.streams && DB.settings.streams[cid]) return;
+                var bMeta = (DB.settings.batteryMeta || {})[cid];
+                if (bMeta && bMeta.charging) return;
                 if (DB.settings.battery[cid] == null) { DB.settings.battery[cid] = 88; changed = true; return; }
                 var curBat = Number(DB.settings.battery[cid]);
                 if (curBat > 0) {
@@ -5830,7 +5911,9 @@
                 var t = k.top;
                 var sub = k.sym.length && k.lvl && (!t || t.lvl < k.lvl) ? 'Symptom: ' + k.sym.join(', ').toLowerCase() : t ? t.n : k.count ? k.count + ' measures in range' : 'Measurement due';
                 return '<button class="sys glass-tile" data-cond="' + k.id + '"><span class="dot" style="background:' + (k.lvl == null ? NONE : COLV[k.lvl]) + '"></span><span class="nm">' + esc(k.short) + '<small>' + esc(sub) + '</small></span></button>';
-              }).join('') + '</div></div></div></div>';
+              }).join('') + '</div></div>' +
+              '<div id="uplinkBoxOverview">' + earthUplinkCardHTML(c) + '</div>' +
+              '</div></div>';
             requestAnimationFrame(function () {
               var g = $('#gval');
               if (g && O.index != null) g.style.strokeDashoffset = circ * (1 - O.index / 100);
@@ -5848,9 +5931,467 @@
               $$('#mtabs [data-tab]').forEach(function (x) { x.setAttribute('aria-selected', x.dataset.tab === 'log'); });
               monTab();
             };
+            bindEarthUplinkCards();
+            ensureUplinkTicker();
+          }
+
+          /* ---------- Earth Uplink: Preventive Escalation Relay ---------- */
+          function getUplinkMeta(cid) {
+            if (!DB.settings.uplinkMeta) DB.settings.uplinkMeta = {};
+            if (!DB.settings.uplinkMeta[cid]) {
+              DB.settings.uplinkMeta[cid] = {
+                txState: 'standby',
+                txStartAt: 0,
+                delayTotalSec: 862, // 14m 22s default deep-space relay window
+                simDrift: false,
+                countermeasureAck: false
+              };
+            }
+            var m = DB.settings.uplinkMeta[cid];
+            if (typeof m.delayTotalSec !== 'number' || isNaN(m.delayTotalSec)) m.delayTotalSec = 862;
+            return m;
+          }
+          function formatDelayMMSS(totalSec) {
+            var s = Math.max(0, Math.round(totalSec));
+            var mm = Math.floor(s / 60);
+            var ss = s % 60;
+            return mm + 'm ' + (ss < 10 ? '0' : '') + ss + 's';
+          }
+          function computeEarthUplink(c) {
+            if (!c) return null;
+            var cid = c.d.id;
+            var d = c.nowDay();
+            var m = getUplinkMeta(cid);
+            var watchVars = ['hrv', 'pvt', 'sleep', 'stress', 'mood', 'hr', 'spo2', 'onsd', 'iop', 'cort', 'sbp', 'ctemp', 'ctx', 'ntx', 'bmd', 'glu', 'dose'];
+            var candidates = [];
+
+            watchVars.forEach(function (vid) {
+              var v = VM(vid);
+              if (!v) return;
+              var allRecs = c.ofVar(vid).filter(function (r) { return r[2] <= d; });
+              if (allRecs.length < 2) return;
+              var latest = allRecs[allRecs.length - 1];
+              var E = c.expected(vid, d);
+              var tol = Math.max(0.001, c.tol(vid, d));
+              var lims = c.lims(vid) || [null, null];
+              var res = c.statusLatest(vid, d, null);
+              var stObj = res[1] || { lvl: 0, z: 0, E: E, tol: tol, why: '' };
+
+              // Evaluate 24-to-48-hour negative slope (prefer >=2 pts in last 2.5 days, else 14-day window)
+              var win48 = allRecs.filter(function (r) { return r[2] >= d - 2.6; });
+              var slopeSet = win48.length >= 2 ? win48 : allRecs.slice(-6);
+              var slopePerDay = 0;
+              if (slopeSet.length >= 2) {
+                var n = slopeSet.length, mx = 0, my = 0;
+                for (var i = 0; i < n; i++) { mx += slopeSet[i][2]; my += slopeSet[i][3]; }
+                mx /= n; my /= n;
+                var sxx = 0, sxy = 0;
+                for (var j = 0; j < n; j++) {
+                  var dx = slopeSet[j][2] - mx;
+                  sxx += dx * dx;
+                  sxy += dx * (slopeSet[j][3] - my);
+                }
+                if (sxx > 1e-6) slopePerDay = sxy / sxx;
+              }
+
+              // Also check 48h delta against earlier baseline
+              var prior = allRecs.filter(function (r) { return r[2] >= d - 9 && r[2] <= d - 2.0; });
+              var priorMean = prior.length ? (prior.reduce(function (a, r) { return a + r[3]; }, 0) / prior.length) : E;
+              var delta48 = latest[3] - priorMean;
+              var zNow = (latest[3] - E) / tol;
+              var zSlope48 = (slopePerDay * 2) / tol;
+              var t14 = c.trend(vid, d);
+
+              var isNeg = false;
+              var score = 0;
+              if (v.dir === 'lo') {
+                isNeg = (slopePerDay < -0.18 * tol) || (delta48 < -0.75 * tol) || (zNow < -0.85) || (t14 && t14.bad);
+                if (isNeg) score = Math.max(0, -zNow) + Math.max(0, -zSlope48 * 0.9) + (stObj.lvl || 0) * 1.4;
+              } else if (v.dir === 'hi') {
+                isNeg = (slopePerDay > 0.18 * tol) || (delta48 > 0.75 * tol) || (zNow > 0.85) || (t14 && t14.bad);
+                if (isNeg) score = Math.max(0, zNow) + Math.max(0, zSlope48 * 0.9) + (stObj.lvl || 0) * 1.4;
+              } else {
+                isNeg = (Math.abs(zNow) > 1.0 && Math.abs(zSlope48) > 0.35) || (t14 && t14.bad);
+                if (isNeg) score = Math.abs(zNow) + Math.abs(zSlope48 * 0.8) + (stObj.lvl || 0) * 1.4;
+              }
+
+              if (!isNeg || score < 1.15) return;
+
+              var critLow = lims[0] != null ? lims[0] : (E - 2.8 * tol);
+              var critHigh = lims[1] != null ? lims[1] : (E + 2.8 * tol);
+              var critTarget = v.dir === 'lo' ? critLow : (v.dir === 'hi' ? critHigh : (latest[3] >= E ? critHigh : critLow));
+              var driftRatePerDay = Math.abs(slopePerDay) > 0.05 * tol ? Math.abs(slopePerDay) : Math.max(0.25 * tol, Math.abs(delta48) / 2);
+              var distToCrit = v.dir === 'lo' ? (latest[3] - critTarget) : (v.dir === 'hi' ? (critTarget - latest[3]) : Math.abs(critTarget - latest[3]));
+              var hoursToCrit = distToCrit <= 0 ? 0 : Math.max(3.5, Math.min(168, (distToCrit / driftRatePerDay) * 24));
+
+              candidates.push({
+                vid: vid,
+                name: v.n,
+                unit: v.u || '',
+                dp: v.dp != null ? v.dp : 1,
+                dir: v.dir,
+                val: latest[3],
+                E: E,
+                tol: tol,
+                critTarget: critTarget,
+                slopePerDay: v.dir === 'lo' ? -Math.abs(slopePerDay || delta48 / 2) : (v.dir === 'hi' ? Math.abs(slopePerDay || delta48 / 2) : slopePerDay),
+                delta48: delta48,
+                hoursToCrit: hoursToCrit,
+                lvl: Math.max(1, stObj.lvl || 0),
+                st: stObj,
+                score: score,
+                pts: allRecs.filter(function (r) { return r[2] >= d - 5; }).slice(-10).map(function (r) { return [r[2], r[3]]; }),
+                simulated: false
+              });
+            });
+
+            // If user triggered Simulate 48h Drift on an otherwise nominal crew profile
+            if (m.simDrift && (!candidates.length || candidates[0].score < 2.2)) {
+              var baseHrv = c.expected('hrv', d) || 56;
+              var tolHrv = c.tol('hrv', d) || 7;
+              var critHrv = (c.lims('hrv') && c.lims('hrv')[0]) || Math.max(22, Math.round(baseHrv - 2.9 * tolHrv));
+              var curHrv = Math.max(critHrv + 5.5, Math.round((baseHrv - 1.9 * tolHrv) * 10) / 10);
+              var slopeHrv = -((baseHrv - curHrv) / 2.0);
+              var etaHrs = Math.max(6, Math.round(((curHrv - critHrv) / Math.max(1.5, Math.abs(slopeHrv))) * 24 * 10) / 10);
+              var simPts = [
+                [d - 2.0, Math.round((baseHrv - 0.1 * tolHrv) * 10) / 10],
+                [d - 1.5, Math.round((baseHrv - 0.5 * tolHrv) * 10) / 10],
+                [d - 1.0, Math.round((baseHrv - 1.0 * tolHrv) * 10) / 10],
+                [d - 0.5, Math.round((baseHrv - 1.5 * tolHrv) * 10) / 10],
+                [d, curHrv]
+              ];
+              candidates.unshift({
+                vid: 'hrv',
+                name: 'Heart rate variability (RMSSD)',
+                unit: 'ms',
+                dp: 1,
+                dir: 'lo',
+                val: curHrv,
+                E: baseHrv,
+                tol: tolHrv,
+                critTarget: critHrv,
+                slopePerDay: slopeHrv,
+                delta48: curHrv - baseHrv,
+                hoursToCrit: etaHrs,
+                lvl: 1,
+                st: { lvl: 1, z: -1.9, E: baseHrv, tol: tolHrv, why: 'Negative 48h autonomic recovery & HRV drift' },
+                score: 4.5,
+                pts: simPts,
+                simulated: true
+              });
+            }
+
+            candidates.sort(function (a, b) { return b.score - a.score; });
+            var primary = candidates[0] || null;
+            var recentSym = c.symptomsRecent(d, 2).map(function (r) {
+              var sid = r[1].slice(4);
+              var found = (META.SYMPTOMS || []).find(function (s) { return s[0] === sid; });
+              return found ? found[1] : sid;
+            });
+            if (primary && primary.simulated && recentSym.indexOf('Fatigue / low energy') < 0) {
+              recentSym.unshift('Mild autonomic fatigue (48h trend)');
+            }
+
+            var flagged = !!primary;
+            if (!flagged && m.txState === 'queued') {
+              m.txState = 'standby';
+            }
+
+            var statusMode = 'standby';
+            var statusLabel = 'Standby';
+            var remainingSec = m.delayTotalSec;
+            if (m.txState === 'active' && m.txStartAt) {
+              var elapsed = (Date.now() - m.txStartAt) / 1000;
+              remainingSec = Math.max(0, m.delayTotalSec - elapsed);
+              if (remainingSec <= 0) {
+                m.txState = 'acknowledged';
+                statusMode = 'acknowledged';
+                statusLabel = 'Packet Delivered · Flight Surgeon Queue';
+              } else {
+                statusMode = 'active';
+                statusLabel = 'Uplink Active: Deep-Space Delay ' + formatDelayMMSS(remainingSec);
+              }
+            } else if (m.txState === 'acknowledged' && flagged) {
+              statusMode = 'acknowledged';
+              statusLabel = 'Packet Delivered · Flight Surgeon Review';
+            } else if (flagged) {
+              statusMode = 'queued';
+              statusLabel = 'Queued: Predictive Drift Detected';
+            }
+
+            var etaText = primary
+              ? (primary.hoursToCrit <= 0 ? 'Critical threshold reached' : ('~' + (primary.hoursToCrit < 24 ? primary.hoursToCrit.toFixed(1) + ' hrs' : (primary.hoursToCrit / 24).toFixed(1) + ' days (' + Math.round(primary.hoursToCrit) + ' hrs)')))
+              : 'Nominal (> 7 days)';
+
+            var gInfo = primary ? guidance(primary.vid, primary.st, Math.max(1, primary.lvl)) : null;
+            var tarsDirective = '';
+            if (primary) {
+              if (primary.vid === 'hrv' || primary.vid === 'sleep' || primary.vid === 'pvt' || primary.vid === 'stress' || primary.vid === 'mood') {
+                tarsDirective = 'Initiate TARS Autonomic Recovery Protocol: protect an uninterrupted 8.5 h sleep window, perform 5 minutes of slow paced breathing (6 breaths/min), hydrate with 500 mL water, and pause high-load EVA scheduling until Earth Surgeon review.';
+              } else if (primary.vid === 'onsd' || primary.vid === 'iop' || primary.vid === 'shift') {
+                tarsDirective = 'Initiate TARS SANS Fluid-Shift Countermeasure: apply Braslet thigh cuffs or schedule LBNP session, elevate sleep-bag head angle, and capture repeat ocular ultrasound/tonometry before next DSN pass.';
+              } else if (primary.vid === 'spo2' || primary.vid === 'hr' || primary.vid === 'sbp') {
+                tarsDirective = 'Initiate TARS Cardiorespiratory Guard: suspend strenuous exertion, inspect cabin O₂/CO₂ partial pressures, perform seated resting re-check with 500 mL fluid loading if hypotensive.';
+              } else {
+                tarsDirective = 'Initiate TARS Preventive Telemetry Guard: maintain hydration, follow scheduled resistive countermeasure, and log confirmation sample in 4 hours while Earth flight surgeons review.';
+              }
+            }
+
+            var packetObj = primary ? {
+              packet_id: 'VITV-ESCALATION-' + cid.slice(0, 4).toUpperCase() + '-D' + Math.floor(d),
+              relay: statusMode === 'active' ? ('DSN-DEEP-SPACE (' + formatDelayMMSS(remainingSec) + ')') : 'NASA-JSC-FLIGHT-SURGEON',
+              mission_day: Number(d.toFixed(2)),
+              crew_member: c.d.name + ' (' + (c.d.role || 'Crew') + ')',
+              priority: primary.lvl >= 2 ? 'PRIORITY-1-EARLY-WARNING' : 'PREVENTIVE-DRIFT-WATCH',
+              primary_biomarker: primary.name + ' [' + primary.vid + ']',
+              current_vs_baseline: fmt(primary.val, primary.dp) + ' ' + primary.unit + ' (expected ' + fmt(primary.E, primary.dp) + ' ' + primary.unit + ')',
+              drift_48h_rate: (primary.slopePerDay >= 0 ? '+' : '') + primary.slopePerDay.toFixed(2) + ' ' + primary.unit + '/day',
+              critical_threshold: fmt(primary.critTarget, primary.dp) + ' ' + primary.unit,
+              projected_breach_eta: etaText,
+              corroborating_symptoms: recentSym.length ? recentSym : ['None logged in last 48h'],
+              secondary_trends: candidates.slice(1, 3).map(function (s) { return s.name + ' (' + fmt(s.val, s.dp) + ' ' + s.unit + ')'; }),
+              tars_interim_action: tarsDirective
+            } : null;
+
+            return {
+              cid: cid,
+              flagged: flagged,
+              statusMode: statusMode,
+              statusLabel: statusLabel,
+              remainingSec: remainingSec,
+              primary: primary,
+              candidates: candidates,
+              recentSym: recentSym,
+              etaText: etaText,
+              guidance: gInfo,
+              tarsDirective: tarsDirective,
+              packetText: packetObj ? JSON.stringify(packetObj, null, 2) : '',
+              simDrift: !!m.simDrift,
+              countermeasureAck: !!m.countermeasureAck
+            };
+          }
+
+          function earthUplinkCardHTML(c) {
+            if (!c) return '';
+            var u = computeEarthUplink(c);
+            var isFlag = u.flagged && u.statusMode === 'queued';
+            var isActive = u.statusMode === 'active';
+            var isAck = u.statusMode === 'acknowledged' && u.flagged;
+            var cardCls = 'card uplink-card' + ((isFlag || isAck) ? ' is-flagged' : (isActive ? ' is-active' : ''));
+            var badgeCls = 'uplink-badge' + ((isFlag || isAck) ? ' is-amber' : (isActive ? ' is-cyan' : ''));
+            var badgeText = isFlag
+              ? '⚠ Early-Warning Flagged'
+              : (isActive ? '📡 Transmitting Packet' : (isAck ? '✓ Relayed to NASA' : '● Nominal Link'));
+
+            return '<div class="' + cardCls + '" data-uplink-card="1" data-crew-id="' + esc(c.d.id) + '">' +
+              '<div class="row between" style="gap:10px;flex-wrap:wrap">' +
+              '<div class="row" style="gap:9px;align-items:center">' +
+              '<span class="uplink-dot" aria-hidden="true"></span>' +
+              '<div><h3 style="font-size:15.5px;margin:0">Earth Flight Surgeon Uplink</h3><div class="xs t3">Earth Uplink: Preventive Escalation Relay</div></div>' +
+              '</div>' +
+              '<button type="button" class="' + badgeCls + '" data-uplink-open="1" title="Inspect Earth Uplink & Preventive Escalation Relay">' + badgeText + '</button>' +
+              '</div>' +
+              '<div class="row between" style="margin-top:10px;gap:8px;flex-wrap:wrap">' +
+              '<span class="xs t3">Transmission Status</span>' +
+              '<span class="mono b" data-uplink-status="1" style="font-size:12.5px;color:' + (isFlag ? 'var(--warn)' : (isActive ? '#79dce8' : (isAck ? 'var(--ok)' : '#d8f8ff'))) + '">' + esc(u.statusLabel) + '</span>' +
+              '</div>' +
+              (u.flagged
+                ? '<button type="button" class="uplink-alert-btn" data-uplink-open="1" style="margin-top:10px">' +
+                  '<div class="grow"><div class="s b" style="color:' + (isActive ? '#d8f8ff' : '#ffe49e') + '">' + esc(u.primary.name) + ': ' + fmt(u.primary.val, u.primary.dp) + ' ' + esc(u.primary.unit) + ' (ETA: ' + esc(u.etaText) + ')</div>' +
+                  '<div class="xs t2" style="margin-top:2px">24–48h negative drift flagged for NASA Earth doctors · Click to inspect packet &amp; TARS countermeasure</div></div>' +
+                  '<span class="btn sm" style="flex:none">' + (isActive ? 'View Live Link' : 'Inspect Alert') + '</span>' +
+                  '</button>'
+                : '<div class="sub xs t3" style="margin-top:10px;padding:9px 11px">All 24–48h physiological &amp; biomarker trends within baseline envelope. Early-warning packet relay armed.</div>') +
+              '<div class="row between" style="margin-top:10px;gap:8px;flex-wrap:wrap">' +
+              '<button type="button" class="btn sm" data-uplink-sim="1">' + (u.simDrift ? 'Clear Drift Sim' : 'Test 48h Drift') + '</button>' +
+              '<button type="button" class="btn sm ' + (u.flagged ? 'p' : '') + '" data-uplink-open="1">' + (u.flagged ? 'Open Escalation Packet' : 'Link Details') + '</button>' +
+              '</div>' +
+              '</div>';
+          }
+
+          function uplinkChartSVG(u) {
+            if (!u || !u.primary) return '';
+            var p = u.primary;
+            var pts = p.pts && p.pts.length >= 2 ? p.pts : [[0, p.E], [1, p.val]];
+            var W = 520, H = 108, padX = 28, padY = 14;
+            var vals = pts.map(function (x) { return x[1]; }).concat([p.E, p.critTarget]);
+            var minV = Math.min.apply(null, vals);
+            var maxV = Math.max.apply(null, vals);
+            var span = Math.max(0.01, maxV - minV);
+            minV -= span * 0.15; maxV += span * 0.15;
+            var x0 = pts[0][0], xLast = pts[pts.length - 1][0];
+            var xProj = xLast + Math.max(0.8, Math.min(3.5, p.hoursToCrit / 24));
+            var X = function (x) { return padX + ((x - x0) / Math.max(0.1, xProj - x0)) * (W - padX * 2); };
+            var Y = function (v) { return H - padY - ((v - minV) / Math.max(0.01, maxV - minV)) * (H - padY * 2); };
+            var poly = pts.map(function (pt) { return X(pt[0]).toFixed(1) + ',' + Y(pt[1]).toFixed(1); }).join(' ');
+            var lastPt = pts[pts.length - 1];
+            return '<svg class="uplink-chart" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
+              '<line x1="' + padX + '" y1="' + Y(p.E).toFixed(1) + '" x2="' + (W - padX) + '" y2="' + Y(p.E).toFixed(1) + '" stroke="rgba(121,220,232,0.45)" stroke-dasharray="4 4" stroke-width="1.2"/>' +
+              '<text x="' + (padX + 4) + '" y="' + Math.max(11, Y(p.E) - 4).toFixed(1) + '" fill="#79dce8" font-size="9.5" font-family="IBM Plex Mono,monospace">Baseline ' + fmt(p.E, p.dp) + '</text>' +
+              '<line x1="' + padX + '" y1="' + Y(p.critTarget).toFixed(1) + '" x2="' + (W - padX) + '" y2="' + Y(p.critTarget).toFixed(1) + '" stroke="rgba(239,91,91,0.75)" stroke-dasharray="5 3" stroke-width="1.3"/>' +
+              '<text x="' + (W - padX - 4) + '" y="' + Math.max(11, Y(p.critTarget) - 4).toFixed(1) + '" text-anchor="end" fill="#ff9e9e" font-size="9.5" font-family="IBM Plex Mono,monospace">Critical ' + fmt(p.critTarget, p.dp) + ' ' + esc(p.unit) + '</text>' +
+              '<polyline points="' + poly + '" fill="none" stroke="#f5b941" stroke-width="2.2" stroke-linejoin="round"/>' +
+              '<line x1="' + X(lastPt[0]).toFixed(1) + '" y1="' + Y(lastPt[1]).toFixed(1) + '" x2="' + X(xProj).toFixed(1) + '" y2="' + Y(p.critTarget).toFixed(1) + '" stroke="#ef5b5b" stroke-dasharray="3 3" stroke-width="1.8"/>' +
+              '<circle cx="' + X(lastPt[0]).toFixed(1) + '" cy="' + Y(lastPt[1]).toFixed(1) + '" r="4" fill="#f5b941" stroke="#fff" stroke-width="1.2"/>' +
+              '<circle cx="' + X(xProj).toFixed(1) + '" cy="' + Y(p.critTarget).toFixed(1) + '" r="4" fill="#ef5b5b"/>' +
+              '</svg>';
+          }
+
+          function openEarthUplinkModal(cid) {
+            var c = getCrew(cid) || cur();
+            if (!c) return;
+            var u = computeEarthUplink(c);
+            var m = getUplinkMeta(c.d.id);
+            if (!u.flagged) {
+              modal('<div class="dhead"><div><h3 style="margin:0">Earth Flight Surgeon Uplink</h3><p class="s t3" style="margin-top:4px">Earth Uplink: Preventive Escalation Relay · ' + esc(c.d.name) + '</p></div><button class="btn sm" id="upClose">Close</button></div>' +
+                '<div class="banner l0" style="margin-top:8px">' + st(0, 'Standby') + '<span class="s"><b>All monitored 24–48h physiological trends are nominal.</b> No preventive escalation packet is queued for NASA Earth doctors.</span></div>' +
+                '<div class="row between" style="margin-top:16px"><button class="btn sm" id="upModalSim">Simulate 48h Drift</button><button class="btn p sm" id="upClose2">Done</button></div>');
+              if ($('#upClose')) $('#upClose').onclick = closeModal;
+              if ($('#upClose2')) $('#upClose2').onclick = closeModal;
+              if ($('#upModalSim')) $('#upModalSim').onclick = function () {
+                m.simDrift = true;
+                m.txState = 'queued';
+                saveDB();
+                refreshEarthUplinkUI();
+                openEarthUplinkModal(c.d.id);
+              };
+              return;
+            }
+
+            var p = u.primary;
+            var items = (u.guidance && u.guidance.do) ? u.guidance.do : [];
+            modal('<div class="dhead"><div><div class="row" style="gap:8px;align-items:center">' +
+              '<h3 style="margin:0">Earth Flight Surgeon Uplink</h3>' +
+              st(u.statusMode === 'active' ? 0 : 1, u.statusMode === 'active' ? 'Uplink Active' : (u.statusMode === 'acknowledged' ? 'Delivered' : 'Early Warning')) +
+              '</div><p class="s t3" style="margin-top:4px">Preventive Escalation Relay · ' + esc(c.d.name) + ' · Mission Day ' + Math.floor(c.nowDay()) + '</p></div>' +
+              '<button class="btn sm" id="upClose">Close</button></div>' +
+              '<div class="grid cols2" style="gap:12px;margin-top:10px">' +
+              '<div class="sub card" style="padding:12px;border-color:rgba(245,185,65,0.45);background:rgba(245,185,65,0.08)">' +
+              '<div class="xs t3">Drifting Biomarker / Symptom</div>' +
+              '<div class="b" style="font-size:15px;margin-top:4px;color:#ffe49e">' + esc(p.name) + '</div>' +
+              '<div class="mono s" style="margin-top:4px">Current: <b>' + fmt(p.val, p.dp) + ' ' + esc(p.unit) + '</b> <span class="t3">(Baseline ' + fmt(p.E, p.dp) + ')</span></div>' +
+              '<div class="xs t2" style="margin-top:4px">48h Drift Slope: <b class="mono">' + (p.slopePerDay >= 0 ? '+' : '') + p.slopePerDay.toFixed(2) + ' ' + esc(p.unit) + '/day</b>' + (u.recentSym.length ? ' · Symptoms: ' + esc(u.recentSym.join(', ')) : '') + '</div>' +
+              '</div>' +
+              '<div class="sub card" style="padding:12px;border-color:rgba(239,91,91,0.45);background:rgba(239,91,91,0.08)">' +
+              '<div class="xs t3">Projected Time to Critical Threshold</div>' +
+              '<div class="mono b" style="font-size:20px;margin-top:4px;color:#ff9e9e">' + esc(u.etaText) + '</div>' +
+              '<div class="xs t2" style="margin-top:4px">Threshold: <b class="mono">' + fmt(p.critTarget, p.dp) + ' ' + esc(p.unit) + '</b> · Link Status: <b data-uplink-status="1">' + esc(u.statusLabel) + '</b></div>' +
+              '</div></div>' +
+              '<div style="margin-top:12px"><div class="xs t3" style="margin-bottom:6px">48-Hour Trajectory &amp; Critical Threshold Projection</div>' + uplinkChartSVG(u) + '</div>' +
+              '<div style="margin-top:14px"><div class="row between" style="margin-bottom:6px"><span class="s b">Automated Medical Telemetry Report Queued for NASA Earth</span><span class="xs t3">Deep-Space DSN Packet</span></div>' +
+              '<pre class="uplink-packet">' + esc(u.packetText) + '</pre></div>' +
+              '<div class="uplink-tars" style="margin-top:14px"><div class="row between" style="gap:8px;margin-bottom:6px"><span class="s b" style="color:#b8ffd8">🤖 TARS AI Immediate Recommended Countermeasure</span><span class="pill">While awaiting Earth review</span></div>' +
+              '<p class="s" style="color:#e7fff2;margin:0">' + esc(u.tarsDirective) + '</p>' +
+              (items.length ? '<ul class="acts xs t2" style="margin-top:8px">' + items.slice(0, 3).map(function (it) { return '<li>' + esc(it) + '</li>'; }).join('') + '</ul>' : '') +
+              '</div>' +
+              '<div class="row between" style="margin-top:16px;gap:8px;flex-wrap:wrap">' +
+              '<button type="button" class="btn sm" id="upAckTars">' + (u.countermeasureAck ? '✓ Countermeasure Active' : 'Start TARS Countermeasure') + '</button>' +
+              '<div class="row" style="gap:8px"><button type="button" class="btn sm" id="upModalSim">' + (u.simDrift ? 'Clear Drift Sim' : 'Refresh') + '</button>' +
+              '<button type="button" class="btn p" id="upTransmit">' + (u.statusMode === 'active' ? 'Transmitting…' : (u.statusMode === 'acknowledged' ? 'Re-Transmit Packet' : 'Transmit Packet to Earth')) + '</button></div>' +
+              '</div>');
+
+            if ($('#upClose')) $('#upClose').onclick = closeModal;
+            if ($('#upModalSim')) $('#upModalSim').onclick = function () {
+              if (u.simDrift) { m.simDrift = false; m.txState = 'standby'; m.txStartAt = 0; }
+              saveDB();
+              refreshEarthUplinkUI();
+              if (!u.simDrift) closeModal();
+              else openEarthUplinkModal(c.d.id);
+            };
+            if ($('#upAckTars')) $('#upAckTars').onclick = function () {
+              m.countermeasureAck = true;
+              saveDB();
+              toast('TARS interim countermeasure activated for ' + c.d.name);
+              $('#upAckTars').textContent = '✓ Countermeasure Active';
+            };
+            if ($('#upTransmit')) $('#upTransmit').onclick = function () {
+              m.txState = 'active';
+              m.txStartAt = Date.now();
+              m.delayTotalSec = 862; // 14m 22s Deep-Space Delay
+              saveDB();
+              ensureUplinkTicker();
+              refreshEarthUplinkUI();
+              toast('📡 Telemetry escalation packet queued on Deep-Space Uplink (14m 22s delay)');
+              openEarthUplinkModal(c.d.id);
+            };
+          }
+
+          function bindEarthUplinkCards(root) {
+            (root || document).querySelectorAll('[data-uplink-card]').forEach(function (card) {
+              var cid = card.dataset.crewId || (cur() && cur().d.id);
+              card.querySelectorAll('[data-uplink-open]').forEach(function (btn) {
+                btn.onclick = function () { openEarthUplinkModal(cid); };
+              });
+              var simBtn = card.querySelector('[data-uplink-sim]');
+              if (simBtn) {
+                simBtn.onclick = function () {
+                  var m = getUplinkMeta(cid);
+                  m.simDrift = !m.simDrift;
+                  m.txState = m.simDrift ? 'queued' : 'standby';
+                  m.txStartAt = 0;
+                  saveDB();
+                  refreshEarthUplinkUI();
+                  toast(m.simDrift ? '⚠️ 48h predictive drift simulated — Earth Uplink flagged' : '48h drift simulation cleared');
+                };
+              }
+            });
+          }
+
+          function refreshEarthUplinkUI() {
+            var c = cur();
+            if (!c) return;
+            var html = earthUplinkCardHTML(c);
+            ['#uplinkBoxOverview', '#uplinkBoxLive', '#uplinkBoxTars'].forEach(function (sel) {
+              var box = $(sel);
+              if (box) {
+                box.innerHTML = html;
+                bindEarthUplinkCards(box);
+              }
+            });
+          }
+
+          var UPLINK_TIMER = 0;
+          function ensureUplinkTicker() {
+            if (UPLINK_TIMER) return;
+            UPLINK_TIMER = setInterval(function () {
+              var c = cur();
+              if (!c) return;
+              var m = getUplinkMeta(c.d.id);
+              if (m.txState !== 'active') return;
+              var u = computeEarthUplink(c);
+              document.querySelectorAll('[data-uplink-status]').forEach(function (el) {
+                el.textContent = u.statusLabel;
+              });
+              if (u.statusMode !== 'active') {
+                saveDB();
+                refreshEarthUplinkUI();
+              }
+            }, 1000);
           }
 
           var streamOn = function (id) { return (DB.settings.streams || {})[id]; };
+          function getBatteryMeta(cid) {
+            if (!DB.settings.batteryMeta) DB.settings.batteryMeta = {};
+            if (!DB.settings.batteryMeta[cid]) {
+              DB.settings.batteryMeta[cid] = {
+                health: 98.4,
+                cycles: 14,
+                fastMode: false,
+                charging: false,
+                fastUses: 0,
+                fastHistory: [],
+                countedSession: false
+              };
+            }
+            var m = DB.settings.batteryMeta[cid];
+            if (typeof m.health !== 'number' || isNaN(m.health)) m.health = 98.4;
+            if (typeof m.cycles !== 'number' || isNaN(m.cycles)) m.cycles = 14;
+            if (!Array.isArray(m.fastHistory)) m.fastHistory = [];
+            // Prune fast-charge history older than 24h (keeps recent mission-day rapid charges)
+            var cutoff = Date.now() - 24 * 60 * 60 * 1000;
+            m.fastHistory = m.fastHistory.filter(function (ts) { return ts >= cutoff; });
+            return m;
+          }
           function getBattery(cid) {
             if (!DB.settings.battery) DB.settings.battery = {};
             if (DB.settings.battery[cid] == null) DB.settings.battery[cid] = 88;
@@ -5885,44 +6426,220 @@
             }
             saveDB();
           }
+
+          var BAT_CHARGE_TIMER = 0;
+          function recordFastRechargeUse(cid) {
+            var m = getBatteryMeta(cid);
+            if (m.countedSession) return false;
+            m.countedSession = true;
+            m.fastUses = (m.fastUses || 0) + 1;
+            m.fastHistory.push(Date.now());
+            saveDB();
+            if (m.fastHistory.length >= 3) {
+              toast('⚠️ Frequent Fast-Recharge alert: ' + m.fastHistory.length + ' rapid-charge cycles logged. Cell wear accelerated (' + m.health.toFixed(1) + '% health).', 5500);
+              return true;
+            }
+            return false;
+          }
+          function ensureBatteryChargeLoop() {
+            var anyCharging = Object.keys(DB.settings.batteryMeta || {}).some(function (cid) {
+              return !!(DB.settings.batteryMeta[cid] && DB.settings.batteryMeta[cid].charging);
+            });
+            if (!anyCharging) {
+              if (BAT_CHARGE_TIMER) { clearInterval(BAT_CHARGE_TIMER); BAT_CHARGE_TIMER = 0; }
+              return;
+            }
+            if (BAT_CHARGE_TIMER) return;
+            BAT_CHARGE_TIMER = setInterval(function () {
+              var stillAny = false;
+              var needsFullRedraw = false;
+              Object.keys(DB.settings.batteryMeta || {}).forEach(function (cid) {
+                var m = getBatteryMeta(cid);
+                if (!m.charging) return;
+                var prevPct = getBattery(cid);
+                if (prevPct >= 100) {
+                  m.charging = false;
+                  m.countedSession = false;
+                  needsFullRedraw = true;
+                  return;
+                }
+                var wasLow = prevPct < 15;
+                var ratePerTick = m.fastMode ? 7.0 : 1.75; // per 200ms tick => 35%/s Fast (4x) vs 8.75%/s Standard
+                var nextPct = Math.min(100, Math.round((prevPct + ratePerTick) * 100) / 100);
+                var gained = Math.max(0, nextPct - prevPct);
+                // Health wear-and-tear: Fast-Recharge incurs ~1.1% wear per full cycle (+ extra wear when overused) vs ~0.05% Standard
+                var freqMultiplier = m.fastHistory.length >= 3 ? 1.4 : 1.0;
+                var wearPer100 = m.fastMode ? (1.1 * freqMultiplier) : 0.05;
+                m.health = Math.max(50, Math.round((m.health - (gained / 100) * wearPer100) * 1000) / 1000);
+                if (m.fastMode && !m.countedSession) {
+                  if (recordFastRechargeUse(cid)) needsFullRedraw = true;
+                }
+                setBattery(cid, nextPct);
+                var nowLow = nextPct < 15;
+                if (wasLow !== nowLow) needsFullRedraw = true;
+                if (nextPct >= 100) {
+                  m.charging = false;
+                  m.countedSession = false;
+                  m.cycles = (m.cycles || 14) + 1;
+                  needsFullRedraw = true;
+                  if (cur() && cur().d.id === cid) {
+                    toast((m.fastMode ? '⚡ Fast-Recharge complete' : 'Wearable battery recharged') + ' to 100% (Health: ' + m.health.toFixed(1) + '%)');
+                  }
+                } else {
+                  stillAny = true;
+                }
+              });
+              saveDB();
+              if (U.route === 'monitor' && U.mtab === 'live') {
+                if (needsFullRedraw) updateBatteryUI(true);
+                else updateBatteryUI(false);
+              }
+              if (!stillAny) {
+                clearInterval(BAT_CHARGE_TIMER);
+                BAT_CHARGE_TIMER = 0;
+              }
+            }, 200);
+          }
+
           function batteryWidgetHTML(c) {
             var cid = c.d.id, pct = getBattery(cid), on = !!streamOn(cid);
+            var m = getBatteryMeta(cid);
+            var fast = !!m.fastMode, charging = !!m.charging;
             var low = pct < 15, med = pct >= 15 && pct < 35;
-            var col = low ? 'var(--bad)' : med ? 'var(--warn)' : 'var(--ok)';
+            var col = charging ? (fast ? 'var(--warn)' : 'var(--ok)') : (low ? 'var(--bad)' : med ? 'var(--warn)' : 'var(--ok)');
             var samples = ((DB.settings.streamMeta || {})[cid] || {}).samples || 0;
             var dischargeRate = on ? 3.5 : 0.8; // % per hour
+            var chargeRatePerSec = fast ? 35.0 : 8.75; // % per sec simulated fill rate (4x faster)
+            var secsToFull = pct < 100 ? ((100 - pct) / chargeRatePerSec) : 0;
             var hoursLeft = dischargeRate > 0 ? (pct / dischargeRate) : 99;
             var timeToEmptyFormatted = hoursLeft >= 24 ? (hoursLeft / 24).toFixed(1) + ' days' : hoursLeft.toFixed(1) + ' hours';
             var dailyUsage = (dischargeRate * 24).toFixed(0);
+            var health = m.health;
+            var healthCol = health < 90 ? 'var(--bad)' : health < 95 ? 'var(--warn)' : 'var(--ok)';
+            var fastCount = m.fastHistory.length;
+            var freqAlert = fastCount >= 3;
+            var freqSevere = fastCount >= 5 || health < 90;
+            var badge = charging
+              ? st(fast ? 1 : 0, fast ? 'Fast-charging' : 'Charging')
+              : st(low ? 2 : med ? 1 : 0, low ? 'Low battery' : med ? 'Moderate' : 'Charged');
 
-            return '<div class="bat-widget' + (low ? ' is-low' : '') + '" id="batWidget">' +
-              '<div class="row between">' +
+            return '<div class="bat-widget' + (low && !charging ? ' is-low' : '') + '" id="batWidget" data-bat-mode="' + (fast ? 'fast' : 'std') + '" data-bat-charging="' + (charging ? '1' : '0') + '">' +
+              '<div class="row between" style="flex-wrap:wrap;gap:10px">' +
               '<div class="row" style="gap:10px">' +
               ICON('<rect x="2" y="7" width="16" height="10" rx="2"/><path d="M21 10v4"/>') +
-              '<div><b>Wearable Smart Device &amp; Battery Telemetry</b> <span class="mono b" style="margin-left:6px;color:' + col + '">' + Math.round(pct) + '%</span>' +
-              '<div class="xs t3">' + (on ? 'Continuous background telemetry active · ' + samples + ' samples logged' : 'Standby mode (wearable connected)') + '</div></div></div>' +
-              '<div class="row" style="gap:8px">' + st(low ? 2 : med ? 1 : 0, low ? 'Low battery' : med ? 'Moderate' : 'Charged') +
-              '<button type="button" class="btn sm" id="batTestLow">Test &lt;15%</button><button type="button" class="btn p sm" id="batRecharge">Recharge 100%</button></div></div>' +
-              '<div class="bat-bar" style="margin:12px 0 10px"><div class="bat-fill" style="width:' + pct + '%;background:' + col + '"></div></div>' +
+              '<div><b>Wearable Smart Device &amp; Battery Telemetry</b> <span class="mono b" id="batPctText" style="margin-left:6px;color:' + col + '">' + Math.round(pct) + '%</span>' +
+              '<div class="xs t3" id="batSubText">' + (charging ? (fast ? '⚡ Fast-Recharge active · +35%/sec simulated fill-up (high cell stress)' : 'Standard magnetic charge · +8.8%/sec simulated fill-up') : (on ? 'Continuous background telemetry active · ' + samples + ' samples logged' : 'Standby mode (wearable connected)')) + '</div></div></div>' +
+              '<div class="row" style="gap:8px;flex-wrap:wrap">' + badge +
+              '<button type="button" class="bat-toggle" id="batFastToggle" aria-pressed="' + (fast ? 'true' : 'false') + '" title="Toggle 4x faster recharge speed with higher battery health wear-and-tear"><span class="bat-toggle-track" aria-hidden="true"></span><span>⚡ Fast-Recharge</span></button>' +
+              '<button type="button" class="btn sm" id="batTestLow">Test &lt;15%</button>' +
+              '<button type="button" class="btn p sm" id="batRecharge">' + (charging ? 'Stop Charge' : (fast ? '⚡ Fast Recharge' : 'Recharge 100%')) + '</button></div></div>' +
+              '<div class="bat-bar" style="margin:12px 0 10px"><div class="bat-fill' + (charging ? ' is-charging' : '') + (charging && fast ? ' is-fast' : '') + '" id="batFill" style="width:' + pct + '%;background:' + col + '"></div></div>' +
               '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px;margin-top:12px">' +
-              '<div class="sub card" style="padding:10px 12px;background:rgba(255,255,255,0.03)"><span class="xs t3">Predicted Time-to-Empty</span><div class="mono b" style="font-size:15px;margin-top:3px;color:' + col + '">' + timeToEmptyFormatted + '</div><div class="xs t3" style="margin-top:2px">Mode: ' + (on ? 'Active streaming' : 'Standby') + '</div></div>' +
-              '<div class="sub card" style="padding:10px 12px;background:rgba(255,255,255,0.03)"><span class="xs t3">Historical Discharge Rate</span><div class="mono b" style="font-size:15px;margin-top:3px">' + dischargeRate + '% / hr</div><div class="xs t3" style="margin-top:2px">Est. ' + dailyUsage + '% per 24h cycle</div></div>' +
-              '<div class="sub card" style="padding:10px 12px;background:rgba(255,255,255,0.03)"><span class="xs t3">Battery Health &amp; Cycles</span><div class="mono b" style="font-size:15px;margin-top:3px">98.4% · 14 cycles</div><div class="xs t3" style="margin-top:2px">Lithium-ion smart band</div></div>' +
+              '<div class="sub card" style="padding:10px 12px;background:rgba(255,255,255,0.03)"><span class="xs t3" id="batCard1Label">' + (charging ? 'Estimated Time to 100%' : 'Predicted Time-to-Empty') + '</span><div class="mono b" id="batCard1Val" style="font-size:15px;margin-top:3px;color:' + col + '">' + (charging ? (secsToFull.toFixed(1) + ' sec') : timeToEmptyFormatted) + '</div><div class="xs t3" id="batCard1Sub" style="margin-top:2px">Mode: ' + (charging ? (fast ? '4.0× Fast-Recharge' : '1.0× Standard charge') : (on ? 'Active streaming' : 'Standby')) + '</div></div>' +
+              '<div class="sub card" style="padding:10px 12px;background:rgba(255,255,255,0.03)"><span class="xs t3">' + (fast ? 'Charge Profile (Fast)' : 'Historical Discharge Rate') + '</span><div class="mono b" style="font-size:15px;margin-top:3px">' + (charging ? ('+' + chargeRatePerSec.toFixed(1) + '% / sec') : (dischargeRate + '% / hr')) + '</div><div class="xs t3" style="margin-top:2px">' + (fast ? '4× fill speed · ~1.1% wear/cycle' : ('Est. ' + dailyUsage + '% per 24h cycle · 0.05% wear')) + '</div></div>' +
+              '<div class="sub card" style="padding:10px 12px;background:rgba(255,255,255,0.03)"><span class="xs t3">Battery Health &amp; Cycles</span><div class="mono b" id="batHealthVal" style="font-size:15px;margin-top:3px;color:' + healthCol + '">' + health.toFixed(1) + '% · ' + m.cycles + ' cycles</div><div class="xs t3" id="batHealthSub" style="margin-top:2px">' + (fastCount > 0 ? ('Fast-Recharge uses (24h): ' + fastCount + (freqAlert ? ' · High wear' : '')) : 'Lithium-ion smart band · Low wear') + '</div></div>' +
               '</div>' +
-              (low ? '<div class="banner l2" style="padding:10px 13px;margin-top:12px">' + st(2, 'Low battery') + '<span class="s"><b>Wearable battery below 15% (' + Math.round(pct) + '%).</b> Connect magnetic charger or swap spare fitness band soon to prevent a telemetry gap.</span></div>' : '') +
+              '<div id="batAlerts">' +
+              (low && !charging ? '<div class="banner l2" style="padding:10px 13px;margin-top:12px">' + st(2, 'Low battery') + '<span class="s"><b>Wearable battery below 15% (' + Math.round(pct) + '%).</b> Connect magnetic charger or swap spare fitness band soon to prevent a telemetry gap.</span></div>' : '') +
+              (freqAlert ? '<div class="banner ' + (freqSevere ? 'l2' : 'l1') + '" style="padding:10px 13px;margin-top:10px">' + st(freqSevere ? 2 : 1, freqSevere ? 'Cell Wear Alert' : 'Frequent Fast-Recharge') + '<span class="s"><b>Frequent Fast-Recharge Alert:</b> Rapid-charge mode has been used <b>' + fastCount + ' times</b> recently (Battery Health: <b>' + health.toFixed(1) + '%</b>). Excessive fast charging accelerates lithium-ion wear-and-tear — switch to Standard Recharge to preserve sensor longevity.</span></div>' : '') +
+              '</div>' +
               '</div>';
           }
           function bindBatteryWidget() {
             var c = cur(); if (!c) return;
-            var rBtn = $('#batRecharge'), tBtn = $('#batTestLow');
-            if (rBtn) rBtn.onclick = function () { setBattery(c.d.id, 100); toast('Wearable battery recharged to 100%'); updateBatteryUI(); };
-            if (tBtn) tBtn.onclick = function () { setBattery(c.d.id, 12); updateBatteryUI(); };
+            var cid = c.d.id;
+            var fBtn = $('#batFastToggle'), rBtn = $('#batRecharge'), tBtn = $('#batTestLow');
+            if (fBtn) {
+              fBtn.onclick = function () {
+                var m = getBatteryMeta(cid);
+                m.fastMode = !m.fastMode;
+                if (m.fastMode && m.charging) {
+                  recordFastRechargeUse(cid);
+                }
+                saveDB();
+                toast(m.fastMode ? '⚡ Fast-Recharge mode ON (4× fill speed, higher battery health wear)' : 'Standard recharge mode ON (low battery wear)');
+                updateBatteryUI(true);
+              };
+            }
+            if (rBtn) {
+              rBtn.onclick = function () {
+                var m = getBatteryMeta(cid);
+                if (m.charging) {
+                  m.charging = false;
+                  m.countedSession = false;
+                  saveDB();
+                  ensureBatteryChargeLoop();
+                  toast('Wearable recharge paused at ' + Math.round(getBattery(cid)) + '%');
+                  updateBatteryUI(true);
+                  return;
+                }
+                if (getBattery(cid) >= 100) {
+                  toast('Battery is already at 100% — tap Test <15% to simulate a recharge cycle.');
+                  return;
+                }
+                m.charging = true;
+                m.countedSession = false;
+                if (m.fastMode) {
+                  recordFastRechargeUse(cid);
+                }
+                saveDB();
+                ensureBatteryChargeLoop();
+                toast(m.fastMode ? '⚡ Fast-Recharging wearable (4× speed)…' : 'Recharging wearable to 100%…');
+                updateBatteryUI(true);
+              };
+            }
+            if (tBtn) {
+              tBtn.onclick = function () {
+                var m = getBatteryMeta(cid);
+                m.charging = false;
+                m.countedSession = false;
+                setBattery(cid, 12);
+                ensureBatteryChargeLoop();
+                updateBatteryUI(true);
+              };
+            }
           }
-          function updateBatteryUI() {
+          function updateBatteryUI(forceFull) {
             var box = $('#batBox'), c = cur();
             if (!box || !c) return;
-            box.innerHTML = batteryWidgetHTML(c);
-            bindBatteryWidget();
+            var cid = c.d.id;
+            var m = getBatteryMeta(cid);
+            var existing = $('#batWidget');
+            if (forceFull || !existing || existing.dataset.batMode !== (m.fastMode ? 'fast' : 'std') || existing.dataset.batCharging !== (m.charging ? '1' : '0')) {
+              box.innerHTML = batteryWidgetHTML(c);
+              bindBatteryWidget();
+              return;
+            }
+            var pct = getBattery(cid);
+            var fast = !!m.fastMode, charging = !!m.charging;
+            var low = pct < 15, med = pct >= 15 && pct < 35;
+            var col = charging ? (fast ? 'var(--warn)' : 'var(--ok)') : (low ? 'var(--bad)' : med ? 'var(--warn)' : 'var(--ok)');
+            var fillEl = $('#batFill');
+            if (fillEl) { fillEl.style.width = pct + '%'; fillEl.style.background = col; }
+            var pctEl = $('#batPctText');
+            if (pctEl) { pctEl.textContent = Math.round(pct) + '%'; pctEl.style.color = col; }
+            var card1Val = $('#batCard1Val');
+            if (card1Val) {
+              if (charging) {
+                var rate = fast ? 35.0 : 8.75;
+                card1Val.textContent = Math.max(0, (100 - pct) / rate).toFixed(1) + ' sec';
+              } else {
+                var dRate = streamOn(cid) ? 3.5 : 0.8;
+                var hrs = dRate > 0 ? (pct / dRate) : 99;
+                card1Val.textContent = hrs >= 24 ? (hrs / 24).toFixed(1) + ' days' : hrs.toFixed(1) + ' hours';
+              }
+              card1Val.style.color = col;
+            }
+            var healthEl = $('#batHealthVal');
+            if (healthEl) {
+              var hCol = m.health < 90 ? 'var(--bad)' : m.health < 95 ? 'var(--warn)' : 'var(--ok)';
+              healthEl.textContent = m.health.toFixed(1) + '% · ' + m.cycles + ' cycles';
+              healthEl.style.color = hCol;
+            }
+            var healthSubEl = $('#batHealthSub');
+            if (healthSubEl && m.fastHistory.length > 0) {
+              healthSubEl.textContent = 'Fast-Recharge uses (24h): ' + m.fastHistory.length + (m.fastHistory.length >= 3 ? ' · High wear' : '');
+            }
           }
           function monLive() {
             var c = cur(), on = !!streamOn(c.d.id);
@@ -5930,8 +6647,12 @@
             $('#mt').innerHTML = '<div class="card"><div class="row between"><div><h3>Continuous wearable data</h3><p class="s t3">The wearable streams continuously across every page until manually stopped here (when the smartwatch/band is removed). Each simulated sample represents 5 minutes.</p></div>' +
               '<div class="row"><span class="live ' + (on ? 'on' : '') + '" id="liveInd"><i></i><span>' + (on ? 'Streaming' : 'Stream off') + '</span></span><select id="inject" style="width:auto"><option value="none">No test event</option><option value="mild_hr">Test: mild heart-rate rise</option><option value="hypox">Test: oxygen drop</option><option value="tachy">Test: fast heart rate</option><option value="fever">Test: fever</option><option value="spe">Test: solar particle event</option></select><button class="btn ' + (on ? '' : 'p') + '" id="liveBtn">' + (on ? 'Stop stream' : 'Start stream') + '</button></div></div>' +
               '<div id="batBox">' + batteryWidgetHTML(c) + '</div>' +
+              '<div id="uplinkBoxLive" style="margin-top:14px">' + earthUplinkCardHTML(c) + '</div>' +
               '<div class="grid cols-auto" id="tiles" style="margin-top:18px"></div><div id="liveGuide" class="stack gap8" style="margin-top:14px"></div></div>';
             bindBatteryWidget();
+            bindEarthUplinkCards($('#uplinkBoxLive'));
+            ensureBatteryChargeLoop();
+            ensureUplinkTicker();
             drawTiles(U.O.tiles);
             $('#inject').value = U.inject;
             $('#inject').onchange = function (e) { U.inject = e.target.value; if (streamOn(c.d.id)) setStream(true, false); };
@@ -7594,9 +8315,13 @@
                 '<button class="sub row between" data-esc="cardiac" style="text-align:left;background:rgba(245,185,65,0.12);border-color:rgba(245,185,65,0.35)"><span class="grow"><b>Cardiac Arrhythmia / Faint</b><br><span class="xs t3">QTc &gt; 500 ms, palpitations or syncope</span></span><span class="btn sm warning">Medical</span></button>' +
                 '<button class="sub row between" data-esc="breathe" style="text-align:left"><span class="grow"><b>Calm Down &amp; Guided Breathing</b><br><span class="xs t3">Anxiety, panic or high stress protocol</span></span><span class="btn sm">Relax</span></button>' +
                 '</div></div>' +
-                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">Turn on <b>Hey TARS</b> to call out anytime like Google Home or Alexa, or tap <b>Speak</b> for push-to-talk:</p><ul class="acts t2" style="margin-top:8px"><li>“Hey TARS, what are my vitals?”</li><li>“Hey TARS, what do I do for decompression sickness?”</li><li>“TARS code red!”</li><li>“Hey TARS, guide me through breathing exercises.”</li></ul></div></div></div>' +
+                '<div class="card"><h3>Voice Command Tips</h3><p class="s t2" style="margin-top:6px">Turn on <b>Hey TARS</b> to call out anytime like Google Home or Alexa, or tap <b>Speak</b> for push-to-talk:</p><ul class="acts t2" style="margin-top:8px"><li>“Hey TARS, what are my vitals?”</li><li>“Hey TARS, what is my Earth uplink status?”</li><li>“Hey TARS, what do I do for decompression sickness?”</li><li>“TARS code red!”</li></ul></div>' +
+                '<div id="uplinkBoxTars">' + (c ? earthUplinkCardHTML(c) : '') + '</div>' +
+                '</div></div>' +
                 '<div class="card section" id="botVoiceLogCard"><div class="row between"><div><div class="row" style="gap:8px;align-items:center"><h3>Voice Log</h3><span class="pill" id="botVoiceLogCount">0 entries</span></div><p class="s t3" style="margin-top:4px">Scrollable history of all past transcribed voice interactions with TARS.</p></div><button class="btn sm" id="botVoiceLogClear" type="button">Clear log</button></div><div class="voice-log-list dash-scroll" id="botVoiceLogList" style="margin-top:14px"></div></div>',
               bind: function () {
+                bindEarthUplinkCards($('#uplinkBoxTars'));
+                ensureUplinkTicker();
                 var VOICE_LOG_KEY = 'vitv_tars_voice_log';
                 var speaking = true;
                 var synth = window.speechSynthesis;
@@ -7905,6 +8630,17 @@
                   } else if (q.indexOf('breathe') >= 0 || q.indexOf('calm') >= 0 || q.indexOf('stress') >= 0 || q.indexOf('panic') >= 0 || q.indexOf('anxiety') >= 0) {
                     replyText = 'Initiating guided breathing protocol. Inhale slowly through your nose for four seconds... hold... and exhale smoothly for four seconds. Repeat.';
                     replyEmoji = '🧘';
+                    speak(replyText, replyEmoji, voiceReply);
+                  } else if (q.indexOf('uplink') >= 0 || q.indexOf('earth') >= 0 || q.indexOf('surgeon') >= 0 || q.indexOf('drift') >= 0 || q.indexOf('packet') >= 0) {
+                    var activeUpCrew = cur();
+                    var upInfo = activeUpCrew ? computeEarthUplink(activeUpCrew) : null;
+                    if (upInfo && upInfo.flagged) {
+                      replyText = 'Earth Flight Surgeon Uplink status: ' + upInfo.statusLabel + '. Predictive drift flagged on ' + upInfo.primary.name + ' (' + fmt(upInfo.primary.val, upInfo.primary.dp) + ' ' + upInfo.primary.unit + ', critical ETA ' + upInfo.etaText + '). ' + upInfo.tarsDirective;
+                      replyEmoji = '📡';
+                    } else {
+                      replyText = 'Earth Flight Surgeon Uplink is on Standby. All 24 to 48 hour biomarker trajectories are nominal.';
+                      replyEmoji = '📡';
+                    }
                     speak(replyText, replyEmoji, voiceReply);
                   } else if (q.indexOf('vital') >= 0 || q.indexOf('status') >= 0 || q.indexOf('health') >= 0 || q.indexOf('report') >= 0) {
                     var active = cur();
